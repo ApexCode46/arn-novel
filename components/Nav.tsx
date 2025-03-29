@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function Nav() {
     return (
-        <nav className="sticky top-0 z-50 flex items-center justify-between py-4 px-6 bg-background text-foreground border-b border-border ">
+        <nav className="sticky top-0 z-50 flex items-center justify-between py-4 px-6 bg-backgroundCustom text-foreground drop-shadow-md  ">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold mr-10">
               ARN NOVEL

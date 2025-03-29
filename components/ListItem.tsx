@@ -1,15 +1,25 @@
-import * as React from "react"
+import * as React from "react";
 
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel"
+} from "@/components/ui/carousel";
 
-export function ListItem() {
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Advertisement } from "@/dummy/dummyNovel";
+
+interface ListItemProp {
+  data: Advertisement[];
+}
+
+export function ListItem({ data }: ListItemProp) {
+  const router = useRouter();
+  const listNovel = data;
+  
   return (
     <Carousel
       opts={{
@@ -18,20 +28,30 @@ export function ListItem() {
       className="w-full"
     >
       <CarouselContent className="w-full">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/6">
-            <div className="p-1">
-              <Card>
-                <CardContent className="flex justify-center p-15">
-                  <span className="text-3xl font-semibold">{index + 1}</span>
-                </CardContent>
-              </Card>
+        {listNovel.map((novelItem) => (
+          <CarouselItem
+            key={novelItem.id}
+            className="basis-1/3 md:basis-1/5 lg:basis-1/6 xl:basis-1/6 p-0"
+          >
+            <div className="flex flex-col p-1 bg-backgroundCustom rounded">
+              <div className="relative w-full aspect-[4/5]">
+                <Image
+                  src={novelItem.imageUrl || "/novelImg/Test-novel.png"}
+                  alt={novelItem.title || "Novel"}
+                  fill
+                  className="object-cover rounded"
+                />
+              </div>
+              <p className="mt-2 text-base font-bold truncate">
+                {novelItem.title || "not found!"}
+              </p>
+              <div>
+                {novelItem.categories}
+              </div>
             </div>
           </CarouselItem>
         ))}
       </CarouselContent>
-      {/* <CarouselPrevious />
-      <CarouselNext /> */}
     </Carousel>
-  )
+  );
 }

@@ -7,44 +7,72 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "./ui/button";
+import Image from "next/image";
 export default function Ranking() {
   return (
     <>
-    <h3>ยอดนิยม</h3>
-    <Card className="w-full my-5">
+      <Card className="w-full my-5 drop-shadow-md bg-backgroundCustom">
         <CardContent className="flex">
-      <div className="mr-5">
-        <img src="https://picsum.photos/200/300" alt="lorem"/>
-      </div>
-      <div className="w-full">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio veritatis itaque numquam nihil architecto distinctio repudiandae illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta, maiores aliquid rem. Suscipit?
-    </div>
+          <div className="mr-5">
+            <Image
+              src="/novelImg/Test-novel.png"
+              alt={`Advertisement`}
+              width={300}
+              height={100}
+              className="object-contain rounded"
+            />
+            <p className="text-base font-bold truncate">Novel A</p>
+          </div>
+          <div className="w-full">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio
+            veritatis itaque numquam nihil architecto distinctio repudiandae
+            illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta,
+            maiores aliquid rem. Suscipit?
+          </div>
         </CardContent>
-    </Card>
+      </Card>
 
-    <Card className="w-full my-5">
+      <Card className="w-full my-5 drop-shadow-md bg-backgroundCustom">
         <CardContent className="flex">
-      <div className="mr-5">
-        <img src="https://picsum.photos/200/300" alt="lorem"/>
-      </div>
-      <div className="w-full">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio veritatis itaque numquam nihil architecto distinctio repudiandae illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta, maiores aliquid rem. Suscipit?
-    </div>
+          <div className="mr-5">
+             <Image 
+              src="/novelImg/Test-novel.png"
+              alt={`Advertisement`}
+              width={300}
+              height={100}
+              className="object-contain rounded"
+            />
+            <p className="text-base font-bold truncate">Novel B</p>
+          </div>
+          <div className="w-full">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio
+            veritatis itaque numquam nihil architecto distinctio repudiandae
+            illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta,
+            maiores aliquid rem. Suscipit?
+          </div>
         </CardContent>
-    </Card>
+      </Card>
 
-    <Card className="w-full my-5">
+      <Card className="w-full my-5 drop-shadow-md bg-backgroundCustom">
         <CardContent className="flex">
-      <div className="mr-5">
-        <img src="https://picsum.photos/200/300" alt="lorem"/>
-      </div>
-      <div className="w-full bg-amber-600">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio veritatis itaque numquam nihil architecto distinctio repudiandae illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta, maiores aliquid rem. Suscipit?
-    </div>
+          <div className="mr-5">
+             <Image 
+                src="/novelImg/Test-novel.png"
+                alt={`Advertisement`}
+                width={300}
+                height={100}
+                className="object-contain rounded"
+              />
+              <p className="text-base font-bold truncate">Novel C</p>
+          </div>
+          <div className="w-full">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio
+            veritatis itaque numquam nihil architecto distinctio repudiandae
+            illo, eligendi, illum ipsa omnis dolore consequuntur fugiat soluta,
+            maiores aliquid rem. Suscipit?
+          </div>
         </CardContent>
-    </Card>
-    <Button variant="outline">Button</Button>
-
+      </Card>
     </>
   );
 }
