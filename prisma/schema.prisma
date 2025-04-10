@@ -1,0 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  user_id String @id @default(uuid())
+  username String 
+  profile_img String
+  role String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  accounts accounts?
+  stories stories[]
+  storyComments storyComments[]
+  chapterComments chapterComments[]
+  follow follow[]
+
+  favorite favorite[]
+
+  voice voice[]
+
+  wallet wallet?
+}
+
+model accounts {
+  account_id String @id @default(uuid())
+  user_id String @unique
+  user users @relation(fields: [user_id], references: [user_id])
+  email String
+  password String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+}
+
+model stories {
+  story_id String @id @default(uuid())
+  user_id String 
+  user users @relation(fields: [user_id], references: [user_id])
+  title String
+  description String
+  category String
+  story_img String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  chapter chapters[]
+  storyComments storyComments[]
+  voice voice[]
+  follow follow[]
+  favorite favorite[]
+}
+
+model chapters {
+  chapter_id String @id @default(uuid())
+  story_id String 
+  story stories @relation(fields: [story_id], references: [story_id])
+  title String
+  content String @db.Text
+  price Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  chapterComments chapterComments[]
+  favorite favorite[]
+  transaction transaction[]
+}
+
+model voice {
+  voice_id String @id @default(uuid())
+  user_id String
+  user users @relation(fields: [user_id], references: [user_id])
+  story_id String
+  story stories @relation(fields: [story_id], references: [story_id])
+
+  transaction transaction[]
+}
+
+model storyComments {
+  storyComment_id String @id @default(uuid())
+  user_id String
+  user users @relation(fields: [user_id], references: [user_id])
+  story_id String
+  story stories @relation(fields: [story_id], references: [story_id])
+  content String @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model chapterComments {
+  chapterComment_id String @id @default(uuid())
+  user_id String
+  user users @relation(fields: [user_id], references: [user_id])
+  chapter_id String
+  chapter chapters @relation(fields: [chapter_id], references: [chapter_id])
+  content String @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model follow {
+  follow_id String @id @default(uuid())
+  user_id String 
+  user users @relation(fields: [user_id], references: [user_id])
+  story_id String
+  story stories @relation(fields: [story_id], references: [story_id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model favorite {
+  favorite_id String @id @default(uuid())
+  user_id String
+  user users @relation(fields: [user_id], references: [user_id])
+  story_id String?
+  story stories? @relation(fields: [story_id], references: [story_id])
+  chapter_id String?
+  chapter chapters? @relation(fields: [chapter_id], references: [chapter_id])  
+}
+
+model wallet {
+  wallet_id String @id @default(uuid())
+  user_id String @unique
+  user users @relation(fields: [user_id], references: [user_id])
+  balance Int @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  transaction transaction[]
+}
+
+model transaction {
+  transaction_id String @id @default(uuid())
+  wallet_id String
+  wallet wallet @relation(fields: [wallet_id], references: [wallet_id])
+  amount Int
+  type TransactionType
+  chapter_id String?
+  chapter chapters? @relation(fields: [chapter_id], references: [chapter_id])
+  voice_id String?
+  voice voice? @relation(fields: [voice_id], references: [voice_id])
+  created_at DateTime @default(now())
+}
+
+enum TransactionType {
+  TOPUP      // เติมเงิน
+  PURCHASE   // ซื้อ Chapter
+  REFUND     // คืนเงิน
+  BONUS      // ได้รับโบนัส
+}
