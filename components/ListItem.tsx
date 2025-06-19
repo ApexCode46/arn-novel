@@ -33,7 +33,7 @@ export function ListItem({ data }: ListItemProp) {
             key={novelItem.id}
             className="basis-1/3 md:basis-1/5 lg:basis-1/6 xl:basis-1/6 p-0"
           >
-            <div className="flex flex-col p-1 bg-backgroundCustom rounded">
+            <div className="flex flex-col p-1 bg-background hover:bg-backgroundCustom rounded">
               <div className="relative w-full aspect-[4/5]">
                 <Image
                   src={novelItem.imageUrl || "/novelImg/Test-novel.png"}

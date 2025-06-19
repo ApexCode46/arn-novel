@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-backgroundNav: var(--backgroundNav);
   --color-backgroundCustom: var(--backgroundCustom);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -47,8 +48,9 @@
 }
 
 :root {
-  --backgroundCustom: #ffffff;
-  --background: #EEEEEE;
+  --backgroundNav: #ffffff;
+  --backgroundCustom: #eeeeee;
+  --background: #ffffff;
   --foreground: #252525;
   --card: #FFFFFF;
   --card-foreground: #252525;
@@ -84,7 +86,9 @@
 }
 
 .dark {
+  --backgroundNav: #181818;
   --backgroundCustom: #181818;
+  /* -- */
   --background: #232323;
   --foreground: #fcfcfc;
   --card: #232323;
