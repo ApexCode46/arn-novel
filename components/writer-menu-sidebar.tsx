@@ -1,6 +1,6 @@
 "use client"
 
-import { ChartColumnBig, Book, Scroll, MessageCircleQuestion } from "lucide-react"
+import { ChartColumnBig, Book, UserCheck, MessageCircleQuestion, Scroll } from "lucide-react"
 import { useRouter } from 'next/navigation';
 import {
   SidebarGroup,
@@ -32,7 +32,7 @@ export function NavMain() {
         </SidebarMenuButton>
 
         <SidebarMenuButton >
-          <Scroll /> <strong>ลงทะเบียนนักเขียน</strong>
+          <UserCheck /> <strong>ลงทะเบียนนักเขียน</strong>
         </SidebarMenuButton>
 
         <SidebarMenuButton >

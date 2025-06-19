@@ -1,7 +1,5 @@
-import { Geist, Geist_Mono, Sarabun  } from "next/font/google";
+import { Geist, Geist_Mono, Sarabun, Kanit  } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,6 +18,12 @@ const sarabun = Sarabun({
   weight: ["300", "400", "500", "700"],
 });
 
+export const kanit = Kanit({
+  variable: "--font-kanit",
+  subsets: ["thai", "latin"],
+  weight: ["400", "600", "700"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,9 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <>
-      <html lang="th" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sarabun.variable}`}>
+      <html lang="th" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sarabun.variable}  ${kanit.variable}`}>
         <head />
-        <body>
+        <body className="font-kanit">
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
