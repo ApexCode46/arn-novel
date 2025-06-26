@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { ListFilter, BookPlus } from "lucide-react"
 
 
@@ -27,15 +29,23 @@ export default function Stories() {
 
       <div className="w-full h-auto mb-3 bg-backgroundCustom">
         <div className="flex justify-between bg-background">
-          <div>
-            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">ทั้งหมด</button>
-            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องยาว</button>
-            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องสั้น</button>
+          <div className="flex items-center">
+            <button className="py-4 px-3 mr-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องยาว</button>
+            <button className="py-4 px-3 mr-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องสั้น</button>
+            <Select>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="เรียงตาม" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">ล่าสุด</SelectItem>
+                <SelectItem value="dark">เก่าสุด</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex">
             <Dialog>
               <DialogTrigger className="flex justify-center item-center bg-green-500 p-2 my-2 hover:bg-green-500/80 rounded">
-                <BookPlus /> เขียนนิยาย
+                <BookPlus /> เขียน
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -49,33 +59,121 @@ export default function Stories() {
             </Dialog>
           </div>
         </div>
-        <div className="flex p-3 rounded hover:bg-secondary/80">
-          <div className="p-6 rounded relative w-22 h-32">
-            <Image
-              src="/novelImg/Test-novel.png"
-              alt="Novel"
-              fill
-              className="rounded object-cover"
-            />
-          </div>
-          <div className="mx-3">
-            <p className="font-medium">test dummy</p>
-          </div>
-        </div>
+        <ScrollArea className="h-165 w-full bg-background border rounded">
 
-        <div className="flex p-3 rounded hover:bg-secondary/80">
-          <div className="p-6 rounded relative w-22 h-32">
-            <Image
-              src="/novelImg/Test-novel.png"
-              alt="Novel"
-              fill
-              className="rounded object-cover"
-            />
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
           </div>
-          <div className="mx-3">
-            <p className="font-medium">test dummy</p>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
           </div>
-        </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+          <div className="flex p-3 rounded hover:bg-secondary/80">
+            <div className="p-6 rounded relative w-22 h-32">
+              <Image
+                src="/novelImg/Test-novel.png"
+                alt="Novel"
+                fill
+                className="rounded object-cover"
+              />
+            </div>
+            <div className="mx-3">
+              <p className="font-medium">test dummy</p>
+            </div>
+          </div>
+
+        </ScrollArea>
       </div>
     </>
   )
