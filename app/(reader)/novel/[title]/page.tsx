@@ -98,6 +98,10 @@ export default function Page() {
 
   const currentChapters = getCurrentPageChapters();
 
+  const test1 = () => {
+    console.log("test 1");
+  }
+
   return (
     <>
       <Card className="w-full bg-background">
@@ -166,8 +170,8 @@ export default function Page() {
             <h3 className="mb-4 text-sm font-bold leading-none">ตอนที่ {pageOptions.find(option => option.value === currentPage)?.label.split(' ')[1]}</h3>
             <hr />
             {currentChapters.map((chapter) => (
-              <div key={chapter.id} className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors">
-                {chapter.title}
+              <div key={chapter.id} onClick={() => test1()} className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors">
+                  {chapter.title}
               </div>
             ))}
           </div>

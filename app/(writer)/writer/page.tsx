@@ -10,7 +10,7 @@ import {
 export default function Page() {
   return (
     <>
-      <h3 className="my-2">หน้าหลัก</h3>
+      <h3 className="my-2 text-3xl md:text-4xl font-bold">หน้าหลัก</h3>
       <hr className="py-2" />
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
@@ -24,7 +24,6 @@ export default function Page() {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-
     </>
   )
 }

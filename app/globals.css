@@ -134,18 +134,42 @@
   }
 
   h1 {
-    @apply text-4xl md:text-6xl font-medium;  
+    @apply text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight my-4; 
   }
 
   h2 {
-    @apply text-xl lg:text-4xl font-medium;
+    @apply text-2xl sm:text-3xl md:text-4xl tracking-tight leading-snug my-3;
   }
 
   h3 {
-    @apply text-2xl lg:text-4xl font-medium;
+    @apply text-xl sm:text-2xl md:text-3xl tracking-normal leading-snug my-2;
+  }
+   h4 {
+    @apply text-lg sm:text-xl tracking-normal leading-snug my-2;
+  }
+
+  h5 {
+    @apply text-base sm:text-lg tracking-tight leading-snug my-1;
+  }
+
+  h6 {
+    @apply text-base tracking-tight uppercase text-muted-foreground my-1;
   }
 
   a {
     @apply hover:cursor-pointer
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+  }
+
+  .prose ul {
+    list-style-type: disc;
+    
+  }
+
+  .prose li {
+    margin-bottom: 0.25rem;
   }
 }

@@ -8,32 +8,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ListFilter } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ListFilter, BookPlus } from "lucide-react"
 
 
 export default function Stories() {
   return (
     <>
-      <h3 className="my-2">นิยายของฉัน</h3>
+      <h3 className="my-2 text-3xl md:text-4xl font-bold">นิยายของฉัน</h3>
       <hr className="py-2" />
 
       <div className="w-full h-auto mb-3 bg-backgroundCustom">
         <div className="flex justify-between bg-background">
           <div>
-            <button className="p-2 hover:bg-secondary/80 focus:bg-backgroundCustom">ทั้งหมด</button>
-            <button className="p-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องยาว</button>
-            <button className="p-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องสั้น</button>
+            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">ทั้งหมด</button>
+            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องยาว</button>
+            <button className="p-2 mx-1 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องสั้น</button>
           </div>
-          <div className="">
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex p-2 hover:bg-secondary/80">
-                  <ListFilter />เรียงตาม
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>เรื่องล่าสุด</DropdownMenuItem>
-                <DropdownMenuItem>เรื่องเก่าสุด</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex">
+            <Dialog>
+              <DialogTrigger className="flex justify-center item-center bg-green-500 p-2 my-2 hover:bg-green-500/80 rounded">
+                <BookPlus /> เขียนนิยาย
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete your account
+                    and remove your data from our servers.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         <div className="flex p-3 rounded hover:bg-secondary/80">
