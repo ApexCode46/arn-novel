@@ -11,15 +11,15 @@ import { useRouter } from 'next/navigation';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TableOfContents } from "lucide-react";
 
-interface LayoutProps {
-    children: React.ReactNode
-    params: {
-        story: string
-    }
+interface StoryLayoutClientProps {
+    children: React.ReactNode;
+    storyName: string;
 }
 
-export default function StoryLayout({ children, params }: LayoutProps) {
-    const storyName = decodeURIComponent(params.story);
+export default function StoryLayoutClient({
+    children,
+    storyName,
+}: StoryLayoutClientProps) {
     const router = useRouter();
 
     const handleNavigationTosettingStory = async () => {
@@ -39,7 +39,7 @@ export default function StoryLayout({ children, params }: LayoutProps) {
                     <SheetHeader>
                         <SheetTitle>{storyName}</SheetTitle>
                         <hr className='py-1' />
-                        <div onClick={() => handleNavigationTosettingStory()} className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"> 
+                        <div onClick={() => handleNavigationTosettingStory()} className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border">
                             ข้อมูลเบื้องต้นของเรื่องนี้
                         </div>
                         <ScrollArea className="h-165 w-full bg-background border rounded">
@@ -148,7 +148,7 @@ export default function StoryLayout({ children, params }: LayoutProps) {
                             <div onClick={() => hadleNevigationTochapter()} className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors">
                                 asdasdasdasdasdaasd
                             </div>
-                            
+
                         </ScrollArea>
                     </SheetHeader>
                 </SheetContent>

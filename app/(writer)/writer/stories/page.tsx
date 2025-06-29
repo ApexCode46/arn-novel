@@ -1,27 +1,22 @@
+'use client'
+
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import { ListFilter, BookPlus } from "lucide-react"
+import Settingstory  from "@/components/ModalSettingStory"
 
 
 export default function Stories() {
+  
   return (
     <>
       <h3 className="my-2 text-3xl md:text-4xl font-bold">นิยายของฉัน</h3>
@@ -42,25 +37,10 @@ export default function Stories() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex">
-            <Dialog>
-              <DialogTrigger className="flex justify-center item-center bg-green-500 p-2 my-2 hover:bg-green-500/80 rounded">
-                <BookPlus /> เขียน
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Are you absolutely sure?</DialogTitle>
-                  <DialogDescription>
-                    This action cannot be undone. This will permanently delete your account
-                    and remove your data from our servers.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Settingstory />
         </div>
-        <ScrollArea className="h-165 w-full bg-background border rounded">
 
+        <ScrollArea className="h-165 w-full bg-background border rounded">
           <div className="flex p-3 rounded hover:bg-secondary/80">
             <div className="p-6 rounded relative w-22 h-32">
               <Image
