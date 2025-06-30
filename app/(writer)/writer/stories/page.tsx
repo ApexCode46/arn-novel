@@ -11,12 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area"
+import Modalsettingstory from "@/components/ModalSettingStory"
 
-import Settingstory  from "@/components/ModalSettingStory"
-
+import { BookPlus } from "lucide-react"
 
 export default function Stories() {
-  
+
   return (
     <>
       <h3 className="my-2 text-3xl md:text-4xl font-bold">นิยายของฉัน</h3>
@@ -37,7 +37,18 @@ export default function Stories() {
               </SelectContent>
             </Select>
           </div>
-          <Settingstory />
+
+          <Modalsettingstory trigger={
+            <div className="flex items-center gap-2 cursor-pointer bg-green-500 text-white p-2 rounded hover:bg-green-500/80">
+              <BookPlus size={18} /> เขียน
+            </div>
+          }
+            mode="create"
+            onSubmit={(data) => {
+              console.log('Creating story:', data);
+              // ส่งข้อมูลไปสร้างนิยายใหม่
+            }}
+          />
         </div>
 
         <ScrollArea className="h-165 w-full bg-background border rounded">
