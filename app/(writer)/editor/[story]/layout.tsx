@@ -1,5 +1,3 @@
-// editor/[story]/layout
-
 "use client";
 import {
     Sheet,
@@ -9,9 +7,8 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
-import { ScrollArea } from "@/components/ui/scroll-area";
+    import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableOfContents, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useEditor } from "@/context/EditorContext";
 import { EditorProvider } from "@/context/EditorContext";
 
@@ -46,13 +43,12 @@ function StoryLayoutInner({
                 </SheetTrigger>
                 <SheetContent>
                     <SheetHeader>
-                        <SheetTitle>{storyName}</SheetTitle>
+                        <SheetTitle>{storyName} asdasd</SheetTitle>
                     </SheetHeader>
-                    <hr className="py-1" />
 
                     <div
                         onClick={handleNavigationTosettingStory}
-                        className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"
+                        className="text-sm p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"
                     >
                         ข้อมูลเบื้องต้นของเรื่องนี้
                     </div>

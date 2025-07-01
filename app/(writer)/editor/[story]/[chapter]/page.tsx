@@ -21,7 +21,7 @@ export default function Page() {
 
   return (
     <div className="w-full min-h-[70rem] my-5 bg-background shadow-2xl">
-      <div className="flex justify-center items-center w-full">
+      <div className="flex justify-center items-center w-full pb-2">
         <div className="text-center">
           <h3
             lang="th"
@@ -52,7 +52,7 @@ export default function Page() {
         </div>
       </div>
 
-      <hr className="py-2" />
+      <hr className="py-2 " />
 
       <div className="p-6">
         <TiptapEditor

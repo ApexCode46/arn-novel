@@ -17,7 +17,7 @@ export default function Page() {
   const { content, setContent } = useEditor();
   return (
     <div className="w-full min-h-screen bg-background">
-      <div className="container mx-auto p-4 space-y-6">
+      <div className="container mx-auto py-4 space-y-6">
         <Modalsettingstory
           trigger={
             <div className="cursor-pointer  transition-all duration-200 hover:shadow-lg ">
@@ -94,17 +94,18 @@ export default function Page() {
             console.log('Updating story:', data);
           }}
         />
+      </div>
 
-      </div>
       <div className="p-6">
-        <div className="w-full min-h-[29.7cm] bg-background shadow-2xl">
-          <TiptapEditor
-            content={content}
-            onContentChange={(html) => setContent(html)}
-          />
-        </div>
+      <div className="w-full min-h-[29.7cm] bg-background shadow-2xl">
+        <TiptapEditor
+          content={content}
+          onContentChange={(html) => setContent(html)}
+        />
       </div>
-    </div >
+    </div>
+      </div>
+
 
   )
 }
