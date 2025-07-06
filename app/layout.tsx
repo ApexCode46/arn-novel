@@ -1,5 +1,6 @@
-import { Geist, Geist_Mono, Sarabun, Kanit  } from "next/font/google";
+import { Geist, Geist_Mono, Sarabun, Kanit } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,14 +35,16 @@ export default function RootLayout({
       <html lang="th" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sarabun.variable}  ${kanit.variable}`}>
         <head />
         <body className="font-kanit">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <Providers >
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </Providers >
         </body>
       </html>
     </>
