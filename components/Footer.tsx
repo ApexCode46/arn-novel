@@ -1,10 +1,10 @@
 
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Mail, Heart, Book } from "lucide-react";
+import { Facebook, Twitter, Instagram, Mail, Book } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-background border-t border-border/50 mt-20">
+    <footer className="bg-backgroundCustom border-t border-border/50 mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Main Footer Content */}
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

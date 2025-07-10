@@ -40,7 +40,7 @@ export function ListItem({ data }: ListItemProp) {
             key={novelItem.id}
             className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 p-2 py-6"
           >
-            <div className="group relative flex flex-col bg-card hover:bg-card/80 rounded-lg border border-border/50 hover:border-border hover:shadow-lg hover:scale-110 transition-all duration-300 overflow-hidden shadow-sm">
+            <div className="group relative flex flex-col bg-backgroundCustom hover:bg-card/80 rounded-lg border border-border/50 hover:border-border hover:shadow-lg hover:scale-110 transition-all duration-300 overflow-hidden shadow-sm">
               {/* Image Container */}
               <div className="relative w-full aspect-[3/4] overflow-hidden">
                 <Image

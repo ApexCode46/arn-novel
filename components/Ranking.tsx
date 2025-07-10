@@ -35,7 +35,7 @@ export default function Ranking() {
       <Card className="w-full my-5 drop-shadow-md bg-backgroundCustom">
         <CardContent className="flex">
           <div className="mr-5">
-             <Image 
+            <Image
               src="/novelImg/Test-novel.png"
               alt={`Advertisement`}
               width={300}
@@ -56,14 +56,14 @@ export default function Ranking() {
       <Card className="w-full my-5 drop-shadow-md bg-backgroundCustom">
         <CardContent className="flex">
           <div className="mr-5">
-             <Image 
-                src="/novelImg/Test-novel.png"
-                alt={`Advertisement`}
-                width={300}
-                height={100}
-                className="object-contain rounded"
-              />
-              <p className="text-base font-bold truncate">Novel C</p>
+            <Image
+              src="/novelImg/Test-novel.png"
+              alt={`Advertisement`}
+              width={300}
+              height={100}
+              className="object-contain rounded"
+            />
+            <p className="text-base font-bold truncate">Novel C</p>
           </div>
           <div className="w-full">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor optio
