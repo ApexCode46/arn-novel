@@ -22,11 +22,21 @@ export default function Stories() {
       <h3 className="my-2 text-3xl md:text-4xl font-bold">นิยายของฉัน</h3>
       <hr className="py-2" />
 
-      <div className="w-full h-auto mb-3 bg-backgroundCustom">
-        <div className="flex justify-between bg-background">
-          <div className="flex items-center">
-            <button className="py-4 px-3 mr-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องยาว</button>
-            <button className="py-4 px-3 mr-2 hover:bg-secondary/80 focus:bg-backgroundCustom">เรื่องสั้น</button>
+
+      <div className="w-full h-auto mb-3 border rounded ">
+        <div className="flex justify-between bg-background p-3">
+          <div className="flex items-center gap-2">
+            <Select>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="เลือกเรื่อง" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                <SelectItem value="long">เรื่องยาว</SelectItem>
+                <SelectItem value="short">เรื่่อวสั้น</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select>
               <SelectTrigger className="w-auto">
                 <SelectValue placeholder="เรียงตาม" />
@@ -34,24 +44,28 @@ export default function Stories() {
               <SelectContent>
                 <SelectItem value="light">ล่าสุด</SelectItem>
                 <SelectItem value="dark">เก่าสุด</SelectItem>
+                <SelectItem value="popular">จบแล้ว</SelectItem>
+                <SelectItem value="alphabetical">ยังไม่จบแล้ว</SelectItem>
+
               </SelectContent>
             </Select>
           </div>
-
-          <Modalsettingstory trigger={
-            <div className="flex items-center gap-2 cursor-pointer bg-green-500 text-white p-2 rounded hover:bg-green-500/80">
-              <BookPlus size={18} /> เขียน
-            </div>
-          }
-            mode="create"
-            onSubmit={(data) => {
-              console.log('Creating story:', data);
-              // ส่งข้อมูลไปสร้างนิยายใหม่
-            }}
-          />
+          <div>
+            <Modalsettingstory trigger={
+              <div className="flex items-center gap-2 cursor-pointer bg-green-500 text-white p-2 rounded hover:bg-green-500/80">
+                เขียนใหม่
+              </div>
+            }
+              mode="create"
+              onSubmit={(data) => {
+                console.log('Creating story:', data);
+                // ส่งข้อมูลไปสร้างนิยายใหม่
+              }}
+            />
+          </div>
         </div>
-
-        <ScrollArea className="h-165 w-full bg-background border rounded">
+        <div>
+          <ScrollArea className="h-165 w-full bg-background border rounded">
           <div className="flex p-3 rounded hover:bg-secondary/80">
             <div className="p-6 rounded relative w-22 h-32">
               <Image
@@ -165,6 +179,7 @@ export default function Stories() {
           </div>
 
         </ScrollArea>
+        </div>
       </div>
     </>
   )

@@ -24,52 +24,64 @@ export default function Home() {
 
   return (
     <>
-      <div className="w-full my-5">
+      <div className="w-full my-1">
         <Ads />
       </div>
-      <div className="flex flex-col items-center">
+      <hr />
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">อัปเดตประจำสัปดาห์</h3>
-          <ListItem data={dummyNovelAction} />
-        </div>
+      <div>
+        <button>1</button>
+        <button>1</button>
+        <button>1</button>
+        <button>1</button>
+        <button>1</button>
+      </div>
+      <hr />
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">มาแรง</h3>
-          <ListItem data={dummyNovelDrama} />
-        </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
-          <ListItem data={dummyNovelFantasy} />
-        </div>
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 py-4">
+        <div className="flex flex-col items-center">
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">อัปเดตประจำสัปดาห์</h3>
+            <ListItem data={dummyNovelAction} />
+          </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">ยอดนิยม</h3>
-          <Ranking />
-        </div>
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">มาแรง</h3>
+            <ListItem data={dummyNovelDrama} />
+          </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">แอคชั่น</h3>
-          <ListItem data={dummyNovelAction} />
-        </div>
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
+            <ListItem data={dummyNovelFantasy} />
+          </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">ดราม่า</h3>
-          <ListItem data={dummyNovelDrama} />
-        </div>
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">ยอดนิยม</h3>
+            <Ranking />
+          </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">แฟนตาซี</h3>
-          <ListItem data={dummyNovelFantasy} />
-        </div>
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">แอคชั่น</h3>
+            <ListItem data={dummyNovelAction} />
+          </div>
 
-        <div className="w-full my-5">
-          <h3 className="text-lg md:text-xl font-bold">สยองขวัญ</h3>
-          <ListItem data={dummyNovelHorror} />
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">ดราม่า</h3>
+            <ListItem data={dummyNovelDrama} />
+          </div>
+
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">แฟนตาซี</h3>
+            <ListItem data={dummyNovelFantasy} />
+          </div>
+
+          <div className="w-full my-5">
+            <h3 className="text-lg md:text-xl font-bold">สยองขวัญ</h3>
+            <ListItem data={dummyNovelHorror} />
+          </div>
         </div>
       </div>
-
     </>
   );
 }

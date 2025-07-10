@@ -1,6 +1,7 @@
 'use client'
 import { use, useState } from 'react';
-
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input"
@@ -35,15 +36,30 @@ type ModalSettingStoryProps = {
     trigger: React.ReactNode;
     mode?: 'create' | 'edit'; // เพิ่ม prop สำหรับกำหนดโหมด
     onSubmit?: (data: any) => void; // เพิ่ม callback function
-    initialData?: any; // เพิ่ม initial data สำหรับโหมด edit
+    initialData?: {
+        storyId?: string;
+        storyName?: string;
+        penName?: string;
+        category?: string;
+        blurb?: string;
+        tags?: string[];
+        verticalImage?: string;
+        horizontalImage?: string;
+        hideComments?: boolean;
+        allowComments?: boolean;
+        commentPermission?: string;
+        userId?: string;
+    };
 }
 
-export default function Modalsettingstory({ 
-    trigger, 
-    mode = 'create', 
+export default function Modalsettingstory({
+    trigger,
+    mode = 'create',
     onSubmit,
-    initialData 
+    initialData
 }: ModalSettingStoryProps) {
+    const { data: session, status } = useSession();
+    const router = useRouter();
     //ชื่อเรื่อง
     const [storyName, setStoryName] = useState<string>(initialData?.storyName || "");
 
@@ -56,7 +72,6 @@ export default function Modalsettingstory({
     // คำโปรย
     const [blurb, setBlurb] = useState<string>(initialData?.blurb || "");
     const maxChars = 200;
-    const [value, setValue] = useState(initialData?.blurb || "");
 
     // แท็ก
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
@@ -70,6 +85,10 @@ export default function Modalsettingstory({
     const [isChecked1, setIsChecked1] = useState(initialData?.hideComments || false);
     const [isChecked2, setIsChecked2] = useState(initialData?.allowComments ?? true);
     const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "comfortable");
+
+    // Loading state
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // จัดการ image
     const handleVerticalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,22 +145,60 @@ export default function Modalsettingstory({
     };
 
     // จัดการการส่งข้อมูล
-    const handleSubmit = () => {
-        const formData = {
-            storyName,
-            penName,
-            category,
-            blurb: value,
-            tags,
-            verticalImage,
-            horizontalImage,
-            hideComments: isChecked1,
-            allowComments: isChecked2,
-            commentPermission: selectedOption
-        };
+    const handleSubmit = async () => {
+        setIsLoading(true);
+        setError(null);
 
-        if (onSubmit) {
-            onSubmit(formData);
+        try {
+            const formData = {
+                storyId: initialData?.storyId || undefined,
+                title: storyName,
+                penName,
+                blurb,
+                category,
+                tags,
+                verticalImage: verticalImage ? `img-v-${storyName.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                horizontalImage: horizontalImage ? `img-h-${storyName.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                hideComments: isChecked1,
+                allowComments: isChecked2,
+                commentPermission: selectedOption,
+                userId: (session?.user?.id as string) || 'temp-user-id'
+            };
+
+            const response = await fetch('/api/createNovel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                
+                // ส่ง GET request เพื่อเอา story_id ล่าสุด
+                const getResponse = await fetch(`/api/createNovel?userId=${session?.user?.id as string}`);
+                const getResult = await getResponse.json();
+                
+                if (getResult.success) {
+                    router.push(`/editor/${getResult.storyId}`);
+                } else {
+                    console.error('Error fetching story ID:', getResult.error);
+                }
+                
+                if (onSubmit) {
+                    onSubmit(result.story);
+                }
+
+            } else {
+                console.log(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+            setError('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -179,9 +236,9 @@ export default function Modalsettingstory({
                         <h4 className='font-bold'>ข้อมูลหลัก</h4>
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
                             <Label htmlFor="nameStory">ชื่อเรื่อง</Label>
-                            <Input 
-                                type="text" 
-                                id="nameStory" 
+                            <Input
+                                type="text"
+                                id="nameStory"
                                 placeholder="พิมพ์ชื่อเรื่อง"
                                 value={storyName}
                                 onChange={(e) => setStoryName(e.target.value)}
@@ -190,9 +247,9 @@ export default function Modalsettingstory({
 
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
                             <Label htmlFor="penName">นามปากกา</Label>
-                            <Input 
-                                type="text" 
-                                id="penName" 
+                            <Input
+                                type="text"
+                                id="penName"
                                 placeholder="พิมพ์นามปากกา"
                                 value={penName}
                                 onChange={(e) => setPenName(e.target.value)}
@@ -282,11 +339,11 @@ export default function Modalsettingstory({
                                 id="Blurb"
                                 placeholder="พิมพ์คำโปรย"
                                 maxLength={maxChars}
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
+                                value={blurb}
+                                onChange={(e) => setBlurb(e.target.value)}
                             />
                             <p className="text-sm text-muted-foreground">
-                                {value.length} / {maxChars} ตัวอักษร
+                                {blurb.length} / {maxChars} ตัวอักษร
                             </p>
                         </div>
                         <hr className='py-2' />
@@ -439,16 +496,21 @@ export default function Modalsettingstory({
                                 </Label>
                             </div>
                         </div>
+
                         <div className='flex justify-center w-full pt-2'>
-                            <Button 
+                            <Button
                                 className={`mx-2 ${config.className}`}
                                 onClick={handleSubmit}
+                                disabled={isLoading}
                             >
-                                {config.text}
+                                {isLoading ? 'กำลังบันทึก...' : config.text}
                             </Button>
 
                             <DialogClose asChild>
-                                <Button className='mx-2 bg-red-500 text-white hover:bg-red-500/80'>
+                                <Button
+                                    className='mx-2 bg-red-500 text-white hover:bg-red-500/80'
+                                    disabled={isLoading}
+                                >
                                     ยกเลิก
                                 </Button>
                             </DialogClose>
