@@ -2,26 +2,25 @@
 
 import { Ads } from "@/components/Ads";
 import { ListItem } from "@/components/ListItem";
-import { useSession, signOut } from 'next-auth/react';
-import Link from 'next/link';
+// import { useSession } from 'next-auth/react';
 import Ranking from "@/components/Ranking";
 
 import { dummyNovelAction, dummyNovelDrama, dummyNovelFantasy, dummyNovelHorror } from "@/dummy/dummyNovel";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  // const { data: session, status } = useSession();
 
-  if (status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2">กำลังโหลด...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (status === 'loading') {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+  //         <p className="mt-2">กำลังโหลด...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>

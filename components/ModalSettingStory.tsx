@@ -1,7 +1,8 @@
 'use client'
-import { use, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input"
@@ -27,20 +28,31 @@ import {
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog"
-
+import type { Story } from "@/type/story";
 import { Settings, Check, Plus, Edit } from "lucide-react"
 import React from "react";
 import clsx from "clsx";
 
+// Extend the session user type to include id
+interface ExtendedUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: string | null;
+}
+
 type ModalSettingStoryProps = {
     trigger: React.ReactNode;
     mode?: 'create' | 'edit'; // เพิ่ม prop สำหรับกำหนดโหมด
-    onSubmit?: (data: any) => void; // เพิ่ม callback function
+    onSubmit: (data: Story) => void;
     initialData?: {
         storyId?: string;
-        storyName?: string;
+        title?: string;
         penName?: string;
         category?: string;
+        contentLevel?: string;
+        type?: string;
         blurb?: string;
         tags?: string[];
         verticalImage?: string;
@@ -58,16 +70,22 @@ export default function Modalsettingstory({
     onSubmit,
     initialData
 }: ModalSettingStoryProps) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession(); //status
     const router = useRouter();
     //ชื่อเรื่อง
-    const [storyName, setStoryName] = useState<string>(initialData?.storyName || "");
+    const [title, setTitle] = useState<string>(initialData?.title || "");
 
     // นามปากา
     const [penName, setPenName] = useState<string>(initialData?.penName || "");
 
+    //ประเภทนิยาย
+    const [type, setType] = useState<string>(initialData?.type || "");
+
     // หมวดหมู่
     const [category, setCategory] = useState<string>(initialData?.category || "");
+
+    // ระดับเนื้อหา
+    const [contentLevel, setContentLevel] = useState<string>(initialData?.contentLevel || "PG");
 
     // คำโปรย
     const [blurb, setBlurb] = useState<string>(initialData?.blurb || "");
@@ -89,6 +107,7 @@ export default function Modalsettingstory({
     // Loading state
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     // จัดการ image
     const handleVerticalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,28 +163,38 @@ export default function Modalsettingstory({
         }
     };
 
-    // จัดการการส่งข้อมูล
     const handleSubmit = async () => {
         setIsLoading(true);
         setError(null);
 
+        // ตรวจสอบ session ก่อนส่งข้อมูล
+        const userId = (session?.user as ExtendedUser)?.id;
+        if (!userId) {
+            setError('กรุณาเข้าสู่ระบบก่อนบันทึกนิยาย');
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const formData = {
                 storyId: initialData?.storyId || undefined,
-                title: storyName,
+                title: title,
                 penName,
                 blurb,
+                type,
+                contentLevel,
                 category,
                 tags,
-                verticalImage: verticalImage ? `img-v-${storyName.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
-                horizontalImage: horizontalImage ? `img-h-${storyName.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                verticalImage: verticalImage ? `img-v-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                horizontalImage: horizontalImage ? `img-h-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
                 hideComments: isChecked1,
                 allowComments: isChecked2,
                 commentPermission: selectedOption,
-                userId: (session?.user?.id as string) || 'temp-user-id'
+                userId: userId // ใช้ userId ที่ตรวจสอบแล้ว
             };
 
-            const response = await fetch('/api/createNovel', {
+
+            const response = await fetch('/api/writer/stories', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,27 +204,25 @@ export default function Modalsettingstory({
 
             const result = await response.json();
 
-            if (result.success) {
-                
-                // ส่ง GET request เพื่อเอา story_id ล่าสุด
-                const getResponse = await fetch(`/api/createNovel?userId=${session?.user?.id as string}`);
-                const getResult = await getResponse.json();
-                
-                if (getResult.success) {
-                    router.push(`/editor/${getResult.storyId}`);
+            if (response.ok) {
+                if (mode === 'create') {
+                    // สำหรับการสร้างใหม่ ไปที่หน้า editor
+                    const storyId = result.story.story_id;
+                    router.push(`/editor/${storyId}`);
                 } else {
-                    console.error('Error fetching story ID:', getResult.error);
-                }
-                
-                if (onSubmit) {
-                    onSubmit(result.story);
+                    // สำหรับการแก้ไข ส่งข้อมูลกลับและปิด modal
+                    if (onSubmit) {
+                        onSubmit(result.story);
+                    }
+                    // ปิด modal
+                    setIsOpen(false);
                 }
 
             } else {
-                console.log(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
+                setError(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
             }
         } catch (error) {
-            console.error('Network error:', error);
+            console.log('Network error:', error);
             setError('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
         } finally {
             setIsLoading(false);
@@ -218,13 +245,30 @@ export default function Modalsettingstory({
 
     const config = buttonConfig[mode];
 
+    useEffect(() => {
+        if (mode === 'edit' && initialData) {
+            setTitle(initialData.title || "");
+            setPenName(initialData.penName || "");
+            setType(initialData.type || "");
+            setCategory(initialData.category || "");
+            setContentLevel(initialData.contentLevel || "PG");
+            setBlurb(initialData.blurb || "");
+            setTags(initialData.tags || []);
+            setVerticalImage(initialData.verticalImage || null);
+            setHorizontalImage(initialData.horizontalImage || null);
+            setIsChecked1(initialData.hideComments || false);
+            setIsChecked2(initialData.allowComments ?? true);
+            setSelectedOption(initialData.commentPermission || "comfortable");
+        }
+    }, [mode, initialData]);
+
     return (
         <div className="contents">
-            <Dialog>
-                <DialogTrigger>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger className='w-full'>
                     {trigger}
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className='bg-backgroundCustom' aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle className="flex items-center">
                             <Settings size={18} className="mr-1" />
@@ -240,8 +284,8 @@ export default function Modalsettingstory({
                                 type="text"
                                 id="nameStory"
                                 placeholder="พิมพ์ชื่อเรื่อง"
-                                value={storyName}
-                                onChange={(e) => setStoryName(e.target.value)}
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
                             />
                         </div>
 
@@ -255,11 +299,26 @@ export default function Modalsettingstory({
                                 onChange={(e) => setPenName(e.target.value)}
                             />
                         </div>
+                        <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                            <Label htmlFor="type">ประเภทนิยาย</Label>
+                            <Select value={type} onValueChange={setType}>
+                                <SelectTrigger className="w-auto bg-backgroundCustom">
+                                    <SelectValue placeholder="ประเภทนิยาย" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>ระดับเนื้อหา</SelectLabel>
+                                        <SelectItem value="เรื่องยาว">เรื่องยาว</SelectItem>
+                                        <SelectItem value="เรื่องสั้น">เรื่องสั้น</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
                             <Label htmlFor="typeNovel">หมวดหมู่</Label>
                             <Select value={category} onValueChange={setCategory}>
-                                <SelectTrigger className="w-auto">
+                                <SelectTrigger className="w-auto bg-backgroundCustom">
                                     <SelectValue placeholder="หมวดหมู่" />
                                 </SelectTrigger>
 
@@ -319,15 +378,15 @@ export default function Modalsettingstory({
 
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
                             <Label htmlFor="contentLevel">ระดับเนื้อหา</Label>
-                            <Select>
-                                <SelectTrigger className="w-auto">
+                            <Select value={contentLevel} onValueChange={setContentLevel}>
+                                <SelectTrigger className="w-auto bg-backgroundCustom">
                                     <SelectValue placeholder="เลือกระดับ" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
                                         <SelectLabel>ระดับเนื้อหา</SelectLabel>
-                                        <SelectItem value="PG">ระดับเนื้อหาทั่วไป (PG)</SelectItem>
-                                        <SelectItem value="NC">ระดับเนื้อหาอายุ 18 ปีขึ้นไป (NC)</SelectItem>
+                                        <SelectItem value="ระดับเนื้อหาทั่วไป (PG)">ระดับเนื้อหาทั่วไป (PG)</SelectItem>
+                                        <SelectItem value="ระดับเนื้อหาอายุ 18 ปีขึ้นไป (NC)">ระดับเนื้อหาอายุ 18 ปีขึ้นไป (NC)</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -355,8 +414,10 @@ export default function Modalsettingstory({
 
                             <div className='flex justify-center w-full '>
                                 {verticalImage && (
-                                    <img
-                                        src={verticalImage}
+                                    <Image
+                                        src={"/novelImg/Test-novel.png"}
+                                        width={240}
+                                        height={320}
                                         alt="preview"
                                         className="w-60 h-80 rounded shadow-md mb-4"
                                     />
@@ -370,12 +431,14 @@ export default function Modalsettingstory({
 
                             <div className='flex justify-center w-full '>
                                 {horizontalImage && (
-                                    <img
-                                        src={horizontalImage}
+                                    <Image
+                                        src={"/novelImg/Test-novel.png"}
+                                        width={320}
+                                        height={180}
                                         alt="preview"
                                         className="w-80 h-42 rounded shadow-md mb-4"
                                     />
-                                )}
+                                )}                                                      
                             </div>
                         </div>
                         <hr className='py-2' />
@@ -496,6 +559,12 @@ export default function Modalsettingstory({
                                 </Label>
                             </div>
                         </div>
+
+                        {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                {error}
+                            </div>
+                        )}
 
                         <div className='flex justify-center w-full pt-2'>
                             <Button

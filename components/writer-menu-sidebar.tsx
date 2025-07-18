@@ -1,6 +1,6 @@
 "use client"
 
-import { ChartColumnBig, Book, UserCheck, MessageCircleQuestion, Scroll } from "lucide-react"
+import { ChartColumnBig, Book, UserCheck, MessageCircleQuestion } from "lucide-react"
 import { useRouter } from 'next/navigation';
 import {
   SidebarGroup,

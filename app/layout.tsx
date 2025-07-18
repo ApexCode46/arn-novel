@@ -19,7 +19,7 @@ const sarabun = Sarabun({
   weight: ["300", "400", "500", "700"],
 });
 
-export const kanit = Kanit({
+const kanit = Kanit({
   variable: "--font-kanit",
   subsets: ["thai", "latin"],
   weight: ["400", "600", "700"],

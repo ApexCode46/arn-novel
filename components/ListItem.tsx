@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Advertisement } from "@/dummy/dummyNovel";
-import { BookOpen, Heart, Star } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 interface ListItemProp {
   data: Advertisement[];

@@ -75,6 +75,7 @@ export default function AuthPage() {
                 setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ")
             }
         } catch (err) {
+            console.error("Registration error:", err)
             setError("เกิดข้อผิดพลาดในการสมัครสมาชิก")
         }
     }

@@ -76,8 +76,10 @@ model stories {
   title             String
   blurb             String?
   category          String
+  type              String   @default("เรื่องสั้น")
+  contentLevel      String   @default("PG")
   tags              String[]
-  storyInfo         String?   @db.Text
+  storyInfo         String?  @db.Text
   verticalImage     String
   horizontalImage   String?
   hideComments      Boolean
@@ -97,6 +99,7 @@ model chapters {
   chapter_id String   @id @default(cuid())
   story_id   String
   story      stories  @relation(fields: [story_id], references: [story_id])
+  order      Int
   title      String
   content    String
   price      Int

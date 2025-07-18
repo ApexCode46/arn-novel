@@ -15,7 +15,7 @@ export const useEditor = () => {
 };
 
 export const EditorProvider = ({ children }: { children: React.ReactNode }) => {
-    const [content, setContent] = useState("<p>เริ่มต้นพิมพ์เนื้อหา...</p>");
+    const [content, setContent] = useState<string>("");
 
     return (
         <EditorContext.Provider value={{ content, setContent }}>

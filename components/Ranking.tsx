@@ -1,12 +1,7 @@
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "./ui/button";
 import Image from "next/image";
 export default function Ranking() {
   return (
