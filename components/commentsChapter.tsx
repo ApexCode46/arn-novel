@@ -3,7 +3,6 @@
 import * as React from "react"
 import { MessageCircleMore, Send } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
 import {
     Drawer,
     DrawerContent,

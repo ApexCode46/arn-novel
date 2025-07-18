@@ -2,10 +2,9 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import TextAlign from '@tiptap/extension-text-align'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Bold,
     Italic,
@@ -23,7 +22,6 @@ import {
     Minus,
     Expand,
     Shrink,
-    Link as LinkIcon,
     Image as ImageIcon,
     Redo,
     Undo,
@@ -51,7 +49,7 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
                 (<div className="sticky top-0 z-10 
         flex justify-end items-center gap-2 p-2
         rounded mb-4">
-                    <button className="p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200  hover:text-black" onClick={() => setCollapsed(!collapsed)}>
+                    <button className="p-2 rounded-md bg-backgroundCustom transition-colors shadow-md hover:bg-gray-200  hover:text-black" onClick={() => setCollapsed(!collapsed)}>
                         <Expand size={18} />
                     </button>
                 </div>) : (
@@ -59,7 +57,7 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
         sticky top-0 z-10 
         flex flex-wrap items-center gap-2 p-2
      bg-backgroundCustom
-        rounded mb-4
+        rounded mb-4 shadow-md
     ">
                         <button
                             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -253,10 +251,6 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
                 bulletList: { keepMarks: true, keepAttributes: false },
                 orderedList: { keepMarks: true, keepAttributes: false },
             }),
-            Link.configure({
-                openOnClick: false,
-                autolink: true,
-            }),
             Image.configure({
                 inline: true,
             }),
@@ -282,6 +276,13 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
         },
         immediatelyRender: false,
     });
+
+    
+    useEffect(() => {
+        if (editor && content !== editor.getHTML()) {
+            editor.commands.setContent(content);
+        }
+    }, [editor, content]);
 
     return (
         <div>

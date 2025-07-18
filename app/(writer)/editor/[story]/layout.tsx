@@ -1,147 +1,70 @@
 "use client";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
-import { useRouter } from "next/navigation";
-    import { ScrollArea } from "@/components/ui/scroll-area";
-import { TableOfContents, Save } from "lucide-react";
+
+import { useParams } from "next/navigation";
+import { Save, TableOfContents } from "lucide-react";
 import { useEditor } from "@/context/EditorContext";
 import { EditorProvider } from "@/context/EditorContext";
+import SidebarChapter from "@/components/SidebarChapter";
 
-interface StoryLayoutClientProps {
-    children: React.ReactNode;
-    storyName: string;
-}
 function StoryLayoutInner({
     children,
-    storyName,
-}: StoryLayoutClientProps) {
-    const router = useRouter();
-    const { content } = useEditor(); 
+}: {
+    children: React.ReactNode;
+}) {
+    const { content } = useEditor();
 
-    const handleNavigationTosettingStory = () => {
-        router.push("/editor/apex");
-    };
+    const params = useParams();
+    const storyId = params.story as string;
+    const chapterOrder = params.chapter as string;
 
-    const handleNavigationToChapter = () => {
-        router.push("/editor/apex/บททดสอบ");
-    };
+    const handleSave = async () => {
+        try {
+            let saveResponse;
+            
+            if (chapterOrder) {
+                // บันทึก chapter
+                saveResponse = await fetch(`/api/writer/stories/${storyId}/chapters/${chapterOrder}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                    }),
+                });
+            } else {
+                // บันทึก story (เมื่ออยู่ในหน้า story)
+                saveResponse = await fetch(`/api/writer/stories/${storyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                    }),
+                });
+            }
 
-    const handleSave = () => {
-        console.log("🚀 Content to Save:", content);
+            if (saveResponse.ok) {
+                const saveResult = await saveResponse.json();
+                console.log("Save Result:", saveResult);
+            } else {
+                console.log("Failed to save data");
+            }
+        } catch (error) {
+            console.log("Error in handleSave:", error);
+        }
     };
 
     return (
         <>
-            <Sheet>
-                <SheetTrigger className="fixed right-2 top-2 p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black">
+            <SidebarChapter trigger={
+                <div className="fixed right-2 top-2 p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black shadow-sm">
                     <TableOfContents size={18} />
-                </SheetTrigger>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>{storyName} asdasd</SheetTitle>
-                    </SheetHeader>
-
-                    <div
-                        onClick={handleNavigationTosettingStory}
-                        className="text-sm p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"
-                    >
-                        ข้อมูลเบื้องต้นของเรื่องนี้
-                    </div>
-
-                    <ScrollArea className="h-165 w-full bg-background border rounded">
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                        <div
-                            onClick={handleNavigationToChapter}
-                            className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
-                        >
-                            ตอนที่ 1: asdasdasdasdasdaasd
-                        </div>
-                    </ScrollArea>
-                </SheetContent>
-            </Sheet>
-            <button onClick={handleSave} className="fixed right-2 top-12 p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black">
+                </div>
+            }
+            mode="writer" />
+            <button onClick={handleSave} className="fixed right-2 top-12 p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black shadow-sm">
                 <Save size={18} />
             </button>
             {children}
@@ -149,13 +72,15 @@ function StoryLayoutInner({
     );
 }
 
-export default function StoryLayoutClient({
+export default function Layout({
     children,
-    storyName,
-}: StoryLayoutClientProps) {
+}: {
+    children: React.ReactNode;
+    params?: Promise<{ story: string }>;
+}) {
     return (
         <EditorProvider>
-            <StoryLayoutInner storyName={storyName}>
+            <StoryLayoutInner>
                 {children}
             </StoryLayoutInner>
         </EditorProvider>

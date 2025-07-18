@@ -1,6 +1,5 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -20,9 +19,6 @@ import { SetStateAction, useState } from "react";
 import Image from "next/image";
 
 export default function Page() {
-  const params = useParams();
-  const srory = params?.srory ? decodeURIComponent(params.srory as string) : "Loading...";
-
   // สร้างข้อมูล dummy สำหรับตอนนิยาย
   const generateDummyChapters = () => {
     const chapters = [];

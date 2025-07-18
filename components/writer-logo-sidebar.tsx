@@ -5,14 +5,10 @@ import * as React from "react"
 import Link from 'next/link';
 
 import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+  SidebarMenuButton
 } from "@/components/ui/sidebar"
 
 export function Navlogo() {
-  const { isMobile } = useSidebar()
 
 
   return (
