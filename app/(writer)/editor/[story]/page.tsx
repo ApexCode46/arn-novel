@@ -185,15 +185,11 @@ export default function Page() {
             hideComments: hideComments,
             allowComments: allowComments,
             commentPermission: commentPermission,
-
           }}
-
           onSubmit={handleStoryUpdate}
         />
       </div>
       <div className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-2xl">
-
-
         <div className="p-6">
           <TiptapEditor
             content={content}
@@ -202,9 +198,5 @@ export default function Page() {
         </div>
       </div>
     </>
-
-
-
-
   )
 }
