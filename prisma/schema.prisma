@@ -69,44 +69,43 @@ model VerificationToken {
 }
 
 model stories {
-  story_id          String   @id @default(cuid())
+  story_id          String          @id @default(cuid())
   user_id           String
-  user              User     @relation(fields: [user_id], references: [id])
-  penName           String
   title             String
-  blurb             String?
   category          String
-  type              String   @default("เรื่องสั้น")
-  contentLevel      String   @default("PG")
-  tags              String[]
-  storyInfo         String?  @db.Text
-  verticalImage     String
-  horizontalImage   String?
-  hideComments      Boolean
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
   allowComments     Boolean
+  blurb             String?
   commentPermission String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  chapter       chapters[]
-  favorite      favorite[]
-  follow        follow[]
-  storyComments storyComments[]
-  voice         voice[]
+  hideComments      Boolean
+  horizontalImage   String?
+  penName           String
+  storyInfo         String?
+  verticalImage     String?
+  contentLevel      String          @default("PG")
+  tags              String[]
+  type              String          @default("เรื่องสั้น")
+  views             Int             @default(0)
+  chapter           chapters[]
+  favorite          favorite[]
+  follow            follow[]
+  user              User            @relation(fields: [user_id], references: [id])
+  storyComments     storyComments[]
+  voice             voice[]
 }
 
 model chapters {
-  chapter_id String   @id @default(cuid())
-  story_id   String
-  story      stories  @relation(fields: [story_id], references: [story_id])
-  order      Int
-  title      String
-  content    String
-  price      Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
+  chapter_id      String            @id @default(cuid())
+  story_id        String
+  title           String
+  content         String
+  price           Int
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  order           Int
   chapterComments chapterComments[]
+  story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
   transaction     transaction[]
 }

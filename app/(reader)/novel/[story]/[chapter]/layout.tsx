@@ -13,12 +13,15 @@ export default function RootLayout({
     return (
         <>
             <SidebarChapter trigger={
-                <div className="fixed right-2 top-20 p-2 rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black shadow-sm">
+                <div className="fixed right-2 top-20 p-2 hidden sm:block rounded-md bg-backgroundCustom transition-colors hover:bg-gray-200 hover:text-black shadow-sm">
                     <TableOfContents size={18} />
                 </div>
             }
             mode="reader"/>
-            <CommentsChapter />
+            <div className="hidden sm:block">
+                <CommentsChapter />
+            </div>
+            
             {children}
         </>
     )

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState, useEffect } from "react";
 
 import {
   Carousel,
@@ -12,20 +13,96 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Advertisement } from "@/dummy/dummyNovel";
 import { BookOpen } from "lucide-react";
 
-interface ListItemProp {
-  data: Advertisement[];
+// Interface สำหรับข้อมูลนิยาย
+interface Story {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  categories: string;
+  chapters: number;
+  views: number;
+  description: string;
+  type: string;
 }
 
-export function ListItem({ data }: ListItemProp) {
+interface ListItemProp {
+  category?: string;
+  limit?: number;
+}
+
+export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
   const router = useRouter();
-  const listNovel = data;
+  const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const handleReadClick = (novelId: number) => {
-    router.push(`/novel/${novelId}`);
+  // ฟังก์ชันดึงข้อมูลจาก API
+  const fetchStories = async () => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        category: category,
+        limit: limit.toString(),
+        page: '1'
+      });
+      
+      const response = await fetch(`/api/reader/stories?${params}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStories(data.stories);
+      } else {
+        console.log('Failed to fetch stories');
+      }
+    } catch (error) {
+      console.log('Error fetching stories:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // ดึงข้อมูลเมื่อ component mount หรือ category เปลี่ยน
+  useEffect(() => {
+    fetchStories();
+  }, [category, limit]);
+  
+  const handleReadClick = (storyId: string) => {
+    router.push(`/novel/${storyId}`);
+  };
+
+  // ฟังก์ชันตรวจสอบ URL รูปภาพ
+  const getValidImageSrc = (imageUrl: string | null): string => {
+    if (!imageUrl || imageUrl.trim() === '') {
+      return "/novelImg/Test-novel.png";
+    }
+    
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    
+    if (imageUrl.startsWith('/')) {
+      return imageUrl;
+    }
+    
+    return "/novelImg/Test-novel.png";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="text-muted-foreground">กำลังโหลด...</div>
+      </div>
+    );
+  }
+
+  if (stories.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="text-muted-foreground">ไม่พบนิยาย</div>
+      </div>
+    );
+  }
   
   return (
     <Carousel
@@ -35,17 +112,17 @@ export function ListItem({ data }: ListItemProp) {
       className="w-full"
     >
       <CarouselContent className="w-full">
-        {listNovel.map((novelItem) => (
+        {stories.map((story) => (
           <CarouselItem
-            key={novelItem.id}
+            key={story.id}
             className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 p-2 py-6"
           >
             <div className="group relative flex flex-col bg-backgroundCustom hover:bg-card/80 rounded-lg border border-border/50 hover:border-border hover:shadow-lg hover:scale-110 transition-all duration-300 overflow-hidden shadow-sm">
               {/* Image Container */}
               <div className="relative w-full aspect-[3/4] overflow-hidden">
                 <Image
-                  src={novelItem.imageUrl || "/novelImg/Test-novel.png"}
-                  alt={novelItem.title || "Novel"}
+                  src={getValidImageSrc(story.imageUrl)}
+                  alt={story.title || "Novel"}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -56,7 +133,7 @@ export function ListItem({ data }: ListItemProp) {
                     size="sm"
                     variant="secondary"
                     className="bg-white/90 hover:bg-white text-black backdrop-blur-sm"
-                    onClick={() => handleReadClick(novelItem.id)}
+                    onClick={() => handleReadClick(story.id)}
                   >
                     <BookOpen className="w-4 h-4 mr-1" />
                     อ่าน
@@ -66,7 +143,7 @@ export function ListItem({ data }: ListItemProp) {
                 {/* Category Badge */}
                 <div className="absolute top-2 left-2">
                   <Badge variant="secondary" className="bg-black/70 text-white text-xs border-none">
-                    {novelItem.categories}
+                    {story.categories}
                   </Badge>
                 </div>
               </div>
@@ -74,12 +151,12 @@ export function ListItem({ data }: ListItemProp) {
               {/* Content */}
               <div className="p-3 space-y-2">
                 <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">
-                  {novelItem.title || "not found!"}
+                  {story.title || "not found!"}
                 </h3>
                 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>12 ตอน</span>
-                  <span>1.2K อ่าน</span>
+                  <span>{story.chapters} ตอน</span>
+                  <span>{story.views.toLocaleString()} อ่าน</span>
                 </div>
 
               </div>

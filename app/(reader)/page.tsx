@@ -4,8 +4,6 @@ import { Ads } from "@/components/Ads";
 import { ListItem } from "@/components/ListItem";
 // import { useSession } from 'next-auth/react';
 import Ranking from "@/components/Ranking";
-
-import { dummyNovelAction, dummyNovelDrama, dummyNovelFantasy, dummyNovelHorror } from "@/dummy/dummyNovel";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -41,14 +39,21 @@ export default function Home() {
 
       <div className="container mx-auto px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 py-4">
         <div className="flex flex-col items-center">
+
           <div className="w-full my-5">
+            <div className="flex justify-between items-center ">
+              <h3 className="text-lg md:text-xl font-bold">มาใหม่</h3>
+              <Button variant="default">ดูทั้งหมด</Button>
+            </div>
+            <ListItem category="all" limit={10} />
+          </div>
 
-
+          <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">อัปเดตประจำสัปดาห์</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelAction} />
+            <ListItem category="all" limit={10} />
           </div>
 
           <div className="w-full my-5">
@@ -56,7 +61,7 @@ export default function Home() {
               <h3 className="text-lg md:text-xl font-bold">มาแรง</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelDrama} />
+            <ListItem category="all" limit={10} />
           </div>
 
           <div className="w-full my-5">
@@ -64,7 +69,7 @@ export default function Home() {
               <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelFantasy} />
+            <ListItem category="all" limit={10} />
           </div>
 
           <div className="w-full my-5">
@@ -77,7 +82,7 @@ export default function Home() {
               <h3 className="text-lg md:text-xl font-bold">แอคชั่น</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelAction} />
+            <ListItem category="action" limit={10} />
           </div>
 
           <div className="w-full my-5">
@@ -85,16 +90,16 @@ export default function Home() {
               <h3 className="text-lg md:text-xl font-bold">ดราม่า</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelDrama} />
+            <ListItem category="drama" limit={10} />
           </div>
           <div className="w-full my-5">
 
 
             <div className="flex justify-between items-center ">
-              <h3 className="text-lg md:text-xl font-bold">แฟนตาซี</h3>
+              <h3 className="text-lg md:text-xl font-bold">นิยายรัก</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelFantasy} />
+            <ListItem category="romance" limit={10} />
           </div>
           <div className="w-full my-5">
 
@@ -103,7 +108,7 @@ export default function Home() {
               <h3 className="text-lg md:text-xl font-bold">สยองขวัญ</h3>
               <Button variant="default">ดูทั้งหมด</Button>
             </div>
-            <ListItem data={dummyNovelHorror} />
+            <ListItem category="horror" limit={10} />
           </div>
         </div>
       </div>

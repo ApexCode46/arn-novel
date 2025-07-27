@@ -98,6 +98,8 @@ export default function Modalsettingstory({
     // upload preview
     const [verticalImage, setVerticalImage] = useState<string | null>(initialData?.verticalImage || null);
     const [horizontalImage, setHorizontalImage] = useState<string | null>(initialData?.horizontalImage || null);
+    const [verticalImageFile, setVerticalImageFile] = useState<File | null>(null);
+    const [horizontalImageFile, setHorizontalImageFile] = useState<File | null>(null);
 
     // สิทธิ์การเข้าถึงนิยาย
     const [isChecked1, setIsChecked1] = useState(initialData?.hideComments || false);
@@ -115,6 +117,7 @@ export default function Modalsettingstory({
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setVerticalImage(imageUrl);
+            setVerticalImageFile(file);
         }
     };
 
@@ -123,7 +126,28 @@ export default function Modalsettingstory({
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setHorizontalImage(imageUrl);
+            setHorizontalImageFile(file);
         }
+    };
+
+    // ฟังก์ชันอัปโหลดไฟล์
+    const uploadImage = async (file: File, storyId: string, imageType: string) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('storyId', storyId);
+        formData.append('imageType', imageType);
+
+        const response = await fetch('/api/writer/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to upload image');
+        }
+
+        const result = await response.json();
+        return result.fileName;
     };
 
     // จัดการ สิทธิ์การเข้าถึง
@@ -176,6 +200,30 @@ export default function Modalsettingstory({
         }
 
         try {
+            let finalVerticalImage = null;
+            let finalHorizontalImage = null;
+
+            if (mode === 'create') {
+                // สำหรับการสร้างใหม่ ใช้ภาพ Test-novel.png เป็นค่าเริ่มต้น
+                finalVerticalImage = '/novelImg/Test-novel.png';
+                finalHorizontalImage = '/novelImg/Test-novel.png';
+            } else if (mode === 'edit' && initialData?.storyId) {
+                // สำหรับการแก้ไข ตรวจสอบว่ามีการอัปโหลดไฟล์ใหม่หรือไม่
+                if (verticalImageFile) {
+                    const uploadedVerticalName = await uploadImage(verticalImageFile, initialData.storyId, 'vertical');
+                    finalVerticalImage = `/novelImg/${uploadedVerticalName}`;
+                } else {
+                    finalVerticalImage = initialData.verticalImage;
+                }
+
+                if (horizontalImageFile) {
+                    const uploadedHorizontalName = await uploadImage(horizontalImageFile, initialData.storyId, 'horizontal');
+                    finalHorizontalImage = `/novelImg/${uploadedHorizontalName}`;
+                } else {
+                    finalHorizontalImage = initialData.horizontalImage;
+                }
+            }
+
             const formData = {
                 storyId: initialData?.storyId || undefined,
                 title: title,
@@ -185,8 +233,8 @@ export default function Modalsettingstory({
                 contentLevel,
                 category,
                 tags,
-                verticalImage: verticalImage ? `img-v-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
-                horizontalImage: horizontalImage ? `img-h-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                verticalImage: finalVerticalImage,
+                horizontalImage: finalHorizontalImage,
                 hideComments: isChecked1,
                 allowComments: isChecked2,
                 commentPermission: selectedOption,
@@ -259,6 +307,22 @@ export default function Modalsettingstory({
             setIsChecked1(initialData.hideComments || false);
             setIsChecked2(initialData.allowComments ?? true);
             setSelectedOption(initialData.commentPermission || "comfortable");
+        } else if (mode === 'create') {
+            // รีเซ็ตค่าเมื่อเป็นโหมดสร้างใหม่
+            setTitle("");
+            setPenName("");
+            setType("");
+            setCategory("");
+            setContentLevel("PG");
+            setBlurb("");
+            setTags([]);
+            setVerticalImage(null);
+            setHorizontalImage(null);
+            setVerticalImageFile(null);
+            setHorizontalImageFile(null);
+            setIsChecked1(false);
+            setIsChecked2(true);
+            setSelectedOption("comfortable");
         }
     }, [mode, initialData]);
 
@@ -323,54 +387,40 @@ export default function Modalsettingstory({
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                    <SelectGroup className="text-pink-400 rounded ">
-                                        <SelectLabel className="text-pink-500 bg-pink-300 text-xl font-bold rounded">นิยายรัก</SelectLabel>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักหวานแหวว">รักหวานแหวว</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก ซึ้งกินใจ">ซึ้งกินใจ</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักดราม่า">รักดราม่า</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักคอมเมดี้st">รักคอมเมดี้</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักแฟนตาซี">รักแฟนตาซี</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก วาย">วาย</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก ยูริ">ยูริ</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักสีเทา">รักสีเทา</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักอื่นๆ">รักอื่นๆ</SelectItem>
-                                    </SelectGroup>
+                                    <SelectGroup>
+                                        <SelectLabel>หมวดหมู่</SelectLabel>
+                                        <SelectItem className="hover:bg-red-200 hover:font-bold text-red-500" value="action">นิยายแอคชั่น</SelectItem>
+                                        <SelectItem className="hover:bg-pink-200 hover:font-bold text-pink-500" value="romance">นิยายรัก</SelectItem>
+                                        <SelectItem className="hover:bg-neutral-300 hover:font-bold text-neutral-600" value="drama">นิยายดราม่า</SelectItem>
+                                        <SelectItem className="hover:bg-yellow-200 hover:font-bold text-yellow-500" value="comedy">นิยายตลก</SelectItem>
+                                        <SelectItem className="hover:bg-purple-200 hover:font-bold text-purple-500" value="fantasy">นิยายแฟนตาซี</SelectItem>
+                                        <SelectItem className="hover:bg-rose-300 hover:font-bold text-rose-600" value="horror">นิยายสยองขวัญ</SelectItem>
+                                        <SelectItem className="hover:bg-orange-200 hover:font-bold text-orange-500" value="thriller">นิยายระทึกขวัญ</SelectItem>
+                                        <SelectItem className="hover:bg-slate-300 hover:font-bold text-slate-600" value="mystery">นิยายสืบสวนสอบสวน</SelectItem>
+                                        <SelectItem className="hover:bg-sky-200 hover:font-bold text-sky-500" value="sci-fi">นิยายวิทยาศาสตร์</SelectItem>
+                                        <SelectItem className="hover:bg-green-200 hover:font-bold text-green-600" value="slice-of-life">ชีวิตประจำวัน</SelectItem>
+                                        <SelectItem className="hover:bg-indigo-200 hover:font-bold text-indigo-500" value="isekai">อิเซไก</SelectItem>
+                                        <SelectItem className="hover:bg-amber-200 hover:font-bold text-amber-600" value="historical">ย้อนยุค</SelectItem>
+                                        <SelectItem className="hover:bg-zinc-200 hover:font-bold text-zinc-700" value="psychological">แนวจิตวิทยา</SelectItem>
+                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-600" value="bl">นิยายวาย (BL)</SelectItem>
+                                        <SelectItem className="hover:bg-rose-200 hover:font-bold text-rose-500" value="gl">นิยายยูริ (GL)</SelectItem>
+                                        <SelectItem className="hover:bg-fuchsia-200 hover:font-bold text-fuchsia-500" value="LGBTQ+">LGBTQ+</SelectItem>
+                                        <SelectItem className="hover:bg-purple-300 hover:font-bold text-purple-600" value="fanfic">แฟนฟิค</SelectItem>
+                                        <SelectItem className="hover:bg-lime-200 hover:font-bold text-lime-600" value="school">นิยายวัยเรียน</SelectItem>
+                                        <SelectItem className="hover:bg-emerald-200 hover:font-bold text-emerald-500" value="sports">นิยายกีฬา</SelectItem>
+                                        <SelectItem className="hover:bg-rose-200 hover:font-bold text-rose-500" value="mafia">นิยายมาเฟีย</SelectItem>
+                                        <SelectItem className="hover:bg-gray-200 hover:font-bold text-gray-600" value="detective">นิยายนักสืบ</SelectItem>
+                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-600" value="revenge">แนวแก้แค้น</SelectItem>
+                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-700" value="drama-romance">รักดราม่า</SelectItem>
+                                        <SelectItem className="hover:bg-cyan-200 hover:font-bold text-cyan-600" value="time-travel">ย้อนเวลา</SelectItem>
+                                        <SelectItem className="hover:bg-yellow-300 hover:font-bold text-yellow-700" value="system">ระบบ/เกมเทพทรู</SelectItem>
+                                        <SelectItem className="hover:bg-red-200 hover:font-bold text-red-500" value="zombie">แนวซอมบี้</SelectItem>
+                                        <SelectItem className="hover:bg-gray-300 hover:font-bold text-gray-700" value="tragedy">โศกนาฏกรรม</SelectItem>
+                                        <SelectItem className="hover:bg-amber-300 hover:font-bold text-amber-700" value="idol">ดารา / ไอดอล</SelectItem>
+                                        <SelectItem className="hover:bg-violet-200 hover:font-bold text-violet-600" value="crossover">ครอสโอเวอร์</SelectItem>
+                                        <SelectItem className="hover:bg-green-100 hover:font-bold text-green-500" value="healing">แนวเยียวยาหัวใจ</SelectItem>
+                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-600" value="mature">ผู้ใหญ่ / Mature</SelectItem>
 
-                                    <SelectGroup className="text-red-400 rounded">
-                                        <SelectLabel className="text-red-500 bg-red-300 text-xl font-bold rounded">นิยายตื่นเต้น</SelectLabel>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น แฟนตาซี">แฟนตาซี</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น เกมออนไลน์">เกมออนไลน์</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น วิทยาศาสตร์">วิทยาศาสตร์</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น ระทึกขวัญ">ระทึกขวัญ</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น สืบสวน">สืบสวน</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น กำลังภายใน">กำลังภายใน</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น สงคราม">สงคราม</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น ผจญภัย">ผจญภัย</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น อดีต ปัจจุบัน อนาคต">อดีต ปัจจุบัน อนาคต</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น พีเรียดไทย">พีเรียดไทย</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น พีเรียดตะวันตก">พีเรียดตะวันตก</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น บู๊_แอ๊คชั่น">บู๊ แอ๊คชั่น</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น จีนย้อนยุค">จีนย้อนยุค</SelectItem>
-                                    </SelectGroup>
-
-                                    <SelectGroup className="text-blue-400 rounded">
-                                        <SelectLabel className="text-blue-500 bg-blue-300 text-xl font-bold rounded">แฟนฟิค</SelectLabel>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคเกาหลี">แฟนฟิคเกาหลี</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคไทย">แฟนฟิคไทย</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคเอเชีย">แฟนฟิคเอเชีย</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคฝรั่ง">แฟนฟิคฝรั่ง</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคนิยาย">แฟนฟิคนิยาย การ์ตูน เกม</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคอื่นๆ">แฟนฟิคอื่นๆ</SelectItem>
-                                    </SelectGroup>
-
-                                    <SelectGroup className="text-orange-400 rounded">
-                                        <SelectLabel className="text-orange-500 bg-orange-300 text-xl font-bold rounded">นิยายอื่นๆ</SelectLabel>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ นิทาน_วรรณกรรม">นิทาน วรรณกรรม</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ กลอน">กลอน</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ สังคม">สังคม</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ จิตวิทยา">จิตวิทยา</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ ตลก_ขบขัน">ตลก-ขบขัน</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ หักมุม">หักมุม</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -407,41 +457,64 @@ export default function Modalsettingstory({
                         </div>
                         <hr className='py-2' />
 
-                        <h4 className='font-bold'>รูปภาพปก</h4>
-                        <div className="grid gap-4 max-w-sm">
-                            <Label className="font-medium">อัปโหลดรูปภาพ (900x1200 รูปแนวตั้ง)</Label>
-                            <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
+                        {mode === 'create' && (
+                            <>
+                                <h4 className='font-bold'>รูปภาพปก</h4>
+                                <div className="grid gap-4 max-w-sm">
+                                    <p className="text-sm text-muted-foreground">
+                                        เมื่อสร้างนิยายใหม่ ระบบจะใช้รูปภาพเริ่มต้น คุณสามารถเปลี่ยนได้ในภายหลัง
+                                    </p>
+                                    <div className='flex justify-center w-full '>
+                                        <Image
+                                            src="/novelImg/Test-novel.png"
+                                            width={240}
+                                            height={320}
+                                            alt="default cover"
+                                            className="w-60 h-80 rounded shadow-md mb-4"
+                                        />
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
 
-                            <div className='flex justify-center w-full '>
-                                {verticalImage && (
-                                    <Image
-                                        src={"/novelImg/Test-novel.png"}
-                                        width={240}
-                                        height={320}
-                                        alt="preview"
-                                        className="w-60 h-80 rounded shadow-md mb-4"
-                                    />
-                                )}
-                            </div>
-                        </div>
+                        {mode === 'edit' && (
+                            <>
+                                <h4 className='font-bold'>รูปภาพปก</h4><div className="grid gap-4 max-w-sm">
+                                    <Label className="font-medium">อัปโหลดรูปภาพ (900x1200 รูปแนวตั้ง)</Label>
+                                    <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
 
-                        <div className="grid gap-4 max-w-sm">
-                            <Label className="font-medium">อัปโหลดรูปภาพ (1200x640 รูปแนวนอน)</Label>
-                            <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
+                                    <div className='flex justify-center w-full '>
+                                        {verticalImage && (
+                                            <Image
+                                                src={verticalImage.startsWith('blob:') ? verticalImage :
+                                                    verticalImage.startsWith('/') ? verticalImage : "/novelImg/Test-novel.png"}
+                                                width={240}
+                                                height={320}
+                                                alt="preview"
+                                                className="w-60 h-80 rounded shadow-md mb-4" />
+                                        )}
+                                    </div>
+                                </div><div className="grid gap-4 max-w-sm">
+                                    <Label className="font-medium">อัปโหลดรูปภาพ (1200x640 รูปแนวนอน *ไม่บังคับ)</Label>
+                                    <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
 
-                            <div className='flex justify-center w-full '>
-                                {horizontalImage && (
-                                    <Image
-                                        src={"/novelImg/Test-novel.png"}
-                                        width={320}
-                                        height={180}
-                                        alt="preview"
-                                        className="w-80 h-42 rounded shadow-md mb-4"
-                                    />
-                                )}                                                      
-                            </div>
-                        </div>
-                        <hr className='py-2' />
+                                    <div className='flex justify-center w-full '>
+                                        {horizontalImage && (
+                                            <Image
+                                                src={horizontalImage.startsWith('blob:') ? horizontalImage :
+                                                    horizontalImage.startsWith('/') ? horizontalImage : "/novelImg/Test-novel.png"}
+                                                width={320}
+                                                height={180}
+                                                alt="preview"
+                                                className="w-80 h-42 rounded shadow-md mb-4" />
+                                        )}
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
+
 
                         <h4 className='pt-2 font-bold'>ช่วยให้เข้าถึงได้ง่าย</h4>
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">

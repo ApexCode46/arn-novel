@@ -23,7 +23,7 @@ export default function Page() {
   const [category, setCategory] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [blurb, setBlurb] = useState<string>("");
-  const [contenLavel, setContentLevel] = useState<string>("");
+  const [contentLavel, setContentLevel] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
   const [verticalImage, setVerticalImage] = useState<string>("");
   const [horizontalImage, setHorizontalImage] = useState<string>("");
@@ -112,7 +112,7 @@ export default function Page() {
                     <div className="lg:col-span-1">
                       <div className="relative aspect-[3/4] w-full max-w-sm mx-auto lg:mx-0">
                         <Image
-                          src="/novelImg/action1.png"
+                          src={verticalImage || "/novelImg/Test-novel.png"}
                           alt="Superman นิยาย"
                           fill
                           className="object-cover rounded-lg shadow-md"
@@ -123,23 +123,23 @@ export default function Page() {
 
                     <div className="lg:col-span-2 space-y-4">
                       <CardTitle className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-                        {title || "ไม่มีชื่อเรื่อง"}
+                        {title || "กำลังโหลด..."}
                       </CardTitle>
 
                       <div className="space-y-3 text-sm md:text-base">
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">นามปากกา:</span>
-                          <span className="text-foreground">{penName || "ไม่มีนามปากกา"}</span>
+                          <span className="text-foreground">{penName || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">ประเภทนิยาย:</span>
-                          <span className="text-foreground">{type || "ไม่มีประเภท"}</span>
+                          <span className="text-foreground">{type || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">หมวดหมู่</span>
-                          <span className="text-foreground">{category || "ไม่มีหมวดหมู่"}</span>
+                          <span className="text-foreground">{category || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
@@ -149,13 +149,13 @@ export default function Page() {
                               <Badge key={tag} className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-md text-xs">
                                 #{tag}
                               </Badge>
-                            )) || "ไม่มีแท็ก"}
+                            )) || "กำลังโหลด..."}
                           </div>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">ระดับเนื้อหา</span>
-                          <span className="text-foreground">{contenLavel || "ไม่มีระดับ"}</span>
+                          <span className="text-foreground">{contentLavel || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="space-y-2">
@@ -177,7 +177,7 @@ export default function Page() {
             penName: penName,
             blurb: blurb,
             type: type,
-            contentLevel: contenLavel,
+            contentLevel: contentLavel,
             category: category,
             tags: tags,
             verticalImage: verticalImage,

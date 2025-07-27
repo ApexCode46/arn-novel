@@ -128,8 +128,7 @@ export default function Stories() {
   };
 
   // ฟังก์ชันจัดการเมื่อสร้างนิยายใหม่สำเร็จ
-  const handleStoryCreated = (newStory: any) => {
-    console.log('Creating story:', newStory);
+  const handleStoryCreated = () => {
     // รีเฟรชข้อมูล
     fetchStories();
   };

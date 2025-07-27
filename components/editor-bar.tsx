@@ -256,12 +256,15 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
             }),
         ],
         content: content,
+        onCreate: ({ editor }) => {
+            editor.commands.setTextAlign('left') // ชิดซ้ายอัตโนมัติ
+        },
         onUpdate: ({ editor }) => {
             onContentChange(editor.getHTML());
         },
         editorProps: {
             attributes: {
-                class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[300px] max-w-none p-4",
+                class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[300px] max-w-none p-4 justify-start items-start",
             },
             handleKeyDown(view, event) {
                 if (event.key === 'Tab') {
@@ -277,10 +280,11 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
         immediatelyRender: false,
     });
 
-    
+
     useEffect(() => {
         if (editor && content !== editor.getHTML()) {
             editor.commands.setContent(content);
+            editor.commands.setTextAlign('left');
         }
     }, [editor, content]);
 

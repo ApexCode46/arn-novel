@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(req, { params }) {
   try {
-    const { storyId, chapter } = params;
+    const { storyId, chapter } = await params;
     const chapterOrder = parseInt(chapter);
 
     if (!storyId) {
@@ -73,7 +73,7 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const { storyId, chapter } = params;
+    const { storyId, chapter } = await params;
     const chapterOrder = parseInt(chapter);
     const body = await req.json();
     const { title, content, price } = body;

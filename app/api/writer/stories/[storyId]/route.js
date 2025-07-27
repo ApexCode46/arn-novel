@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(req, { params }) {
   try {
-    const { storyId } = params;
+    const { storyId } = await params;
 
     if (!storyId) {
       return NextResponse.json(

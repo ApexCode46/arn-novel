@@ -39,7 +39,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const params = useParams();
     const storyId = params.story as string;
     const router = useRouter();
-    
+
     // State สำหรับเก็บข้อมูล chapters และ story
     const [chapters, setChapters] = useState<Chapter[]>([]);
     const [storyTitle, setStoryTitle] = useState<string>("");
@@ -47,30 +47,34 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const [isCreating, setIsCreating] = useState(false);
     const [currentPage, setCurrentPage] = useState("page-1");
 
+    const handlePageChange = (value: SetStateAction<string>) => {
+        setCurrentPage(value);
+    };
+
     // ดึงข้อมูล story และ chapters จาก API
     const fetchData = async () => {
         if (!storyId) return;
-        
+
         try {
             setIsLoading(true);
-            
+
             // ดึงข้อมูล story เพื่อเอาชื่อเรื่อง
             const storyResponse = await fetch(`/api/writer/stories/${storyId}`);
             if (storyResponse.ok) {
                 const storyData = await storyResponse.json();
                 setStoryTitle(storyData.title || "ไม่มีชื่อเรื่อง");
             }
-            
+
             // ดึงข้อมูล chapters
             const chaptersResponse = await fetch(`/api/writer/stories/${storyId}/chapters`);
             if (chaptersResponse.ok) {
                 const chaptersData = await chaptersResponse.json();
                 setChapters(chaptersData);
             } else {
-                console.error('Failed to fetch chapters');
+                console.log('Failed to fetch chapters');
             }
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.log('Error fetching data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -103,8 +107,12 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const pageOptions = generatePageOptions();
 
     // ฟังก์ชันสำหรับการเปลี่ยนหน้า
-    const handlePageChange = (value: SetStateAction<string>) => {
-        setCurrentPage(value);
+    const handlePageChangeInfoEditor = () => {
+        router.push(`/editor/${storyId}`);
+    };
+
+    const handlePageChangeInfo = () => {
+        router.push(`/novel/${storyId}`);
     };
 
     // คำนวณตอนที่จะแสดงในหน้าปัจจุบัน
@@ -116,11 +124,11 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     };
 
     const currentChapters = getCurrentPageChapters();
-    
+
 
     const handleCreateChapter = async () => {
         if (!storyId || isCreating) return;
-        
+
         setIsCreating(true);
         try {
             const response = await fetch(`/api/writer/stories/${storyId}/chapters`, {
@@ -144,7 +152,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                 throw new Error("Failed to create chapter");
             }
         } catch (error) {
-            console.error("Error creating chapter:", error);
+            console.log("Error creating chapter:", error);
             alert("เกิดข้อผิดพลาดในการสร้างบทใหม่");
         } finally {
             setIsCreating(false);
@@ -158,13 +166,14 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
             </SheetTrigger>
             <SheetContent className="bg-backgroundCustom ">
                 <SheetHeader>
-                    <SheetTitle className="text-left">
+                    <SheetTitle className="text-foreground text-lg font-bold">
                         {isLoading ? "กำลังโหลด..." : storyTitle}
                     </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col-2 gap-2 mx-2">
                     <div
                         className="flex text-sm p-4 bg-backgroundCustom rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"
+                        onClick={mode === 'writer' ? handlePageChangeInfoEditor : handlePageChangeInfo}
                     >
                         ข้อมูลเบื้องต้นของเรื่องนี้
                     </div>
@@ -175,9 +184,8 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                                 onClick={handleCreateChapter}
                                 disabled={isCreating}
                                 type="button"
-                                className={`text-sm p-4 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer transition-colors border ${
-                                    isCreating ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`text-sm p-4 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer transition-colors border ${isCreating ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
                             >
                                 {isCreating ? 'กำลังสร้าง...' : '+ เพิ่มตอนใหม่'}
                             </button>
@@ -210,8 +218,8 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                             </div>
                         ) : (
                             currentChapters.map((chapter: Chapter) => (
-                                <div 
-                                    key={chapter.chapter_id} 
+                                <div
+                                    key={chapter.chapter_id}
                                     onClick={() => {
                                         if (mode === 'writer') {
                                             // นำไปหน้าแก้ไข chapter
@@ -221,7 +229,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                                             router.push(`/novel/${storyId}/${chapter.order}`);
                                         }
                                     }}
-                                    className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
+                                    className="text-sm my-2 p-4 bg-background border rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
                                 >
                                     <div className=" text-bold mt-1">
                                         ตอนที่ {chapter.order} : {chapter.title} {chapter.price > 0 && `• ${chapter.price} เหรียญ`}
