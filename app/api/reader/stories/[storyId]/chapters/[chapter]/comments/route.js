@@ -71,6 +71,7 @@ export async function GET(request, { params }) {
           select: {
             id: true,
             name: true,
+            email: true,
             image: true,
           },
         },
@@ -80,6 +81,7 @@ export async function GET(request, { params }) {
               select: {
                 id: true,
                 name: true,
+                email: true,
                 image: true,
               },
             },
@@ -112,11 +114,11 @@ export async function GET(request, { params }) {
     const formattedComments = comments.map((comment) => ({
       id: comment.chapterComment_id,
       user: {
-        id: comment.user.id,
+        id: comment.user.email, // ใช้ email สำหรับการเปรียบเทียบ ownership
         name: comment.user.name || "ผู้ใช้ไม่ระบุชื่อ",
         avatar: comment.user.name ? comment.user.name.charAt(0).toUpperCase() : "?",
         image: comment.user.image,
-        color: generateUserColor(comment.user.id), // สร้างสีจาก user id
+        color: generateUserColor(comment.user.id), // ยังใช้ ID จริงสำหรับสีเพื่อความเสถียร
       },
       content: comment.content,
       timestamp: formatTimestamp(comment.created_at),
@@ -124,11 +126,11 @@ export async function GET(request, { params }) {
       replies: comment.replies?.map((reply) => ({
         id: reply.chapterComment_id,
         user: {
-          id: reply.user.id,
+          id: reply.user.email, // ใช้ email สำหรับการเปรียบเทียบ ownership
           name: reply.user.name || "ผู้ใช้ไม่ระบุชื่อ",
           avatar: reply.user.name ? reply.user.name.charAt(0).toUpperCase() : "?",
           image: reply.user.image,
-          color: generateUserColor(reply.user.id),
+          color: generateUserColor(reply.user.id), // ยังใช้ ID จริงสำหรับสีเพื่อความเสถียร
         },
         content: reply.content,
         timestamp: formatTimestamp(reply.created_at),
@@ -304,6 +306,7 @@ export async function POST(request, { params }) {
           select: {
             id: true,
             name: true,
+            email: true,
             image: true,
           },
         },
@@ -321,6 +324,7 @@ export async function POST(request, { params }) {
       id: newComment.chapterComment_id,
       user: {
         id: newComment.user.id,
+        email: newComment.user.email,
         name: newComment.user.name || "ผู้ใช้ไม่ระบุชื่อ",
         avatar: newComment.user.name ? newComment.user.name.charAt(0).toUpperCase() : "?",
         image: newComment.user.image,

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { MessageCircleMore, Send } from "lucide-react"
+import { MessageCircleMore, Send, Edit2, Trash2, MoreHorizontal } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -14,6 +14,12 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Reply {
     id: string;
@@ -27,6 +33,7 @@ interface Reply {
     content: string;
     timestamp: string;
     created_at: string;
+    updated_at?: string;
     likes: number;
     isLiked: boolean;
 }
@@ -43,6 +50,7 @@ interface Comment {
     content: string;
     timestamp: string;
     created_at: string;
+    updated_at?: string;
     replies: Reply[];
     repliesCount: number;
     likes: number;
@@ -67,6 +75,8 @@ export function CommentsChapter({
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState("");
     const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({});
+    const [editingComment, setEditingComment] = useState<string | null>(null);
+    const [editContent, setEditContent] = useState("");
     const { data: session } = useSession();
 
     // ฟังก์ชันสำหรับดึงข้อมูล comments
@@ -261,6 +271,132 @@ export function CommentsChapter({
         }
     };
 
+    // ฟังก์ชันสำหรับเริ่มแก้ไข comment
+    const handleEditClick = (commentId: string, currentContent: string) => {
+        setEditingComment(commentId);
+        setEditContent(currentContent);
+    };
+
+    // ฟังก์ชันสำหรับยกเลิกการแก้ไข
+    const handleCancelEdit = () => {
+        setEditingComment(null);
+        setEditContent("");
+    };
+
+    // ฟังก์ชันสำหรับบันทึกการแก้ไข
+    const handleSaveEdit = async (commentId: string) => {
+        if (!editContent.trim()) {
+            toast.error('กรุณาใส่เนื้อหาความคิดเห็น');
+            return;
+        }
+
+        const loadingToast = toast.loading('กำลังบันทึกการแก้ไข...');
+
+        try {
+            const response = await fetch(`/api/reader/stories/${storyId}/chapters/${chapterOrder}/comments/${commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: editContent.trim(),
+                    userId: session?.user?.email,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setComments(prev => prev.map(comment => {
+                        if (comment.id === commentId) {
+                            return {
+                                ...comment,
+                                content: data.data.content,
+                                updated_at: data.data.updated_at,
+                                timestamp: data.data.timestamp
+                            };
+                        }
+                        // อัพเดท replies ด้วย
+                        return {
+                            ...comment,
+                            replies: comment.replies.map(reply => 
+                                reply.id === commentId 
+                                    ? { 
+                                        ...reply, 
+                                        content: data.data.content,
+                                        updated_at: data.data.updated_at,
+                                        timestamp: data.data.timestamp
+                                    }
+                                    : reply
+                            )
+                        };
+                    }));
+                    setEditingComment(null);
+                    setEditContent("");
+                    toast.dismiss(loadingToast);
+                    toast.success('แก้ไขความคิดเห็นเรียบร้อยแล้ว');
+                } else {
+                    toast.dismiss(loadingToast);
+                    toast.error('เกิดข้อผิดพลาดในการแก้ไข: ' + (data.error || 'ไม่ทราบสาเหตุ'));
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                toast.dismiss(loadingToast);
+                toast.error('เกิดข้อผิดพลาดในการแก้ไข: ' + (errorData.error || 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'));
+            }
+        } catch (error) {
+            console.error('Error editing comment:', error);
+            toast.dismiss(loadingToast);
+            toast.error('เกิดข้อผิดพลาดในการแก้ไข: ' + (error instanceof Error ? error.message : 'ไม่ทราบสาเหตุ'));
+        }
+    };
+
+    // ฟังก์ชันสำหรับลบ comment
+    const handleDeleteComment = async (commentId: string) => {
+        if (!confirm('คุณแน่ใจหรือไม่ที่จะลบความคิดเห็นนี้?')) {
+            return;
+        }
+
+        const loadingToast = toast.loading('กำลังลบความคิดเห็น...');
+
+        try {
+            const response = await fetch(`/api/reader/stories/${storyId}/chapters/${chapterOrder}/comments/${commentId}?userId=${encodeURIComponent(session?.user?.email || '')}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setComments(prev => prev.filter(comment => comment.id !== commentId).map(comment => ({
+                        ...comment,
+                        replies: comment.replies.filter(reply => reply.id !== commentId)
+                    })));
+                    setTotalComments(prev => prev - 1);
+                    toast.dismiss(loadingToast);
+                    toast.success('ลบความคิดเห็นเรียบร้อยแล้ว');
+                } else {
+                    toast.dismiss(loadingToast);
+                    toast.error('เกิดข้อผิดพลาดในการลบ: ' + (data.error || 'ไม่ทราบสาเหตุ'));
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                toast.dismiss(loadingToast);
+                toast.error('เกิดข้อผิดพลาดในการลบ: ' + (errorData.error || 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'));
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            toast.dismiss(loadingToast);
+            toast.error('เกิดข้อผิดพลาดในการลบ: ' + (error instanceof Error ? error.message : 'ไม่ทราบสาเหตุ'));
+        }
+    };
+
+    // ฟังก์ชันตรวจสอบว่าเป็นเจ้าของ comment หรือไม่
+    const isCommentOwner = (commentUserId: string) => {
+        // For now, we'll use email since that's what we have in session
+        // and what we use for API calls
+        return session?.user?.email && commentUserId === session.user.email;
+    };
+
     // ดึงข้อมูล comments เมื่อ drawer เปิด
     useEffect(() => {
         if (isOpen) {
@@ -293,7 +429,7 @@ export function CommentsChapter({
                                     </div>
                                 ) : (
                                     comments.map((comment) => (
-                                        <div key={comment.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 mb-4">
+                                        <div key={comment.id} className="bg-backgroundCustom rounded-lg p-4 hover:bg-backgroundCustom/80 mb-4">
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center`}>
@@ -304,18 +440,75 @@ export function CommentsChapter({
                                                                 className="w-8 h-8 rounded-full object-cover"
                                                             />
                                                         ) : (
-                                                            <span className="text-white text-xs">{comment.user.avatar}</span>
+                                                            <span className="text-xs">{comment.user.avatar}</span>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <div className="font-medium text-gray-800 text-sm">{comment.user.name}</div>
-                                                        <div className="text-xs text-gray-500">{comment.timestamp}</div>
+                                                        <div className="font-medium text-sm">{comment.user.name}</div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {comment.timestamp}
+                                                            {comment.updated_at && comment.updated_at !== comment.created_at && (
+                                                                <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                {/* Edit/Delete Menu */}
+                                                {isCommentOwner(comment.user.id) && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600">
+                                                                <MoreHorizontal size={16} />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleEditClick(comment.id, comment.content)}>
+                                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                                แก้ไข
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleDeleteComment(comment.id)}
+                                                                className="text-red-600 focus:text-red-600"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                ลบ
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                             </div>
-                                            <p className="text-gray-700 text-sm mb-3 leading-relaxed">
-                                                {comment.content}
-                                            </p>
+                                            
+                                            {/* Comment Content - Edit Mode or Display Mode */}
+                                            {editingComment === comment.id ? (
+                                                <div className="mb-3">
+                                                    <textarea
+                                                        value={editContent}
+                                                        onChange={(e) => setEditContent(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                                        rows={3}
+                                                        placeholder="แก้ไขความคิดเห็น..."
+                                                    />
+                                                    <div className="flex gap-2 mt-2">
+                                                        <button
+                                                            onClick={() => handleSaveEdit(comment.id)}
+                                                            disabled={!editContent.trim()}
+                                                            className="px-3 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600"
+                                                        >
+                                                            บันทึก
+                                                        </button>
+                                                        <button
+                                                            onClick={handleCancelEdit}
+                                                            className="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
+                                                        >
+                                                            ยกเลิก
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className=" text-sm mb-3 leading-relaxed">
+                                                    {comment.content}
+                                                </p>
+                                            )}
                                             <div className="flex items-center gap-4 text-sm">
                                                 <button 
                                                     className="flex items-center gap-1 text-gray-500 hover:text-blue-500"
@@ -381,26 +574,85 @@ export function CommentsChapter({
                                                 <div className="mt-3 ml-6 space-y-3">
                                                     {comment.replies.map((reply) => (
                                                         <div key={reply.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                                                            <div className="flex items-center gap-3 mb-2">
-                                                                <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
-                                                                    {reply.user.image ? (
-                                                                        <img
-                                                                            src={reply.user.image}
-                                                                            alt={reply.user.name}
-                                                                            className="w-6 h-6 rounded-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <span className="text-white text-xs">{reply.user.avatar}</span>
-                                                                    )}
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
+                                                                        {reply.user.image ? (
+                                                                            <img
+                                                                                src={reply.user.image}
+                                                                                alt={reply.user.name}
+                                                                                className="w-6 h-6 rounded-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-white text-xs">{reply.user.avatar}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-medium text-gray-800 text-sm">{reply.user.name}</div>
+                                                                        <div className="text-xs text-gray-500">
+                                                                            {reply.timestamp}
+                                                                            {reply.updated_at && reply.updated_at !== reply.created_at && (
+                                                                                <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    <div className="font-medium text-gray-800 text-sm">{reply.user.name}</div>
-                                                                    <div className="text-xs text-gray-500">{reply.timestamp}</div>
-                                                                </div>
+                                                                {/* Edit/Delete Menu for Replies */}
+                                                                {isCommentOwner(reply.user.id) && (
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
+                                                                            <button className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600">
+                                                                                <MoreHorizontal size={14} />
+                                                                            </button>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent align="end">
+                                                                            <DropdownMenuItem onClick={() => handleEditClick(reply.id, reply.content)}>
+                                                                                <Edit2 className="mr-2 h-3 w-3" />
+                                                                                แก้ไข
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem 
+                                                                                onClick={() => handleDeleteComment(reply.id)}
+                                                                                className="text-red-600 focus:text-red-600"
+                                                                            >
+                                                                                <Trash2 className="mr-2 h-3 w-3" />
+                                                                                ลบ
+                                                                            </DropdownMenuItem>
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
+                                                                )}
                                                             </div>
-                                                            <p className="text-gray-700 text-sm mb-2 leading-relaxed">
-                                                                {reply.content}
-                                                            </p>
+                                                            
+                                                            {/* Reply Content - Edit Mode or Display Mode */}
+                                                            {editingComment === reply.id ? (
+                                                                <div className="mb-2">
+                                                                    <textarea
+                                                                        value={editContent}
+                                                                        onChange={(e) => setEditContent(e.target.value)}
+                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                                                        rows={2}
+                                                                        placeholder="แก้ไขการตอบกลับ..."
+                                                                    />
+                                                                    <div className="flex gap-2 mt-2">
+                                                                        <button
+                                                                            onClick={() => handleSaveEdit(reply.id)}
+                                                                            disabled={!editContent.trim()}
+                                                                            className="px-2 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600"
+                                                                        >
+                                                                            บันทึก
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={handleCancelEdit}
+                                                                            className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
+                                                                        >
+                                                                            ยกเลิก
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-gray-700 text-sm mb-2 leading-relaxed">
+                                                                    {reply.content}
+                                                                </p>
+                                                            )}
                                                             <div className="flex items-center gap-4 text-sm">
                                                                 <button 
                                                                     className={`flex items-center gap-1 hover:text-red-500 ${reply.isLiked ? 'text-red-500' : 'text-gray-500'}`}
