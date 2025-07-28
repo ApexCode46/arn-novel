@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 // API สำหรับ toggle like comment
 export async function POST(request, { params }) {
   try {
-    const { storyId, chapter, commentId } = await params;
+    const { commentId } = await params;
     const body = await request.json();
     const { userId } = body;
 

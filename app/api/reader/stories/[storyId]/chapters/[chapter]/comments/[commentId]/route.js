@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 // PUT - แก้ไข comment
 export async function PUT(request, { params }) {
   try {
-    const { storyId, chapter, commentId } = await params;
+    const { commentId } = await params;
     const { content, userId } = await request.json();
 
     if (!content || !content.trim()) {
@@ -127,7 +127,7 @@ export async function PUT(request, { params }) {
 // DELETE - ลบ comment
 export async function DELETE(request, { params }) {
   try {
-    const { storyId, chapter, commentId } = await params;
+    const { commentId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

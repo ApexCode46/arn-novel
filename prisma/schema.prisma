@@ -109,15 +109,24 @@ model chapters {
   story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
   transaction     transaction[]
+  voice           voice[]           // เพิ่ม relation กับ voice
 }
 
 model voice {
-  voice_id    String        @id @default(cuid())
-  user_id     String
-  story_id    String
-  transaction transaction[]
-  story       stories       @relation(fields: [story_id], references: [story_id])
-  user        User          @relation(fields: [user_id], references: [id])
+  voice_id     String        @id @default(cuid())
+  user_id      String
+  story_id     String
+  chapter_id   String?       // เพิ่มความเชื่อมโยงกับ chapter
+  file_path    String        // เก็บ path ของไฟล์เสียง
+  file_name    String        // ชื่อไฟล์เดิม
+  file_size    Int           // ขนาดไฟล์ (bytes)
+  duration     Float?        // ความยาวของเสียง (วินาที)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  transaction  transaction[]
+  chapter      chapters?     @relation(fields: [chapter_id], references: [chapter_id])
+  story        stories       @relation(fields: [story_id], references: [story_id])
+  user         User          @relation(fields: [user_id], references: [id])
 }
 
 model storyComments {

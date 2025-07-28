@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import SidebarChapter from "@/components/SidebarChapter";
 import { CommentsChapter } from "@/components/commentsChapter";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import TextAlign from '@tiptap/extension-text-align'
 
 interface Chapter {
@@ -352,6 +353,16 @@ export default function Page() {
                         {story.title}
                     </h1>
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
+                </div>
+                
+                {/* Voice Player */}
+                <div className="mb-6">
+                    <VoicePlayer
+                        storyId={storyId}
+                        chapterId={chapter.chapter_id}
+                        chapterTitle={chapter.title}
+                        chapterOrder={chapter.order}
+                    />
                 </div>
             </div>
 

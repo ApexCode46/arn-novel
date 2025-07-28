@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { SetStateAction, useState, useEffect } from "react";
+import { SetStateAction, useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
@@ -53,7 +53,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     };
 
     // ดึงข้อมูล story และ chapters จาก API
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!storyId) return;
 
         try {
@@ -79,12 +79,12 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [storyId]);
 
     // ดึงข้อมูลเมื่อ component mount หรือเมื่อ storyId เปลี่ยน
     useEffect(() => {
         fetchData();
-    }, [storyId]);
+    }, [storyId, fetchData]);
 
     // คำนวณจำนวนหน้าสำหรับ pagination (20 ตอนต่อหน้า)
     const chaptersPerPage = 20;

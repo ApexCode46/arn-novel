@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import {
   Carousel,
@@ -38,7 +38,7 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
   const [isLoading, setIsLoading] = useState(true);
   
   // ฟังก์ชันดึงข้อมูลจาก API
-  const fetchStories = async () => {
+  const fetchStories = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -60,12 +60,12 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [category, limit]);
 
   // ดึงข้อมูลเมื่อ component mount หรือ category เปลี่ยน
   useEffect(() => {
     fetchStories();
-  }, [category, limit]);
+  }, [category, limit, fetchStories]);
   
   const handleReadClick = (storyId: string) => {
     router.push(`/novel/${storyId}`);

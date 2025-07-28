@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { SetStateAction, useState, useEffect } from "react";
+import { SetStateAction, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -131,8 +131,8 @@ export default function Page() {
   const totalChapters = story?.chapters.length || 0;
   const totalPages = Math.ceil(totalChapters / chaptersPerPage);
 
-  // สร้างตัวเลือกสำหรับ dropdown
-  const generatePageOptions = () => {
+  // สร้างตัวเลือกสำหรับ dropdown ด้วย useMemo
+  const pageOptions = useMemo(() => {
     const options = [];
     for (let i = 0; i < totalPages; i++) {
       const startChapter = i * chaptersPerPage + 1;
@@ -143,9 +143,7 @@ export default function Page() {
       });
     }
     return options;
-  };
-
-  const pageOptions = generatePageOptions();
+  }, [totalPages, totalChapters]);
 
   // State สำหรับเก็บหน้าปัจจุบัน
   const [currentPage, setCurrentPage] = useState('page-1');
@@ -155,7 +153,7 @@ export default function Page() {
     if (story && pageOptions.length > 0) {
       setCurrentPage(pageOptions[0].value);
     }
-  }, [story]);
+  }, [story, pageOptions]);
 
   // ฟังก์ชันสำหรับการเปลี่ยนหน้า
   const handlePageChange = (value: SetStateAction<string>) => {

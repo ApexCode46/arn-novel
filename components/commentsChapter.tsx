@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { MessageCircleMore, Send, Edit2, Trash2, MoreHorizontal } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
+import Image from "next/image"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Drawer,
@@ -80,7 +81,7 @@ export function CommentsChapter({
     const { data: session } = useSession();
 
     // ฟังก์ชันสำหรับดึงข้อมูล comments
-    const fetchComments = async () => {
+    const fetchComments = useCallback(async () => {
         console.log('fetchComments called with:', { storyId, chapterOrder });
         
         if (!storyId || !chapterOrder) {
@@ -119,7 +120,7 @@ export function CommentsChapter({
         } finally {
             setLoading(false);
         }
-    };
+    }, [storyId, chapterOrder]);
 
     // ฟังก์ชันสำหรับส่ง comment ใหม่
     const handleSubmitComment = async (parentId?: string) => {
@@ -402,7 +403,7 @@ export function CommentsChapter({
         if (isOpen) {
             fetchComments();
         }
-    }, [isOpen, storyId, chapterOrder]);
+    }, [isOpen, storyId, chapterOrder, fetchComments]);
 
     return (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -434,9 +435,11 @@ export function CommentsChapter({
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center`}>
                                                         {comment.user.image ? (
-                                                            <img
+                                                            <Image
                                                                 src={comment.user.image}
                                                                 alt={comment.user.name}
+                                                                width={32}
+                                                                height={32}
                                                                 className="w-8 h-8 rounded-full object-cover"
                                                             />
                                                         ) : (
@@ -578,9 +581,11 @@ export function CommentsChapter({
                                                                 <div className="flex items-center gap-3">
                                                                     <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
                                                                         {reply.user.image ? (
-                                                                            <img
+                                                                            <Image
                                                                                 src={reply.user.image}
                                                                                 alt={reply.user.name}
+                                                                                width={24}
+                                                                                height={24}
                                                                                 className="w-6 h-6 rounded-full object-cover"
                                                                             />
                                                                         ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -48,7 +48,7 @@ export default function Stories() {
   const [sortOrder, setSortOrder] = useState("latest");
 
   // ดึงข้อมูล stories จาก API
-  const fetchStories = async () => {
+  const fetchStories = useCallback(async () => {
     const userId = (session?.user as ExtendedUser)?.id;
     if (!userId) return;
 
@@ -67,14 +67,14 @@ export default function Stories() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session?.user]);
 
   // ดึงข้อมูลเมื่อ session พร้อม
   useEffect(() => {
     if (session?.user) {
       fetchStories();
     }
-  }, [session]);
+  }, [session, fetchStories]);
 
   // ฟังก์ชันกรองและเรียงลำดับ
   useEffect(() => {
