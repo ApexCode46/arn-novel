@@ -71,23 +71,6 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
     router.push(`/novel/${storyId}`);
   };
 
-  // ฟังก์ชันตรวจสอบ URL รูปภาพ
-  const getValidImageSrc = (imageUrl: string | null): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return "/novelImg/Test-novel.png";
-    }
-    
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-    
-    if (imageUrl.startsWith('/')) {
-      return imageUrl;
-    }
-    
-    return "/novelImg/Test-novel.png";
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -121,7 +104,7 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
               {/* Image Container */}
               <div className="relative w-full aspect-[3/4] overflow-hidden">
                 <Image
-                  src={getValidImageSrc(story.imageUrl)}
+                  src={story.imageUrl || "/novelImg/Test-novel.png"}
                   alt={story.title || "Novel"}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"

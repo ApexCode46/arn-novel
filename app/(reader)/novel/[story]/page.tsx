@@ -214,7 +214,7 @@ export default function Page() {
             </div>
 
             <div className="lg:col-span-2 space-y-4">
-              <CardTitle className="text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
+              <CardTitle className="text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight break-words hyphens-auto">
                 {story.title}
               </CardTitle>
 

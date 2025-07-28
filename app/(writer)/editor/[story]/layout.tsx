@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Save, TableOfContents } from "lucide-react";
+import { toast } from "sonner";
 import { useEditor } from "@/context/EditorContext";
 import { EditorProvider } from "@/context/EditorContext";
 import SidebarChapter from "@/components/SidebarChapter";
@@ -18,6 +19,9 @@ function StoryLayoutInner({
     const chapterOrder = params.chapter as string;
 
     const handleSave = async () => {
+        // แสดง loading toast
+        const loadingToast = toast.loading('กำลังบันทึก...');
+        
         try {
             let saveResponse;
             
@@ -48,10 +52,19 @@ function StoryLayoutInner({
             if (saveResponse.ok) {
                 const saveResult = await saveResponse.json();
                 console.log("Save Result:", saveResult);
+                // ปิด loading toast และแสดง success
+                toast.dismiss(loadingToast);
+                toast.success('บันทึกเรียบร้อยแล้ว');
             } else {
+                // ปิด loading toast และแสดง error
+                toast.dismiss(loadingToast);
+                toast.error('เกิดข้อผิดพลาดในการบันทึก');
                 console.log("Failed to save data");
             }
         } catch (error) {
+            // ปิด loading toast และแสดง error
+            toast.dismiss(loadingToast);
+            toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อ');
             console.log("Error in handleSave:", error);
         }
     };

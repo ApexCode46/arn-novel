@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import Modalsettingstory from "@/components/ModalSettingStory"
 
-import { Calendar, BookOpen } from "lucide-react"
+import { Calendar, BookOpen, Eye } from "lucide-react"
 
 // Extend the session user type to include id
 interface ExtendedUser {
@@ -35,6 +35,7 @@ type Story = {
   category: string;
   created_at: string;
   type: string;
+  views: number;
 };
 
 export default function Stories() {
@@ -99,6 +100,8 @@ export default function Stories() {
           return a.title.localeCompare(b.title, 'th');
         case "chapters":
           return b.chapters - a.chapters;
+        case "views":
+          return b.views - a.views;
         default:
           return 0;
       }
@@ -162,6 +165,7 @@ export default function Stories() {
                 <SelectItem value="oldest">เก่าสุด</SelectItem>
                 <SelectItem value="alphabetical">ตามตัวอักษร</SelectItem>
                 <SelectItem value="chapters">จำนวนตอน</SelectItem>
+                <SelectItem value="views">จำนวนการอ่าน</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -239,6 +243,10 @@ export default function Stories() {
                           <div className="flex items-center gap-1">
                             <BookOpen className="w-3 h-3" />
                             <span>{story.chapters}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <span>{story.views.toLocaleString()}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />

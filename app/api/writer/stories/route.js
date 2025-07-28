@@ -27,6 +27,7 @@ export async function GET(req) {
         category: true,
         created_at: true,
         type: true,
+        views: true,
         _count: {
           select: {
             chapter: true,
@@ -48,6 +49,7 @@ export async function GET(req) {
       category: story.category,
       created_at: story.created_at,
       type: story.type,
+      views: story.views,
     }));
 
     return NextResponse.json(formattedStories);

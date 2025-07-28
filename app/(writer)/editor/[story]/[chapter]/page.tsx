@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { useEditor } from "@/context/EditorContext";
 import { TiptapEditor } from "@/components/editor-bar"
 import { Input } from "@/components/ui/input"
@@ -64,30 +65,17 @@ export default function Page() {
       if (response.ok) {
         const result = await response.json();
         console.log("Chapter saved successfully:", result);
-        // แสดงข้อความสำเร็จ (อาจใช้ toast notification)
+        toast.success("บันทึกแล้ว");
       } else {
         throw new Error("Failed to save chapter");
       }
     } catch (error) {
       console.error("Error saving chapter:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error("เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setIsSaving(false);
     }
   };
-
-  // Auto-save เมื่อมีการเปลี่ยนแปลง (debounced)
-  useEffect(() => {
-    if (isLoading) return; // ไม่ save ขณะกำลังโหลดข้อมูล
-
-    const timeoutId = setTimeout(() => {
-      if (nameChapter || content) {
-        saveChapter();
-      }
-    }, 5000); // auto-save หลังจาก 5 วินาที
-
-    return () => clearTimeout(timeoutId);
-  }, [nameChapter, content]); // เมื่อ title หรือ content เปลี่ยน
 
   const handleBlur = () => {
     setIsEditing(false);

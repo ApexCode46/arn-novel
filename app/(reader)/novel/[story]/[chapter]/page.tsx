@@ -261,6 +261,21 @@ export default function Page() {
     const [fontSize, setFontSize] = useState(16);
     const [fontFamily, setFontFamily] = useState('"Sarabun", sans-serif');
 
+    // ฟังก์ชันสำหรับรับการเปลี่ยนแปลงจาก FontControls ใน layout
+    useEffect(() => {
+        const handleFontSettingsChange = (event: CustomEvent) => {
+            const { fontSize: newFontSize, fontFamily: newFontFamily } = event.detail;
+            setFontSize(newFontSize);
+            setFontFamily(newFontFamily);
+        };
+
+        window.addEventListener('fontSettingsChange', handleFontSettingsChange as EventListener);
+
+        return () => {
+            window.removeEventListener('fontSettingsChange', handleFontSettingsChange as EventListener);
+        };
+    }, []);
+
     // ฟังก์ชันสำหรับจัดการการคลิกหน้าจอ (mobile)
     const handleContentClick = () => {
         // ถ้าเป็นมือถือ ให้ซ่อน/แสดง footer
@@ -333,7 +348,7 @@ export default function Page() {
 
                 {/* Story Title */}
                 <div className="text-center mb-2">
-                    <h1 className="text-lg font-semibold text-muted-foreground">
+                    <h1 className="text-lg font-semibold text-muted-foreground break-words hyphens-auto">
                         {story.title}
                     </h1>
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
@@ -400,6 +415,14 @@ export default function Page() {
                 <SidebarChapter
                     trigger={<div></div>}
                     mode="reader"
+                />
+            </div>
+
+            {/* Desktop Comments Component */}
+            <div className="hidden sm:block">
+                <CommentsChapter 
+                    storyId={storyId}
+                    chapterOrder={chapterOrder}
                 />
             </div>
         </div>

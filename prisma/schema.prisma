@@ -19,6 +19,7 @@ model User {
   Session         Session[]
   accounts        Account[]
   chapterComments chapterComments[]
+  commentLikes    commentLikes[]
   favorite        favorite[]
   follow          follow[]
   stories         stories[]
@@ -131,14 +132,29 @@ model storyComments {
 }
 
 model chapterComments {
-  chapterComment_id String   @id @default(cuid())
+  chapterComment_id String              @id @default(cuid())
   user_id           String
   chapter_id        String
   content           String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  chapter           chapters @relation(fields: [chapter_id], references: [chapter_id])
-  user              User     @relation(fields: [user_id], references: [id])
+  parent_id         String?             // สำหรับ reply
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  chapter           chapters            @relation(fields: [chapter_id], references: [chapter_id])
+  user              User                @relation(fields: [user_id], references: [id])
+  parent            chapterComments?    @relation("CommentReplies", fields: [parent_id], references: [chapterComment_id])
+  replies           chapterComments[]   @relation("CommentReplies")
+  likes             commentLikes[]
+}
+
+model commentLikes {
+  id                String            @id @default(cuid())
+  user_id           String
+  chapterComment_id String
+  created_at        DateTime          @default(now())
+  user              User              @relation(fields: [user_id], references: [id])
+  comment           chapterComments   @relation(fields: [chapterComment_id], references: [chapterComment_id])
+  
+  @@unique([user_id, chapterComment_id])
 }
 
 model follow {

@@ -60,10 +60,11 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     }
 
-    // ดึงข้อมูล comments ของ chapter
+    // ดึงข้อมูล comments ของ chapter (เฉพาะ parent comments)
     const comments = await prisma.chapterComments.findMany({
       where: {
         chapter_id: chapterData.chapter_id,
+        parent_id: null, // เฉพาะ main comments
       },
       include: {
         user: {
@@ -71,6 +72,31 @@ export async function GET(request, { params }) {
             id: true,
             name: true,
             image: true,
+          },
+        },
+        replies: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+            _count: {
+              select: {
+                likes: true,
+              },
+            },
+          },
+          orderBy: {
+            created_at: "asc",
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            replies: true,
           },
         },
       },
@@ -95,8 +121,23 @@ export async function GET(request, { params }) {
       content: comment.content,
       timestamp: formatTimestamp(comment.created_at),
       created_at: comment.created_at,
-      replies: 0, // TODO: implement replies system
-      likes: 0, // TODO: implement likes system
+      replies: comment.replies?.map((reply) => ({
+        id: reply.chapterComment_id,
+        user: {
+          id: reply.user.id,
+          name: reply.user.name || "ผู้ใช้ไม่ระบุชื่อ",
+          avatar: reply.user.name ? reply.user.name.charAt(0).toUpperCase() : "?",
+          image: reply.user.image,
+          color: generateUserColor(reply.user.id),
+        },
+        content: reply.content,
+        timestamp: formatTimestamp(reply.created_at),
+        created_at: reply.created_at,
+        likes: reply._count?.likes || 0,
+        isLiked: false, // TODO: implement user-specific likes
+      })) || [],
+      repliesCount: comment._count?.replies || 0,
+      likes: comment._count?.likes || 0,
       isLiked: false, // TODO: implement user-specific likes
     }));
 
@@ -180,7 +221,7 @@ export async function POST(request, { params }) {
   try {
     const { storyId, chapter } = await params;
     const body = await request.json();
-    const { content, userId } = body;
+    const { content, userId, parentId } = body;
 
     if (!content || content.trim() === "") {
       return NextResponse.json(
@@ -205,6 +246,23 @@ export async function POST(request, { params }) {
       );
     }
 
+    // หา user จาก email (เนื่องจาก session ส่ง email มา)
+    const user = await prisma.user.findUnique({
+      where: {
+        email: userId, // userId จริงๆ คือ email ที่ส่งมา
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // หา chapter ที่ต้องการ
     const chapterData = await prisma.chapters.findFirst({
       where: {
@@ -220,12 +278,26 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     }
 
+    // ถ้าเป็น reply ตรวจสอบว่า parent comment มีอยู่จริง
+    if (parentId) {
+      const parentComment = await prisma.chapterComments.findUnique({
+        where: {
+          chapterComment_id: parentId,
+        },
+      });
+
+      if (!parentComment) {
+        return NextResponse.json({ error: "Parent comment not found" }, { status: 404 });
+      }
+    }
+
     // สร้าง comment ใหม่
     const newComment = await prisma.chapterComments.create({
       data: {
         content: content.trim(),
-        user_id: userId,
+        user_id: user.id, // ใช้ user id จริงจากฐานข้อมูล
         chapter_id: chapterData.chapter_id,
+        parent_id: parentId || null,
       },
       include: {
         user: {
@@ -233,6 +305,12 @@ export async function POST(request, { params }) {
             id: true,
             name: true,
             image: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            replies: true,
           },
         },
       },
@@ -251,9 +329,11 @@ export async function POST(request, { params }) {
       content: newComment.content,
       timestamp: formatTimestamp(newComment.created_at),
       created_at: newComment.created_at,
-      replies: 0,
-      likes: 0,
+      replies: [],
+      repliesCount: newComment._count?.replies || 0,
+      likes: newComment._count?.likes || 0,
       isLiked: false,
+      parentId: newComment.parent_id,
     };
 
     return NextResponse.json({

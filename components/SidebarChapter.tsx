@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import {
     Sheet,
     SheetContent,
@@ -146,6 +147,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
             if (response.ok) {
                 const data = await response.json();
                 console.log("Chapter created successfully:", data);
+                toast.success("สร้างบทใหม่สำเร็จ");
                 // รีเฟรชรายการ chapters
                 await fetchData();
             } else {
@@ -153,7 +155,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
             }
         } catch (error) {
             console.log("Error creating chapter:", error);
-            alert("เกิดข้อผิดพลาดในการสร้างบทใหม่");
+            toast.error("เกิดข้อผิดพลาดในการสร้างบทใหม่");
         } finally {
             setIsCreating(false);
         }
@@ -166,7 +168,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
             </SheetTrigger>
             <SheetContent className="bg-backgroundCustom ">
                 <SheetHeader>
-                    <SheetTitle className="text-foreground text-lg font-bold">
+                    <SheetTitle className="text-foreground text-lg font-bold break-words hyphens-auto">
                         {isLoading ? "กำลังโหลด..." : storyTitle}
                     </SheetTitle>
                 </SheetHeader>

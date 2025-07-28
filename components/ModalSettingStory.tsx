@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -256,9 +257,11 @@ export default function Modalsettingstory({
                 if (mode === 'create') {
                     // สำหรับการสร้างใหม่ ไปที่หน้า editor
                     const storyId = result.story.story_id;
+                    toast.success('สร้างนิยายใหม่สำเร็จ');
                     router.push(`/editor/${storyId}`);
                 } else {
                     // สำหรับการแก้ไข ส่งข้อมูลกลับและปิด modal
+                    toast.success('บันทึกการแก้ไขเรียบร้อยแล้ว');
                     if (onSubmit) {
                         onSubmit(result.story);
                     }
@@ -268,10 +271,12 @@ export default function Modalsettingstory({
 
             } else {
                 setError(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
+                toast.error(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
             }
         } catch (error) {
             console.log('Network error:', error);
             setError('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
+            toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
         } finally {
             setIsLoading(false);
         }
@@ -514,7 +519,6 @@ export default function Modalsettingstory({
                                 <hr className='py-2' />
                             </>
                         )}
-
 
                         <h4 className='pt-2 font-bold'>ช่วยให้เข้าถึงได้ง่าย</h4>
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
