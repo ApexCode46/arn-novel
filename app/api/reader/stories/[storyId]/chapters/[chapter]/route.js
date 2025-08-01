@@ -50,11 +50,12 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Story not found" }, { status: 404 });
     }
 
-    // ดึงข้อมูล chapter ตาม order
+    // ดึงข้อมูล chapter ตาม order (เฉพาะที่เผยแพร่แล้ว)
     const chapterData = await prisma.chapters.findFirst({
       where: {
         story_id: storyId,
         order: chapterOrder,
+        status: "published", // เพิ่มเงื่อนไข status
       },
       include: {
         _count: {
@@ -66,19 +67,21 @@ export async function GET(request, { params }) {
     });
 
     if (!chapterData) {
-      return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+      return NextResponse.json({ error: "Chapter not found or not published" }, { status: 404 });
     }
 
-    // ดึง chapter ก่อนหน้าและถัดไป
+    // ดึง chapter ก่อนหน้าและถัดไป (เฉพาะที่เผยแพร่แล้ว)
     const previousChapter = await prisma.chapters.findFirst({
       where: {
         story_id: storyId,
         order: chapterOrder - 1,
+        status: "published", // เพิ่มเงื่อนไข status
       },
       select: {
         chapter_id: true,
         order: true,
         title: true,
+        status: true, // เพิ่ม status
       },
     });
 
@@ -86,18 +89,21 @@ export async function GET(request, { params }) {
       where: {
         story_id: storyId,
         order: chapterOrder + 1,
+        status: "published", // เพิ่มเงื่อนไข status
       },
       select: {
         chapter_id: true,
         order: true,
         title: true,
+        status: true, // เพิ่ม status
       },
     });
 
-    // ดึงรายการ chapter ทั้งหมดของเรื่องนี้ (สำหรับ navigation)
+    // ดึงรายการ chapter ทั้งหมดของเรื่องนี้ (เฉพาะที่เผยแพร่แล้ว)
     const allChapters = await prisma.chapters.findMany({
       where: {
         story_id: storyId,
+        status: "published", // เพิ่มเงื่อนไข status
       },
       orderBy: {
         order: "asc",

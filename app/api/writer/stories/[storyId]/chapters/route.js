@@ -14,6 +14,9 @@ export async function GET(req, { params }) {
       );
     }
 
+    // เช็คและอัปเดตตอนที่ถึงเวลาเผยแพร่แล้วก่อน
+    await checkAndUpdateScheduledChapters();
+
     // ตรวจสอบว่า story มีอยู่จริง
     const story = await prisma.stories.findUnique({
       where: {
@@ -39,6 +42,9 @@ export async function GET(req, { params }) {
         title: true,
         content: true,
         price: true,
+        status: true,
+        scheduled_date: true,
+        is_hidden: true,
         created_at: true,
         updated_at: true,
       },
@@ -55,6 +61,36 @@ export async function GET(req, { params }) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+// ฟังก์ชันสำหรับเช็คและอัปเดตตอนที่ถึงเวลาเผยแพร่แล้ว
+async function checkAndUpdateScheduledChapters() {
+  try {
+    const now = new Date();
+    
+    const updateResult = await prisma.chapters.updateMany({
+      where: {
+        status: "scheduled",
+        scheduled_date: {
+          lte: now
+        }
+      },
+      data: {
+        status: "published",
+        scheduled_date: null,
+        updated_at: now
+      }
+    });
+
+    if (updateResult.count > 0) {
+      console.log(`Auto-published ${updateResult.count} chapters that reached their scheduled time`);
+    }
+
+    return updateResult.count;
+  } catch (error) {
+    console.error("Error in checkAndUpdateScheduledChapters:", error);
+    return 0;
   }
 }
 

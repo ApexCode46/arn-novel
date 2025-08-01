@@ -54,6 +54,7 @@ interface NavigationChapter {
     chapter_id: string;
     order: number;
     title: string;
+    status?: string; // เพิ่ม status
 }
 
 interface ChapterData {
@@ -79,6 +80,7 @@ function ChapterContentDisplay({ content, fontSize, fontFamily }: { content: str
         ],
         content: content || '<p>ไม่มีเนื้อหาในตอนนี้</p>',
         editable: false,
+        immediatelyRender: false,
         editorProps: {
             attributes: {
                 class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -220,10 +222,10 @@ function FooterMenu({
                             storyId={storyId}
                             chapterOrder={chapterOrder}
                             customTrigger={
-                                <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1 h-auto py-2">
+                                <div className="flex flex-col items-center gap-1 h-auto py-2">
                                     <MessageCircle className="w-4 h-4" />
                                     <span className="text-xs">ความคิดเห็น</span>
-                                </Button>
+                                </div>
                             }
                         />
                     </div>
@@ -232,14 +234,13 @@ function FooterMenu({
                     <div className="flex justify-center">
                         <SidebarChapter
                             trigger={
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                <div
+                                    
                                     className="flex flex-col items-center gap-1 h-auto py-2"
                                 >
                                     <Sidebar className="w-4 h-4" />
                                     <span className="text-xs">ตอน</span>
-                                </Button>
+                                </div>
                             }
                             mode="reader"
                         />
@@ -336,7 +337,7 @@ export default function Page() {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <Link href={`/novel/${storyId}`}>
-                        <Button variant="outline" size="sm">
+                        <Button variant="default" size="sm">
                             <List className="w-4 h-4 mr-2" />
                             กลับสู่สารบัญ
                         </Button>
@@ -352,6 +353,7 @@ export default function Page() {
                     <h1 className="text-lg font-semibold text-muted-foreground break-words hyphens-auto">
                         {story.title}
                     </h1>
+                    <h1 className="text-lg font-semibold text-muted-foreground break-words hyphens-auto">ตอนที่ {chapter.order} : {chapter.title}</h1>
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
                 </div>
                 
@@ -376,9 +378,9 @@ export default function Page() {
                 <div className="flex justify-between items-center">
                     {/* Previous Chapter */}
                     <div className="flex-1">
-                        {navigation.previous ? (
+                        {navigation.previous && navigation.previous.status === "published" ? (
                             <Link href={`/novel/${storyId}/${navigation.previous.order}`}>
-                                <Button variant="outline" className="w-auto max-w-xs">
+                                <Button variant="default" className="w-auto max-w-xs">
                                     <ChevronLeft className="w-4 h-4 mr-2" />
                                     <div className="text-left hidden sm:block">
                                         <div className="text-xs text-muted-foreground">ตอนก่อนหน้า</div>
@@ -393,9 +395,9 @@ export default function Page() {
 
                     {/* Next Chapter */}
                     <div className="flex-1 flex justify-end">
-                        {navigation.next ? (
+                        {navigation.next && navigation.next.status === "published" ? (
                             <Link href={`/novel/${storyId}/${navigation.next.order}`}>
-                                <Button variant="outline" className="w-auto max-w-xs">
+                                <Button variant="default" className="w-auto max-w-xs">
                                     <div className="text-right hidden sm:block">
                                         <div className="text-xs text-muted-foreground">ตอนถัดไป</div>
                                         <div className="truncate">ตอนที่ {navigation.next.order}: {navigation.next.title}</div>

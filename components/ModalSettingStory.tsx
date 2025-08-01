@@ -61,6 +61,7 @@ type ModalSettingStoryProps = {
         hideComments?: boolean;
         allowComments?: boolean;
         commentPermission?: string;
+        publishStatus?: "draft" | "published";
         userId?: string;
     };
 }
@@ -106,6 +107,9 @@ export default function Modalsettingstory({
     const [isChecked1, setIsChecked1] = useState(initialData?.hideComments || false);
     const [isChecked2, setIsChecked2] = useState(initialData?.allowComments ?? true);
     const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "comfortable");
+
+    // สถานะการเผยแพร่
+    const [publishStatus, setPublishStatus] = useState<"draft" | "published">(initialData?.publishStatus || "draft");
 
     // Loading state
     const [isLoading, setIsLoading] = useState(false);
@@ -239,6 +243,7 @@ export default function Modalsettingstory({
                 hideComments: isChecked1,
                 allowComments: isChecked2,
                 commentPermission: selectedOption,
+                publishStatus: mode === 'edit' ? publishStatus : 'draft', // ใช้ draft เป็นค่าเริ่มต้นสำหรับการสร้างใหม่
                 userId: userId // ใช้ userId ที่ตรวจสอบแล้ว
             };
 
@@ -263,7 +268,12 @@ export default function Modalsettingstory({
                     // สำหรับการแก้ไข ส่งข้อมูลกลับและปิด modal
                     toast.success('บันทึกการแก้ไขเรียบร้อยแล้ว');
                     if (onSubmit) {
-                        onSubmit(result.story);
+                        // เพิ่ม status เข้าไปในข้อมูลที่ส่งกลับ
+                        const updatedStory = {
+                            ...result.story,
+                            status: result.story.status || publishStatus
+                        };
+                        onSubmit(updatedStory);
                     }
                     // ปิด modal
                     setIsOpen(false);
@@ -312,6 +322,7 @@ export default function Modalsettingstory({
             setIsChecked1(initialData.hideComments || false);
             setIsChecked2(initialData.allowComments ?? true);
             setSelectedOption(initialData.commentPermission || "comfortable");
+            setPublishStatus(initialData.publishStatus || "draft");
         } else if (mode === 'create') {
             // รีเซ็ตค่าเมื่อเป็นโหมดสร้างใหม่
             setTitle("");
@@ -328,6 +339,7 @@ export default function Modalsettingstory({
             setIsChecked1(false);
             setIsChecked2(true);
             setSelectedOption("comfortable");
+            setPublishStatus("draft");
         }
     }, [mode, initialData]);
 
@@ -569,6 +581,63 @@ export default function Modalsettingstory({
                             </div>
                         </div>
                         <hr className='py-2' />
+
+                        {mode === 'edit' && (
+                            <>
+                                <h4 className='font-bold'>สถานะการเผยแพร่</h4>
+                                <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                    <Label htmlFor="publishStatus">เลือกสถานะการเผยแพร่</Label>
+                                    <RadioGroup value={publishStatus} onValueChange={(value: "draft" | "published") => setPublishStatus(value)}>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="draft" id="draft" />
+                                            <Label htmlFor="draft" className="flex items-center gap-2">
+                                                <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                                ร่าง
+                                            </Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="published" id="published" />
+                                            <Label htmlFor="published" className="flex items-center gap-2">
+                                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                                เผยแพร่
+                                            </Label>
+                                        </div>
+                                    </RadioGroup>
+                                    
+                                    {publishStatus === "draft" && (
+                                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <p className="text-sm text-gray-600">
+                                                💡 <strong>ร่าง:</strong> นิยายจะไม่แสดงในรายการสาธารณะ และเฉพาะคุณเท่านั้นที่เห็นได้
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    {publishStatus === "published" && (
+                                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                            <p className="text-sm text-green-700">
+                                                ✅ <strong>เผยแพร่:</strong> นิยายจะแสดงในรายการสาธารณะ และผู้อ่านสามารถค้นหาและอ่านได้
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
+
+                        {mode === 'create' && (
+                            <>
+                                <h4 className='font-bold'>สถานะการเผยแพร่</h4>
+                                <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                    <div className="p-3 bg-backgroundCustom/80 borde rounded-lg">
+                                        <p className="text-sm">
+                                            📝 <strong>สำหรับนิยายใหม่:</strong> นิยายจะถูกสร้างในสถานะ &ldquo;ร่าง&rdquo; ก่อน คุณสามารถเปลี่ยนเป็น &ldquo;เผยแพร่&rdquo; ได้ในภายหลังผ่านการแก้ไขข้อมูลนิยาย
+                                        </p>
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
+                        
                         <div>
                             <h4 className='pt-2 font-bold'>สิทธิ์การเข้าถึงนิยาย</h4>
                             <div className="grid w-full max-w-sm items-center gap-3 py-3">

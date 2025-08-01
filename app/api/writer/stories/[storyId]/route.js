@@ -32,6 +32,7 @@ export async function GET(req, { params }) {
         horizontalImage: true,
         allowComments: true,
         commentPermission: true,
+        status: true,
         created_at: true,
         updated_at: true,
       }

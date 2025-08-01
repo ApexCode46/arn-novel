@@ -36,6 +36,7 @@ type Story = {
   created_at: string;
   type: string;
   views: number;
+  status: string;
 };
 
 export default function Stories() {
@@ -89,23 +90,30 @@ export default function Stories() {
       });
     }
 
-    // เรียงลำดับ
-    filtered.sort((a, b) => {
-      switch (sortOrder) {
-        case "latest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case "alphabetical":
-          return a.title.localeCompare(b.title, 'th');
-        case "chapters":
-          return b.chapters - a.chapters;
-        case "views":
-          return b.views - a.views;
-        default:
-          return 0;
-      }
-    });
+    // เรียงลำดับและกรอง
+    if (sortOrder === "published") {
+      filtered = filtered.filter(story => story.status === "published");
+    } else if (sortOrder === "draft") {
+      filtered = filtered.filter(story => story.status === "draft");
+    } else {
+      // เรียงลำดับตามเงื่อนไขอื่นๆ
+      filtered.sort((a, b) => {
+        switch (sortOrder) {
+          case "latest":
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          case "oldest":
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          case "alphabetical":
+            return a.title.localeCompare(b.title, 'th');
+          case "chapters":
+            return b.chapters - a.chapters;
+          case "views":
+            return b.views - a.views;
+          default:
+            return 0;
+        }
+      });
+    }
 
     setFilteredStories(filtered);
   }, [stories, typeFilter, sortOrder]);
@@ -166,6 +174,8 @@ export default function Stories() {
                 <SelectItem value="alphabetical">ตามตัวอักษร</SelectItem>
                 <SelectItem value="chapters">จำนวนตอน</SelectItem>
                 <SelectItem value="views">จำนวนการอ่าน</SelectItem>
+                <SelectItem value="published">เผยแพร่</SelectItem>
+                <SelectItem value="draft">ร่าง</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -232,12 +242,26 @@ export default function Stories() {
                       
                       {/* Category & Stats Row */}
                       <div className="flex items-center justify-between">
-                        <Badge 
-                          variant="secondary" 
-                          className="bg-primary/10 text-primary border-primary/20 text-xs"
-                        >
-                          {story.category}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="secondary" 
+                            className="bg-primary/10 text-primary border-primary/20 text-xs"
+                          >
+                            {story.category}
+                          </Badge>
+                          
+                          {/* Status Badge */}
+                          <Badge 
+                            variant={story.status === 'published' ? 'default' : 'secondary'}
+                            className={`text-xs ${
+                              story.status === 'published' 
+                                ? 'bg-green-100 text-green-800 border-green-200' 
+                                : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                            }`}
+                          >
+                            {story.status === 'published' ? 'เผยแพร่' : 'ร่าง'}
+                          </Badge>
+                        </div>
                         
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">

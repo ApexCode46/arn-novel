@@ -20,6 +20,8 @@ import {
 import { SetStateAction, useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { Settings } from "lucide-react";
+import ModalSettingChapter from "@/components/ModalSettingChapter";
 
 type SidebarChapterProps = {
     trigger?: React.ReactNode;
@@ -34,6 +36,11 @@ type Chapter = {
     price: number;
     created_at: string;
     updated_at: string;
+    status?: "draft" | "published" | "scheduled";
+    scheduledDate?: Date;
+    scheduled_date?: string; // เพิ่มเพื่อรองรับข้อมูลจาก API
+    isHidden?: boolean;
+    is_hidden?: boolean; // เพิ่มเพื่อรองรับข้อมูลจาก API
 };
 
 export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
@@ -47,6 +54,8 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
     const [currentPage, setCurrentPage] = useState("page-1");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
     const handlePageChange = (value: SetStateAction<string>) => {
         setCurrentPage(value);
@@ -88,7 +97,11 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
 
     // คำนวณจำนวนหน้าสำหรับ pagination (20 ตอนต่อหน้า)
     const chaptersPerPage = 20;
-    const totalChapters = chapters.length;
+    // กรองตอนตาม mode ก่อนคำนวณ pagination
+    const visibleChapters = mode === 'reader' 
+        ? chapters.filter(chapter => chapter.status === 'published')
+        : chapters;
+    const totalChapters = visibleChapters.length;
     const totalPages = Math.ceil(totalChapters / chaptersPerPage);
 
     // สร้างตัวเลือกสำหรับ dropdown
@@ -118,10 +131,17 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
 
     // คำนวณตอนที่จะแสดงในหน้าปัจจุบัน
     const getCurrentPageChapters = () => {
+        // กรองตอนตาม mode
+        let filteredChapters = chapters;
+        if (mode === 'reader') {
+            // แสดงเฉพาะตอนที่เผยแพร่แล้วสำหรับ reader
+            filteredChapters = chapters.filter(chapter => chapter.status === 'published');
+        }
+        
         const pageIndex = parseInt(currentPage.split('-')[1]) - 1;
         const startIndex = pageIndex * chaptersPerPage;
-        const endIndex = Math.min(startIndex + chaptersPerPage, totalChapters);
-        return chapters.slice(startIndex, endIndex);
+        const endIndex = Math.min(startIndex + chaptersPerPage, filteredChapters.length);
+        return filteredChapters.slice(startIndex, endIndex);
     };
 
     const currentChapters = getCurrentPageChapters();
@@ -159,6 +179,16 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
         } finally {
             setIsCreating(false);
         }
+    };
+
+    const handleOpenSettings = (chapter: Chapter) => {
+        setSelectedChapter(chapter);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedChapter(null);
     };
 
     return (
@@ -222,25 +252,89 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                             currentChapters.map((chapter: Chapter) => (
                                 <div
                                     key={chapter.chapter_id}
-                                    onClick={() => {
-                                        if (mode === 'writer') {
-                                            // นำไปหน้าแก้ไข chapter
-                                            router.push(`/editor/${storyId}/${chapter.order}`);
-                                        } else {
-                                            // นำไปหน้าอ่าน chapter
-                                            router.push(`/novel/${storyId}/${chapter.order}`);
-                                        }
-                                    }}
-                                    className="text-sm my-2 p-4 bg-background border rounded hover:bg-backgroundCustom cursor-pointer transition-colors"
+                                    className="text-sm my-2 p-4 bg-background border rounded hover:bg-backgroundCustom transition-colors relative group"
                                 >
-                                    <div className=" text-bold mt-1">
-                                        ตอนที่ {chapter.order} : {chapter.title} {chapter.price > 0 && `• ${chapter.price} เหรียญ`}
+                                    <div
+                                        onClick={() => {
+                                            if (mode === 'writer') {
+                                                // นำไปหน้าแก้ไข chapter
+                                                router.push(`/editor/${storyId}/${chapter.order}`);
+                                            } else {
+                                                // นำไปหน้าอ่าน chapter
+                                                router.push(`/novel/${storyId}/${chapter.order}`);
+                                            }
+                                        }}
+                                        className="cursor-pointer"
+                                    >
+                                        <div className="text-bold mt-1 pr-10">
+                                            <div className="flex items-center gap-2">
+                                                <span>ตอนที่ {chapter.order} : {chapter.title}</span>
+                                                {chapter.price > 0 && (
+                                                    <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded">
+                                                        {chapter.price} เหรียญ
+                                                    </span>
+                                                )}
+                                                {(chapter.isHidden || chapter.is_hidden) && (
+                                                    <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded">
+                                                        ซ่อน
+                                                    </span>
+                                                )}
+                                                {chapter.status === "draft" && (
+                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+                                                        ร่าง
+                                                    </span>
+                                                )}
+                                                {chapter.status === "scheduled" && (
+                                                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
+                                                        รอเผยแพร่
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {mode === 'writer' && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenSettings(chapter);
+                                            }}
+                                            className="absolute top-2 right-2 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 opacity-60 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                                            title="ตั้งค่าตอน"
+                                        >
+                                            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200" />
+                                        </button>
+                                    )}
                                 </div>
                             ))
                         )}
                     </div>
                 </ScrollArea>
+
+                {/* Modal Setting Chapter */}
+                {selectedChapter && (
+                    <ModalSettingChapter
+                        isOpen={isModalOpen}
+                        onClose={handleCloseModal}
+                        onSave={fetchData} // รีเฟรชข้อมูลหลังจากบันทึก
+                        chapterData={{
+                            id: selectedChapter.chapter_id,
+                            title: selectedChapter.title,
+                            order: selectedChapter.order,
+                            storyId: storyId,
+                            status: selectedChapter.status || "draft",
+                            scheduledDate: selectedChapter.scheduledDate ? new Date(selectedChapter.scheduledDate) :
+                                selectedChapter.scheduled_date ? new Date(selectedChapter.scheduled_date) : undefined,
+                            isHidden: selectedChapter.isHidden || selectedChapter.is_hidden || false,
+                            price: selectedChapter.price
+                        }}
+                        previousChapterStatus={
+                            selectedChapter.order > 1
+                                ? chapters.find(ch => ch.order === selectedChapter.order - 1)?.status || null
+                                : null
+                        }
+                    />
+                )}
             </SheetContent>
         </Sheet>
     )

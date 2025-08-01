@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/update-scheduled-chapters",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

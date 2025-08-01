@@ -88,6 +88,7 @@ model stories {
   tags              String[]
   type              String          @default("เรื่องสั้น")
   views             Int             @default(0)
+  status            String          @default("draft")
   chapter           chapters[]
   favorite          favorite[]
   follow            follow[]
@@ -105,28 +106,31 @@ model chapters {
   created_at      DateTime          @default(now())
   updated_at      DateTime          @updatedAt
   order           Int
+  status          String            @default("draft")
+  is_hidden       Boolean           @default(false)
+  scheduled_date  DateTime?
   chapterComments chapterComments[]
   story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
   transaction     transaction[]
-  voice           voice[]           // เพิ่ม relation กับ voice
+  voice           voice[]
 }
 
 model voice {
-  voice_id     String        @id @default(cuid())
-  user_id      String
-  story_id     String
-  chapter_id   String?       // เพิ่มความเชื่อมโยงกับ chapter
-  file_path    String        // เก็บ path ของไฟล์เสียง
-  file_name    String        // ชื่อไฟล์เดิม
-  file_size    Int           // ขนาดไฟล์ (bytes)
-  duration     Float?        // ความยาวของเสียง (วินาที)
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-  transaction  transaction[]
-  chapter      chapters?     @relation(fields: [chapter_id], references: [chapter_id])
-  story        stories       @relation(fields: [story_id], references: [story_id])
-  user         User          @relation(fields: [user_id], references: [id])
+  voice_id    String        @id @default(cuid())
+  user_id     String
+  story_id    String
+  chapter_id  String?
+  created_at  DateTime      @default(now())
+  duration    Float?
+  file_name   String
+  file_path   String
+  file_size   Int
+  updated_at  DateTime      @updatedAt
+  transaction transaction[]
+  chapter     chapters?     @relation(fields: [chapter_id], references: [chapter_id])
+  story       stories       @relation(fields: [story_id], references: [story_id])
+  user        User          @relation(fields: [user_id], references: [id])
 }
 
 model storyComments {
@@ -141,28 +145,28 @@ model storyComments {
 }
 
 model chapterComments {
-  chapterComment_id String              @id @default(cuid())
+  chapterComment_id String            @id @default(cuid())
   user_id           String
   chapter_id        String
   content           String
-  parent_id         String?             // สำหรับ reply
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  chapter           chapters            @relation(fields: [chapter_id], references: [chapter_id])
-  user              User                @relation(fields: [user_id], references: [id])
-  parent            chapterComments?    @relation("CommentReplies", fields: [parent_id], references: [chapterComment_id])
-  replies           chapterComments[]   @relation("CommentReplies")
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  parent_id         String?
+  chapter           chapters          @relation(fields: [chapter_id], references: [chapter_id])
+  parent            chapterComments?  @relation("CommentReplies", fields: [parent_id], references: [chapterComment_id])
+  replies           chapterComments[] @relation("CommentReplies")
+  user              User              @relation(fields: [user_id], references: [id])
   likes             commentLikes[]
 }
 
 model commentLikes {
-  id                String            @id @default(cuid())
+  id                String          @id @default(cuid())
   user_id           String
   chapterComment_id String
-  created_at        DateTime          @default(now())
-  user              User              @relation(fields: [user_id], references: [id])
-  comment           chapterComments   @relation(fields: [chapterComment_id], references: [chapterComment_id])
-  
+  created_at        DateTime        @default(now())
+  comment           chapterComments @relation(fields: [chapterComment_id], references: [chapterComment_id])
+  user              User            @relation(fields: [user_id], references: [id])
+
   @@unique([user_id, chapterComment_id])
 }
 

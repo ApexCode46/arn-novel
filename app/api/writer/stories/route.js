@@ -25,6 +25,7 @@ export async function GET(req) {
         blurb: true,
         verticalImage: true,
         category: true,
+        status: true,
         created_at: true,
         type: true,
         views: true,
@@ -47,6 +48,7 @@ export async function GET(req) {
       verticalImage: story.verticalImage,
       chapters: story._count.chapter,
       category: story.category,
+      status: story.status,
       created_at: story.created_at,
       type: story.type,
       views: story.views,
@@ -79,6 +81,7 @@ export async function POST(req) {
       hideComments,
       allowComments,
       commentPermission,
+      publishStatus,
       userId,
     } = body;
 
@@ -140,6 +143,7 @@ export async function POST(req) {
           hideComments: hideComments,
           allowComments: allowComments,
           commentPermission: commentPermission,
+          status: publishStatus || "draft",
         },
       });
 
@@ -161,6 +165,7 @@ export async function POST(req) {
           hideComments: hideComments,
           allowComments: allowComments,
           commentPermission: commentPermission,
+          status: publishStatus || "draft", // ใช้ publishStatus หรือ draft เป็นค่าเริ่มต้น
           user_id: userId,
         },
       });

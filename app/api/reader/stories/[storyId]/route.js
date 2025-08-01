@@ -15,7 +15,8 @@ export async function GET(req, { params }) {
     // ดึงข้อมูลนิยายพร้อมข้อมูลผู้เขียนและตอนต่างๆ
     const story = await prisma.stories.findUnique({
       where: {
-        story_id: storyId
+        story_id: storyId,
+        status: "published" // แสดงเฉพาะนิยายที่เผยแพร่แล้ว
       },
       include: {
         user: {
@@ -26,6 +27,9 @@ export async function GET(req, { params }) {
           }
         },
         chapter: {
+          where: {
+            status: "published" // แสดงเฉพาะตอนที่เผยแพร่แล้ว
+          },
           orderBy: {
             order: 'asc'
           },
@@ -40,7 +44,11 @@ export async function GET(req, { params }) {
         },
         _count: {
           select: {
-            chapter: true,
+            chapter: {
+              where: {
+                status: "published" // นับเฉพาะตอนที่เผยแพร่แล้ว
+              }
+            },
             favorite: true,
             follow: true,
             storyComments: true

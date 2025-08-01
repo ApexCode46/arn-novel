@@ -21,7 +21,7 @@ interface Story {
   title: string;
   imageUrl: string | null;
   categories: string;
-  chapters: number;
+  chapter: number; // แก้จาก chapters เป็น chapter
   views: number;
   description: string;
   type: string;
@@ -107,6 +107,7 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
                   src={story.imageUrl || "/novelImg/Test-novel.png"}
                   alt={story.title || "Novel"}
                   fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 
@@ -115,7 +116,7 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="bg-white/90 hover:bg-white text-black backdrop-blur-sm"
+                    // className="bg-white/90 hover:bg-white text-black backdrop-blur-sm"
                     onClick={() => handleReadClick(story.id)}
                   >
                     <BookOpen className="w-4 h-4 mr-1" />
@@ -138,7 +139,7 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
                 </h3>
                 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{story.chapters} ตอน</span>
+                  <span>{story.chapter} ตอน</span>
                   <span>{story.views.toLocaleString()} อ่าน</span>
                 </div>
 
@@ -150,8 +151,8 @@ export function ListItem({ category = "all", limit = 20 }: ListItemProp) {
       
       {/* Navigation Buttons */}
       <div className="hidden sm:block">
-        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-red-500/80 hover:bg-red-500 border-border/50 hover:border-border" />
-        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-500/80 hover:bg-red-500 border-border/50 hover:border-border" />
+        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
+        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
       </div>
     </Carousel>
   );

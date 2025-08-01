@@ -56,6 +56,8 @@ export function Ads() {
                   src={ad.imageUrl}
                   alt={ad.title}
                   fill
+                  priority={ad.id === 1} // เพิ่ม priority สำหรับโฆษณาแรก
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover rounded"
                 />
               </div>

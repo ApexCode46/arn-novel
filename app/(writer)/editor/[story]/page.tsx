@@ -30,6 +30,7 @@ export default function Page() {
   const [hideComments, setHideComments] = useState<boolean>();
   const [allowComments, setAllowComments] = useState<boolean>();
   const [commentPermission, setCommentPermission] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
 
   type Story = {
   title?: string;
@@ -44,6 +45,7 @@ export default function Page() {
   hideComments?: boolean;
   allowComments?: boolean;
   commentPermission?: string;
+  status?: string;
 };
 
 
@@ -61,6 +63,7 @@ export default function Page() {
     setHideComments(updatedStory.hideComments);
     setAllowComments(updatedStory.allowComments);
     setCommentPermission(updatedStory.commentPermission || "");
+    setStatus(updatedStory.status || "");
   };
 
 
@@ -90,6 +93,7 @@ export default function Page() {
         setHideComments(getResult.hideComments);
         setAllowComments(getResult.allowComments);
         setCommentPermission(getResult.commentPermission || "");
+        setStatus(getResult.status || "");
       } catch (error) {
         console.error("Error fetching story data:", error);
       }
@@ -104,7 +108,7 @@ export default function Page() {
       <div className="container mx-auto py-4 space-y-6">
         <Modalsettingstory
           trigger={
-            <div className="cursor-pointer  transition-all duration-200 hover:shadow-lg ">
+            <div className="cursor-pointer  transition-all duration-200 shadow-lg hover:scale-105 ">
               <Card className="w-full bg-backgroundCustom border hover:bg-secondary ">
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -185,6 +189,7 @@ export default function Page() {
             hideComments: hideComments,
             allowComments: allowComments,
             commentPermission: commentPermission,
+            publishStatus: status as "draft" | "published",
           }}
           onSubmit={handleStoryUpdate}
         />

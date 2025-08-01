@@ -10,15 +10,15 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
 
     // สร้าง where clause สำหรับการกรองตามหมวดหมู่
-    let whereClause = {};
+    let whereClause = {
+      status: "published" // แสดงเฉพาะนิยายที่เผยแพร่แล้ว
+    };
     
     if (category && category !== 'all') {
       // ใช้ contains สำหรับค้นหาคำที่อยู่ในข้อความ
       // เช่น หา "แฟนตาซี" ใน "นิยายตื่นเต้น แฟนตาซี"
-      whereClause = {
-        category: {
-          contains: category
-        }
+      whereClause.category = {
+        contains: category
       };
     }
 
