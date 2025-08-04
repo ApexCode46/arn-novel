@@ -200,17 +200,40 @@ model wallet {
   user        User          @relation(fields: [user_id], references: [id])
 }
 
+model coinPackage {
+  package_id    String        @id @default(uuid())
+  name          String        // ชื่อแพ็คเกจ
+  amount        Int           // จำนวน coins หลัก
+  bonus         Int           @default(0) // coins โบนัส
+  price         Int           // ราคาในบาท
+  original_price Int?         // ราคาเดิม (ก่อนลด)
+  is_popular    Boolean       @default(false) // แพ็คเกจแนะนำ
+  is_active     Boolean       @default(true) // เปิด/ปิดการขาย
+  description   String?       // คำอธิบาย
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  transactions  transaction[] // ธุรกรรมที่ใช้แพ็คเกจนี้
+}
+
 model transaction {
-  transaction_id String          @id @default(cuid())
-  wallet_id      String
-  amount         Int
-  type           TransactionType
-  chapter_id     String?
-  voice_id       String?
-  created_at     DateTime        @default(now())
-  chapter        chapters?       @relation(fields: [chapter_id], references: [chapter_id])
-  voice          voice?          @relation(fields: [voice_id], references: [voice_id])
-  wallet         wallet          @relation(fields: [wallet_id], references: [wallet_id])
+  transaction_id          String          @id @default(uuid())
+  wallet_id               String
+  amount                  Int
+  type                    TransactionType
+  chapter_id              String?
+  voice_id                String?
+  coin_package_id         String?         // อ้างอิงถึงแพ็คเกจที่ซื้อ
+  created_at              DateTime        @default(now())
+  stripe_payment_intent_id String?         // Stripe Payment Intent ID
+  stripe_charge_id        String?         // Stripe Charge ID  
+  payment_method          String?         // วิธีการชำระเงิน (stripe, bank_transfer, etc)
+  payment_status          PaymentStatus   @default(PENDING) // สถานะการชำระเงิน
+  currency                String          @default("THB") // สกุลเงิน
+  notes                   String?         // หมายเหตุเพิ่มเติม
+  chapter                 chapters?       @relation(fields: [chapter_id], references: [chapter_id])
+  voice                   voice?          @relation(fields: [voice_id], references: [voice_id])
+  wallet                  wallet          @relation(fields: [wallet_id], references: [wallet_id])
+  coinPackage             coinPackage?    @relation(fields: [coin_package_id], references: [package_id])
 }
 
 enum TransactionType {
@@ -218,4 +241,13 @@ enum TransactionType {
   PURCHASE
   REFUND
   BONUS
+}
+
+enum PaymentStatus {
+  PENDING     // รอการชำระเงิน
+  PROCESSING  // กำลังดำเนินการ
+  SUCCESS     // สำเร็จ
+  FAILED      // ล้มเหลว
+  CANCELLED   // ยกเลิก
+  REFUNDED    // คืนเงินแล้ว
 }

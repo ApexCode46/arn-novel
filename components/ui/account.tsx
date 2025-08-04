@@ -24,6 +24,10 @@ export default function Account() {
     router.push("/login");
   }
 
+  const handleNavigationToWallet = () => {
+    router.push("/wallet");
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="bg-backgroundNav">
@@ -60,7 +64,7 @@ export default function Account() {
             <DropdownMenuItem onClick={handleNavigationToWriter}>
               <Pencil /> เขียนนิยาย
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleNavigationToWallet}>
               <Coins /> เติมเหรียญ
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => signOut()}>

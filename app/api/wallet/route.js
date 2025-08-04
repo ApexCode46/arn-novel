@@ -1,8 +1,9 @@
-import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { prisma } from "@/lib/prisma";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import { hash } from "bcrypt";
 
 const authOptions = {
@@ -29,7 +30,7 @@ const authOptions = {
             type: "credentials",
           },
           include: {
-            user: true, // สำคัญ! ต้อง include user เพื่อส่งให้ NextAuth
+            user: true,
           },
         });
 
@@ -42,12 +43,12 @@ const authOptions = {
           throw new Error("รหัสผ่านไม่ถูกต้อง");
         }
 
-        return account.user; 
+        return account.user;
       },
     }),
   ],
   callbacks: {
-    async session({ session, token }) {  //user
+    async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
@@ -64,10 +65,9 @@ const authOptions = {
   },
   events: {
     async createUser({ user }) {
-      // สร้าง wallet สำหรับผู้ใช้ใหม่ (เมื่อ login ด้วย Google ครั้งแรก)
       try {
         const existingWallet = await prisma.wallet.findUnique({
-          where: { user_id: user.id }
+          where: { user_id: user.id },
         });
 
         if (!existingWallet) {
@@ -94,5 +94,70 @@ const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้" }, { status: 401 });
+    }
+
+    // ดึงข้อมูล wallet พร้อมธุรกรรม
+    const wallet = await prisma.wallet.findUnique({
+      where: { user_id: session.user.id },
+      include: {
+        transaction: {
+          orderBy: { created_at: "desc" },
+          take: 20, // แสดง 20 รายการล่าสุด
+          include: {
+            chapter: {
+              select: {
+                title: true,
+                story: {
+                  select: {
+                    title: true,
+                  },
+                },
+              },
+            },
+            voice: {
+              select: {
+                file_name: true,
+                story: {
+                  select: {
+                    title: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!wallet) {
+      // หาก wallet ไม่มี ให้สร้างใหม่
+      const newWallet = await prisma.wallet.create({
+        data: {
+          user_id: session.user.id,
+          balance: 0,
+        },
+        include: {
+          transaction: {
+            orderBy: { created_at: "desc" },
+          },
+        },
+      });
+
+      return NextResponse.json(newWallet);
+    }
+
+    return NextResponse.json(wallet);
+  } catch (error) {
+    console.error("Error fetching wallet:", error);
+    return NextResponse.json(
+      { error: "เกิดข้อผิดพลาดในการดึงข้อมูล wallet" },
+      { status: 500 }
+    );
+  }
+}
