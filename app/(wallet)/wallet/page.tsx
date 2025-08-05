@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wallet, Plus, History, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Gift, RefreshCw, Search, X } from "lucide-react";
+import { Wallet, Plus, History, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -338,7 +338,7 @@ export default function WalletPage() {
                 
                 {searchQuery && (
                   <div className="text-sm text-gray-600">
-                    ค้นหา: "{searchQuery}" พบ {totalTransactions} รายการ
+                    ค้นหา: {searchQuery} พบ {totalTransactions} รายการ
                     {totalTransactions > 0 && totalPages > 1 && (
                       <span className="ml-2">({totalPages} หน้า)</span>
                     )}

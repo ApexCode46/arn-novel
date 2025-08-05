@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
 // Import authOptions from NextAuth config
 const authOptions = {
-  adapter: require("@next-auth/prisma-adapter").PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
   providers: [
     // Your providers will be imported from the auth config
   ],

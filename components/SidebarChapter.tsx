@@ -20,7 +20,7 @@ import {
 import { SetStateAction, useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Settings } from "lucide-react";
+import { Settings, Coins, EyeOff, Clock, Pen } from "lucide-react";
 import ModalSettingChapter from "@/components/ModalSettingChapter";
 
 type SidebarChapterProps = {
@@ -270,23 +270,23 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                                             <div className="flex items-center gap-2">
                                                 <span>ตอนที่ {chapter.order} : {chapter.title}</span>
                                                 {chapter.price > 0 && (
-                                                    <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded">
-                                                        {chapter.price} เหรียญ
+                                                    <span className="flex justify-center items-center text-xs bg-yellow-900 text-yellow-200 px-2 py-0.5 rounded">
+                                                        {chapter.price} <Coins className="inline-block w-3 h-3" />
                                                     </span>
                                                 )}
                                                 {(chapter.isHidden || chapter.is_hidden) && (
-                                                    <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded">
-                                                        ซ่อน
+                                                    <span className="flex justify-center items-center text-xs bg-red-900 text-white px-2 py-0.5 rounded">
+                                                        <EyeOff className="inline-block w-3 h-3" />
                                                     </span>
                                                 )}
                                                 {chapter.status === "draft" && (
-                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                                                        ร่าง
+                                                    <span className="flex justify-center items-center text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                                        <Pen className="inline-block w-3 h-3" />
                                                     </span>
                                                 )}
                                                 {chapter.status === "scheduled" && (
-                                                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
-                                                        รอเผยแพร่
+                                                    <span className="flex justify-center items-center text-xs bg-blue-900 text-blue-200 px-2 py-0.5 rounded">
+                                                        <Clock className="inline-block w-3 h-3" />
                                                     </span>
                                                 )}
                                             </div>

@@ -120,16 +120,6 @@ export async function GET() {
                 },
               },
             },
-            voice: {
-              select: {
-                file_name: true,
-                story: {
-                  select: {
-                    title: true,
-                  },
-                },
-              },
-            },
           },
         },
       },

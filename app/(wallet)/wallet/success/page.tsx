@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Coins, Loader2 } from "lucide-react";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -130,5 +130,29 @@ export default function PaymentSuccessPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+// Loading component for Suspense
+function PaymentSuccessLoading() {
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <Card className="w-full max-w-md">
+                <CardContent className="p-8 text-center">
+                    <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
+                    <h1 className="text-xl font-semibold mb-2">กำลังโหลด...</h1>
+                    <p className="text-gray-600">กำลังตรวจสอบข้อมูลการชำระเงิน</p>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// Main component with Suspense
+export default function PaymentSuccessPage() {
+    return (
+        <Suspense fallback={<PaymentSuccessLoading />}>
+            <PaymentSuccessContent />
+        </Suspense>
     );
 }

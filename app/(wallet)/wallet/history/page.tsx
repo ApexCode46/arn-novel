@@ -47,7 +47,7 @@ interface WalletData {
 type ViewMode = "coin" | "novel";
 
 export default function WalletHistoryPage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const [walletData, setWalletData] = useState<WalletData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");

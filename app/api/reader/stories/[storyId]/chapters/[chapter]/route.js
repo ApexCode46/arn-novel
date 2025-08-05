@@ -55,9 +55,17 @@ export async function GET(request, { params }) {
       where: {
         story_id: storyId,
         order: chapterOrder,
-        status: "published", // เพิ่มเงื่อนไข status
+        status: "published", 
       },
-      include: {
+      select: {
+        chapter_id: true,
+        order: true,
+        title: true,
+        content: true,
+        price: true,
+        is_hidden: true,
+        created_at: true,
+        updated_at: true,
         _count: {
           select: {
             chapterComments: true,
@@ -103,7 +111,7 @@ export async function GET(request, { params }) {
     const allChapters = await prisma.chapters.findMany({
       where: {
         story_id: storyId,
-        status: "published", // เพิ่มเงื่อนไข status
+        status: "published",
       },
       orderBy: {
         order: "asc",
@@ -124,6 +132,7 @@ export async function GET(request, { params }) {
         title: chapterData.title,
         content: chapterData.content,
         price: chapterData.price,
+        is_hidden: chapterData.is_hidden, // เพิ่ม is_hidden field ใน response
         created_at: chapterData.created_at,
         updated_at: chapterData.updated_at,
         commentsCount: chapterData._count.chapterComments,

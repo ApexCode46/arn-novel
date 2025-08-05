@@ -7,6 +7,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     ChevronLeft,
     ChevronRight,
@@ -16,7 +17,8 @@ import {
     Minus,
     Plus,
     Sidebar,
-    MessageCircle
+    MessageCircle,
+    EyeOff
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -35,6 +37,7 @@ interface Chapter {
     title: string;
     content: string;
     price: number;
+    is_hidden?: boolean;
     created_at: string;
     updated_at: string;
     commentsCount: number;
@@ -102,6 +105,30 @@ function ChapterContentDisplay({ content, fontSize, fontFamily }: { content: str
                 />
             </div>
         </div>
+    );
+}
+
+// Component สำหรับแสดงเมื่อเนื้อหาถูกซ่อน
+function HiddenContentDisplay() {
+    return (
+        <Card className="w-full max-w-md mx-auto bg-backgroundCustom backdrop-blur-sm shadow-xl">
+                    <CardHeader className="text-center">
+                        <div className="mx-auto mb-4 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                            <EyeOff className="w-8 h-8 text-gray-500" />
+                        </div>
+                        <CardTitle className="text-xl font-bold">
+                            เนื้อหาถูกปิดการมองเห็น
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                        <p className="text-gray-600 mb-4">
+                            เนื้อหาตอนนี้ถูกซ่อนโดยผู้เขียน
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            กรุณาติดต่อผู้เขียนหรือรอการเปิดเผยเนื้อหา
+                        </p>
+                    </CardContent>
+                </Card>
     );
 }
 
@@ -298,6 +325,8 @@ export default function Page() {
                 }
 
                 const data = await response.json();
+
+                
                 setChapterData(data.data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
@@ -330,6 +359,8 @@ export default function Page() {
     }
 
     const { chapter, story, navigation } = chapterData;
+    
+    const isHidden = chapter.is_hidden === true;
 
     return (
         <div className="relative">
@@ -357,23 +388,29 @@ export default function Page() {
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
                 </div>
                 
-                {/* Voice Player */}
-                <div className="mb-6">
-                    <VoicePlayer
-                        storyId={storyId}
-                        chapterId={chapter.chapter_id}
-                        chapterTitle={chapter.title}
-                        chapterOrder={chapter.order}
-                    />
-                </div>
+                {/* Voice Player - ซ่อนเมื่อ is_hidden เป็น true */}
+                {!isHidden && (
+                    <div className="mb-6">
+                        <VoicePlayer
+                            storyId={storyId}
+                            chapterId={chapter.chapter_id}
+                            chapterTitle={chapter.title}
+                            chapterOrder={chapter.order}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Content area with click handler */}
             <div onClick={handleContentClick} className="cursor-pointer md:cursor-default">
-                <ChapterContentDisplay content={chapter.content} fontSize={fontSize} fontFamily={fontFamily} />
+                {isHidden ? (
+                    <HiddenContentDisplay />
+                ) : (
+                    <ChapterContentDisplay content={chapter.content} fontSize={fontSize} fontFamily={fontFamily} />
+                )}
             </div>
 
-            {/* Navigation Footer */}
+            {/* Navigation Footer - แสดงเสมอไม่ว่าเนื้อหาจะถูกซ่อนหรือไม่ */}
             <div className="mt-8">
                 <div className="flex justify-between items-center">
                     {/* Previous Chapter */}

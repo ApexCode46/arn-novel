@@ -15,20 +15,53 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { EyeOff, Coins } from "lucide-react";
 import { SetStateAction, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import TextAlign from '@tiptap/extension-text-align'
+import TextAlign from '@tiptap/extension-text-align';
+import { ModalConfirm } from "@/components/ModalConfirm";
+import { useSession } from "next-auth/react";
+
+// Interface สำหรับ Session
+interface ExtendedUser {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  wallet?: {
+    balance: number;
+  };
+}
+
+interface ExtendedSession {
+  user?: ExtendedUser;
+  expires?: string;
+}
 
 interface Chapter {
   chapter_id: string;
   title: string;
   order: number;
   price: number;
+  is_hidden?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface Transaction {
+  transaction_id: string;
+  chapter_id: string;
+  amount: number;
+  created_at: string;
+  chapter?: {
+    chapter_id: string;
+    title: string;
+    order: number;
+    price: number;
+  };
 }
 
 interface Author {
@@ -73,6 +106,7 @@ function StoryInfoDisplay({ content }: { content: string }) {
     ],
     content: content || '<p>ไม่มีข้อมูลเพิ่มเติมเกี่ยวกับเรื่องนี้</p>',
     editable: false,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none',
@@ -96,10 +130,20 @@ export default function Page() {
   const params = useParams();
   const storyId = params.story as string;
   const router = useRouter();
+  const { data: session, status } = useSession() as { 
+    data: ExtendedSession | null; 
+    status: "loading" | "authenticated" | "unauthenticated" 
+  };
 
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State สำหรับ Modal Confirm
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [userCoins, setUserCoins] = useState(0);
+  const [purchasedChapters, setPurchasedChapters] = useState<Set<string>>(new Set());
 
   // ดึงข้อมูลนิยายจาก API
   useEffect(() => {
@@ -125,6 +169,62 @@ export default function Page() {
       fetchStory();
     }
   }, [storyId]);
+
+  // ดึงข้อมูล transaction ที่ผู้ใช้ซื้อบทในเรื่องนี้
+  useEffect(() => {
+    const fetchPurchasedChapters = async () => {
+      if (status === "authenticated" && session?.user && storyId) {
+        try {
+          const userId = session.user.id || session.user.email;
+          if (!userId) return;
+
+          const response = await fetch(`/api/reader/purchased-chapters?user_id=${encodeURIComponent(userId)}&story_id=${storyId}`);
+          if (response.ok) {
+            const data = await response.json();
+            // สร้าง Set ของ chapter_id ที่ซื้อแล้ว
+            const purchasedSet = new Set<string>(
+              data.purchasedChapters?.map((transaction: Transaction) => transaction.chapter_id)
+                .filter((id: string | null | undefined) => id) || []
+            );
+            setPurchasedChapters(purchasedSet);
+          }
+        } catch (error) {
+          console.log('Error fetching purchased chapters:', error);
+        }
+      }
+    };
+
+    fetchPurchasedChapters();
+  }, [status, session, storyId]);
+
+  // ดึงข้อมูลเหรียญของผู้ใช้
+  useEffect(() => {
+    const fetchUserCoins = async () => {
+      if (status === "authenticated" && session?.user) {
+        try {
+          // ใช้ user.id เป็นหลัก แต่ถ้าไม่มีให้ใช้ email
+          const userId = session.user.id || session.user.email;
+          if (!userId) {
+            console.log('No user ID or email found');
+            return;
+          }
+
+          // ส่ง user ID ไปใน query parameter
+          const response = await fetch(`/api/wallet/balance?user_id=${encodeURIComponent(userId)}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserCoins(data.balance || 0);
+          } else {
+            console.log('Failed to fetch user balance:', response.status);
+          }
+        } catch (error) {
+          console.log('Error fetching user coins:', error);
+        }
+      }
+    };
+
+    fetchUserCoins();
+  }, [status, session]);
 
   // ตัวแปรสำหรับ pagination
   const chaptersPerPage = 20;
@@ -171,8 +271,36 @@ export default function Page() {
 
   const currentChapters = getCurrentPageChapters();
 
-  const handleChapterClick = (chapterOrder: number) => {
-    router.push(`/novel/${storyId}/${chapterOrder}`);
+  const handleChapterClick = (chapter: Chapter) => {
+    // ตรวจสอบว่าบทนี้ซื้อแล้วหรือไม่
+    const isPurchased = purchasedChapters.has(chapter.chapter_id);
+    
+    // ถ้าซื้อแล้วหรือฟรี ไปยังบทโดยตรง
+    if (chapter.price === 0 || isPurchased) {
+      router.push(`/novel/${storyId}/${chapter.order}`);
+    } else {
+      // ถ้ายังไม่ซื้อและมีราคา แสดง modal confirm
+      setSelectedChapter(chapter);
+      setIsModalOpen(true);
+    }
+  };
+
+  // ฟังก์ชันสำหรับยืนยันการซื้อบท
+  const handleConfirmPurchase = async () => {
+    if (selectedChapter) {
+      // หลังจากซื้อสำเร็จ อัปเดต purchasedChapters และไปยังบทนั้น
+      const newPurchasedChapters = new Set(purchasedChapters);
+      newPurchasedChapters.add(selectedChapter.chapter_id);
+      setPurchasedChapters(newPurchasedChapters);
+      
+      router.push(`/novel/${storyId}/${selectedChapter.order}`);
+    }
+  };
+
+  // ฟังก์ชันสำหรับปิด modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedChapter(null);
   };
 
   // Loading state
@@ -205,6 +333,7 @@ export default function Page() {
                   src={story.verticalImage ||  "/novelImg/Test-novel.png"}
                   alt={story.title}
                   fill
+                  priority
                   className="object-cover rounded-lg shadow-md"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
@@ -303,24 +432,46 @@ export default function Page() {
               </>
             )}
             {currentChapters.length > 0 ? (
-              currentChapters.map((chapter) => (
+              currentChapters.map((chapter) => {
+                const isPurchased = purchasedChapters.has(chapter.chapter_id);
+                return (
                 <div
                   key={chapter.chapter_id}
-                  onClick={() => handleChapterClick(chapter.order)}
-                  className="text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border"
+                  onClick={() => handleChapterClick(chapter)}
+                  className={`text-sm my-2 p-4 bg-background rounded hover:bg-backgroundCustom cursor-pointer transition-colors border ${
+                    chapter.is_hidden ? 'opacity-60 border-dashed' : ''
+                  }`}
                 >
                   <div className="flex justify-between items-center">
-                    <span>ตอนที่ {chapter.order}: {chapter.title}</span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {chapter.price > 0 && (
-                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                          {chapter.price} เหรียญ
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <span>ตอนที่ {chapter.order}: {chapter.title}</span>
+                      <div className="flex items-center gap-2">
+                        {/* Test hidden icon */}
+                        {chapter.is_hidden && (
+                          <div className="flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded" title="บทนี้ถูกซ่อน">
+                            <EyeOff className="w-3 h-3" />
+                            <span className="ml-1 text-xs">ซ่อน</span>
+                          </div>
+                        )}
+                        {/* Test price icon - แสดงเฉพาะเมื่อยังไม่ซื้อและมีราคา */}
+                        {chapter.price > 0 && !isPurchased && (
+                          <div className="flex items-center bg-yellow-100 text-yellow-800 px-2 py-1 rounded" title="บทนี้ต้องใช้เหรียญ">
+                            <Coins className="w-3 h-3" />
+                            <span className="ml-1 text-xs">{chapter.price}</span>
+                          </div>
+                        )}
+                        {/* แสดงสถานะซื้อแล้ว */}
+                        {chapter.price > 0 && isPurchased && (
+                          <div className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded" title="บทนี้ซื้อแล้ว">
+                            <span className="ml-1 text-xs">ซื้อแล้ว</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))
+                )
+              })
             ) : (
               <div className="text-center text-muted-foreground py-8">
                 ยังไม่มีตอนในเรื่องนี้
@@ -329,6 +480,25 @@ export default function Page() {
           </div>
         </ScrollArea>
       </div>
+
+      {/* Modal Confirm สำหรับการซื้อบท */}
+      {selectedChapter && (
+        <ModalConfirm
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmPurchase}
+          item={{
+            storyId: story.story_id,
+            chapterId: selectedChapter.chapter_id,
+            title: `ตอนที่ ${selectedChapter.order}: ${selectedChapter.title}`,
+            price: selectedChapter.price,
+            description: `ตอนที่ ${selectedChapter.order} ของเรื่อง "${story?.title || 'ไม่ระบุ'}"`,
+            imageUrl: story?.verticalImage || "/novelImg/Test-novel.png"
+          }}
+          userCoins={userCoins}
+          paymentMethod="coins"
+        />
+      )}
     </>
   );
 }
