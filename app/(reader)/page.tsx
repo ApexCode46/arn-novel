@@ -2,12 +2,36 @@
 
 import { Ads } from "@/components/Ads";
 import { ListItem } from "@/components/ListItem";
-// import { useSession } from 'next-auth/react';
 import Ranking from "@/components/Ranking";
 import { Button } from "@/components/ui/button";
+import { Search, Pencil, ChartNoAxesCombined, Wallet, User } from "lucide-react";
+
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  // const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleToSearch = () => {
+    router.push("/search");
+  }
+
+  const handleToWriter = () => {
+    router.push("/writer");
+  }
+
+  const handleToRanking = () => {
+    router.push("/ranking");
+  }
+
+  const handleToWallet = () => {
+    router.push("/wallet");
+  }
+
+  const handleToProfile = () => {
+    router.push("/profile");
+  }
+
+
 
   // if (status === 'loading') {
   //   return (
@@ -27,13 +51,35 @@ export default function Home() {
       </div>
       <hr />
 
-      <div>
-        <button>1</button>
-        <button>1</button>
-        <button>1</button>
-        <button>1</button>
-        <button>1</button>
+      <div className="flex justify-center items-center p-6 bg-white/50 backdrop-blur-sm border-b border-gray-200/60">
+        <div className="flex items-center gap-2 md:gap-6">
+          <button onClick={() => handleToSearch()} className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out hover:scale-105">
+            <Search size={20}  className="text-gray-600 group-hover:text-blue-600 transition-colors" />
+            <span className="text-xs mt-1 text-gray-500 group-hover:text-blue-600 hidden sm:block font-medium">ค้นหา</span>
+          </button>
+
+          <button onClick={() => handleToWriter()} className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out hover:scale-105">
+            <Pencil size={20}  className="text-gray-600 group-hover:text-emerald-600 transition-colors" />
+            <span className="text-xs mt-1 text-gray-500 group-hover:text-emerald-600 hidden sm:block font-medium">เขียนนิยาย</span>
+          </button>
+
+          <button onClick={() => handleToRanking()} className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out hover:scale-105">
+            <ChartNoAxesCombined size={20}  className="text-gray-600 group-hover:text-purple-600 transition-colors" />
+            <span className="text-xs mt-1 text-gray-500 group-hover:text-purple-600 hidden sm:block font-medium">ยอดนิยม</span>
+          </button>
+
+          <button onClick={() => handleToWallet()} className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out hover:scale-105">
+            <Wallet size={20}  className="text-gray-600 group-hover:text-yellow-600 transition-colors" />
+            <span className="text-xs mt-1 text-gray-500 group-hover:text-yellow-600 hidden sm:block font-medium">การเป๋า</span>
+          </button>
+
+          <button onClick={() => handleToProfile()} className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 ease-out hover:scale-105">
+            <User size={20}  className="text-gray-600 group-hover:text-indigo-600 transition-colors" />
+            <span className="text-xs mt-1 text-gray-500 group-hover:text-indigo-600 hidden sm:block font-medium">โปรไฟล์</span>
+          </button>
+        </div>
       </div>
+
       <hr />
 
 

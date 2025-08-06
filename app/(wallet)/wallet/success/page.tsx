@@ -53,12 +53,12 @@ function PaymentSuccessContent() {
                     window.location.href = '/wallet';
                 }, 3000);
             } else {
-                console.error('Payment verification failed:', result);
+                console.log('Payment verification failed:', result);
                 setStatus('error');
                 setMessage(result.error || 'เกิดข้อผิดพลาดในการตรวจสอบการชำระเงิน');
             }
         } catch (error) {
-            console.error('Payment verification error:', error);
+            console.log('Payment verification error:', error);
             setStatus('error');
             setMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }

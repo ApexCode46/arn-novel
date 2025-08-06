@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcrypt";
+import { compare } from "bcrypt";
 
 const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -37,7 +37,7 @@ const authOptions = {
           throw new Error("ไม่พบผู้ใช้หรือยังไม่ได้ตั้งรหัสผ่าน");
         }
 
-        const isValid = await hash(credentials.password, account.password);
+        const isValid = await compare(credentials.password, account.password);
         if (!isValid) {
           throw new Error("รหัสผ่านไม่ถูกต้อง");
         }

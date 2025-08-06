@@ -126,6 +126,18 @@ export async function GET() {
     });
 
     if (!wallet) {
+      // ตรวจสอบว่า user มีอยู่จริงในฐานข้อมูลก่อน
+      const existingUser = await prisma.user.findUnique({
+        where: { id: session.user.id }
+      });
+
+      if (!existingUser) {
+        return NextResponse.json(
+          { error: "ไม่พบข้อมูลผู้ใช้ในระบบ" }, 
+          { status: 404 }
+        );
+      }
+
       // หาก wallet ไม่มี ให้สร้างใหม่
       const newWallet = await prisma.wallet.create({
         data: {
