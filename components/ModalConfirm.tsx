@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Coins, AlertTriangle } from "lucide-react";
 import Image from "next/image";
@@ -109,7 +110,7 @@ export function ModalConfirm({
     
     // Check if user is authenticated
     if (status !== "authenticated" || !session?.user) {
-      alert("กรุณาเข้าสู่ระบบก่อนทำการซื้อ");
+      toast.warning("กรุณาเข้าสู่ระบบก่อนทำการซื้อ");
       return;
     }
     
@@ -151,9 +152,9 @@ export function ModalConfirm({
       // Close modal after successful purchase
       onClose();
     } catch (error) {
-      console.log("Purchase failed:", error);
-      const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการซื้อ';
-      alert(errorMessage);
+  console.log("Purchase failed:", error);
+  const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการซื้อ';
+  toast.error(errorMessage);
     } finally {
       setConfirming(false);
     }

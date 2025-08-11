@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Lock, EyeOff } from "lucide-react";
@@ -143,9 +144,54 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <div className="text-muted-foreground">กำลังโหลด...</div>
-      </div>
+      <Carousel
+        opts={{
+          align: "start",
+        }}
+        className="w-full"
+      >
+        <CarouselContent className="w-full">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <CarouselItem
+              key={index}
+              className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 p-2 py-6"
+            >
+              <div className="group relative flex flex-col bg-backgroundCustom rounded-lg border overflow-hidden shadow-sm">
+                {/* Image Skeleton */}
+                <div className="relative w-full aspect-[3/4] overflow-hidden">
+                  <Skeleton className="w-full h-full bg-background" />
+                  
+                  {/* Category Badge Skeleton */}
+                  <div className="absolute top-2 left-2">
+                    <Skeleton className="h-5 w-16 rounded-full bg-backgroundCustom" />
+                  </div>
+                </div>
+
+                {/* Content Skeleton */}
+                <div className="p-3 space-y-2">
+                  {/* Title Skeleton */}
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-full bg-background" />
+                    <Skeleton className="h-4 w-3/4 bg-background" />
+                  </div>
+                  
+                  {/* Stats Skeleton */}
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-12 bg-background" />
+                    <Skeleton className="h-3 w-16 bg-background" />
+                  </div>
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        
+        {/* Navigation Buttons */}
+        <div className="hidden sm:block">
+          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
+          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
+        </div>
+      </Carousel>
     );
   }
 

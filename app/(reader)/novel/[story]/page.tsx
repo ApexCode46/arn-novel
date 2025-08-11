@@ -24,6 +24,10 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import { ModalConfirm } from "@/components/ModalConfirm";
 import { useSession } from "next-auth/react";
+import { CommentsStory } from "@/components/commentsStory";
+import { Button } from '@/components/ui/button';
+import { Heart, Bell } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Interface สำหรับ Session
 interface ExtendedUser {
@@ -144,6 +148,12 @@ export default function Page() {
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [userCoins, setUserCoins] = useState(0);
   const [purchasedChapters, setPurchasedChapters] = useState<Set<string>>(new Set());
+  // follow & favorite state
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followCount, setFollowCount] = useState(0);
+  const [ffLoading, setFfLoading] = useState(false);
 
   // ดึงข้อมูลนิยายจาก API
   useEffect(() => {
@@ -255,6 +265,72 @@ export default function Page() {
     }
   }, [story, pageOptions]);
 
+  // Fetch follow & favorite status
+  useEffect(() => {
+    const run = async () => {
+      if (!storyId) return;
+      try {
+        const [favRes, folRes] = await Promise.all([
+          fetch(`/api/reader/stories/${storyId}/favorite`, { cache: 'no-store' }),
+          fetch(`/api/reader/stories/${storyId}/follow`, { cache: 'no-store' })
+        ]);
+        if (favRes.ok) {
+          const j = await favRes.json();
+            setFavoriteCount(j.data.count);
+            setIsFavorited(j.data.isFavorited);
+        }
+        if (folRes.ok) {
+          const j2 = await folRes.json();
+            setFollowCount(j2.data.count);
+            setIsFollowing(j2.data.isFollowing);
+        }
+      } catch (e) {
+        console.log('FF status error', e);
+      }
+    };
+    run();
+  }, [storyId]);
+
+  const toggleFavorite = async () => {
+    if (ffLoading) return;
+    if (status !== 'authenticated') {
+      toast.warning('กรุณาเข้าสู่ระบบเพื่อเพิ่มถูกใจ');
+      return;
+    }
+    try {
+      setFfLoading(true);
+      const res = await fetch(`/api/reader/stories/${storyId}/favorite`, { method: 'POST' });
+      if (!res.ok) throw new Error('ไม่สามารถอัปเดตถูกใจ');
+      const j = await res.json();
+      setIsFavorited(j.data.isFavorited);
+      setFavoriteCount(j.data.count);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setFfLoading(false);
+    }
+  };
+
+  const toggleFollow = async () => {
+    if (ffLoading) return;
+    if (status !== 'authenticated') {
+      toast.warning('กรุณาเข้าสู่ระบบเพื่อติดตาม');
+      return;
+    }
+    try {
+      setFfLoading(true);
+      const res = await fetch(`/api/reader/stories/${storyId}/follow`, { method: 'POST' });
+      if (!res.ok) throw new Error('ไม่สามารถอัปเดตการติดตาม');
+      const j = await res.json();
+      setIsFollowing(j.data.isFollowing);
+      setFollowCount(j.data.count);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setFfLoading(false);
+    }
+  };
+
   // ฟังก์ชันสำหรับการเปลี่ยนหน้า
   const handlePageChange = (value: SetStateAction<string>) => {
     setCurrentPage(value);
@@ -344,6 +420,14 @@ export default function Page() {
               <CardTitle className="text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight break-words hyphens-auto">
                 {story.title}
               </CardTitle>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button variant={isFavorited ? 'default' : 'outline'} size="sm" disabled={ffLoading} onClick={toggleFavorite} className={isFavorited ? 'bg-pink-600 hover:bg-pink-700 text-white' : ''}>
+                  <Heart className={`w-4 h-4 mr-1 ${isFavorited ? 'fill-current' : ''}`} /> {favoriteCount}
+                </Button>
+                <Button variant={isFollowing ? 'default' : 'outline'} size="sm" disabled={ffLoading} onClick={toggleFollow} className={isFollowing ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}>
+                  <Bell className="w-4 h-4 mr-1" />ติดตาม {followCount}
+                </Button>
+              </div>
 
               <div className="space-y-3 text-sm md:text-base">
                 <div className="flex flex-wrap items-start gap-2">
@@ -499,6 +583,7 @@ export default function Page() {
           paymentMethod="coins"
         />
       )}
+  <CommentsStory storyId={story.story_id} />
     </>
   );
 }

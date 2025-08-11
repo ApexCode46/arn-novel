@@ -38,6 +38,7 @@ interface Chapter {
     content: string;
     price: number;
     is_hidden?: boolean;
+    views?: number;
     created_at: string;
     updated_at: string;
     commentsCount: number;
@@ -47,6 +48,7 @@ interface Story {
     penName: string;
     story_id: string;
     title: string;
+    views?: number;
     author: {
         id: string;
         name: string;
@@ -386,6 +388,15 @@ export default function Page() {
                     </h1>
                     <h1 className="text-lg font-semibold text-muted-foreground break-words hyphens-auto">ตอนที่ {chapter.order} : {chapter.title}</h1>
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
+                    {/* แสดงจำนวน views */}
+                    <div className="flex justify-center items-center gap-4 text-xs text-muted-foreground mt-1">
+                        {story.views !== undefined && (
+                            <span>การอ่านทั้งเรื่อง: {story.views.toLocaleString()} ครั้ง</span>
+                        )}
+                        {chapter.views !== undefined && (
+                            <span>การอ่านตอนนี้: {chapter.views.toLocaleString()} ครั้ง</span>
+                        )}
+                    </div>
                 </div>
                 
                 {/* Voice Player - ซ่อนเมื่อ is_hidden เป็น true */}

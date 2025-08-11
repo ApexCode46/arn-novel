@@ -74,8 +74,6 @@ model stories {
   user_id           String
   title             String
   category          String
-  created_at        DateTime        @default(now())
-  updated_at        DateTime        @updatedAt
   allowComments     Boolean
   blurb             String?
   commentPermission String
@@ -89,6 +87,9 @@ model stories {
   type              String          @default("เรื่องสั้น")
   views             Int             @default(0)
   status            String          @default("draft")
+  is_end            Boolean         @default(false)
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
   chapter           chapters[]
   favorite          favorite[]
   follow            follow[]
@@ -104,12 +105,13 @@ model chapters {
   title           String
   content         String
   price           Int
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
   order           Int
   is_hidden       Boolean           @default(false)
   scheduled_date  DateTime?
   status          String            @default("draft")
+  views           Int               @default(0)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
   chapterComments chapterComments[]
   story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
@@ -118,19 +120,19 @@ model chapters {
 }
 
 model voice {
-  voice_id    String        @id @default(cuid())
-  user_id     String
-  story_id    String
-  chapter_id  String?
-  created_at  DateTime      @default(now())
-  duration    Float?
-  file_name   String
-  file_path   String
-  file_size   Int
-  updated_at  DateTime      @updatedAt
-  chapter     chapters?     @relation(fields: [chapter_id], references: [chapter_id])
-  story       stories       @relation(fields: [story_id], references: [story_id])
-  user        User          @relation(fields: [user_id], references: [id])
+  voice_id   String    @id @default(cuid())
+  user_id    String
+  story_id   String
+  chapter_id String?
+  created_at DateTime  @default(now())
+  duration   Float?
+  file_name  String
+  file_path  String
+  file_size  Int
+  updated_at DateTime  @updatedAt
+  chapter    chapters? @relation(fields: [chapter_id], references: [chapter_id])
+  story      stories   @relation(fields: [story_id], references: [story_id])
+  user       User      @relation(fields: [user_id], references: [id])
 }
 
 model storyComments {
@@ -230,7 +232,7 @@ model transaction {
   payment_status           PaymentStatus   @default(PENDING)
   stripe_charge_id         String?
   stripe_payment_intent_id String?
-  story                    stories?       @relation(fields: [story_id], references: [story_id])
+  story                    stories?        @relation(fields: [story_id], references: [story_id])
   chapter                  chapters?       @relation(fields: [chapter_id], references: [chapter_id])
   coinPackage              coinPackage?    @relation(fields: [coin_package_id], references: [package_id])
   wallet                   wallet          @relation(fields: [wallet_id], references: [wallet_id])

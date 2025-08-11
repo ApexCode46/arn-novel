@@ -13,6 +13,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -291,13 +292,13 @@ export default function ProfilePage() {
         if (file) {
             // Check file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                alert("ไฟล์รูปต้องมีขนาดไม่เกิน 5MB");
+                toast.error("ไฟล์รูปต้องมีขนาดไม่เกิน 5MB");
                 return;
             }
 
             // Check file type
             if (!file.type.startsWith("image/")) {
-                alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+                toast.error("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
                 return;
             }
 
@@ -340,14 +341,14 @@ export default function ProfilePage() {
                 // Update session
                 await update();
 
-                alert("อัปโหลดรูปโปรไฟล์สำเร็จ");
+                toast.success("อัปโหลดรูปโปรไฟล์สำเร็จ");
             } else {
                 const errorData = await response.json();
-                alert(`เกิดข้อผิดพลาด: ${errorData.error}`);
+                toast.error(`เกิดข้อผิดพลาด: ${errorData.error}`);
             }
         } catch (error) {
             console.error("Error uploading image:", error);
-            alert("เกิดข้อผิดพลาดในการอัปโหลดรูป");
+            toast.error("เกิดข้อผิดพลาดในการอัปโหลดรูป");
         } finally {
             setUploadingImage(false);
         }
@@ -359,12 +360,12 @@ export default function ProfilePage() {
 
         // Validate password
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert("รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน");
+            toast.error("รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน");
             return;
         }
 
         if (passwordData.newPassword.length < 6) {
-            alert("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+            toast.error("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
             return;
         }
 
@@ -385,7 +386,7 @@ export default function ProfilePage() {
             });
 
             if (response.ok) {
-                alert("เปลี่ยนรหัสผ่านสำเร็จ");
+                toast.success("เปลี่ยนรหัสผ่านสำเร็จ");
                 setChangePasswordMode(false);
                 setPasswordData({
                     currentPassword: "",
@@ -399,11 +400,11 @@ export default function ProfilePage() {
                 });
             } else {
                 const errorData = await response.json();
-                alert(`เกิดข้อผิดพลาด: ${errorData.error}`);
+                toast.error(`เกิดข้อผิดพลาด: ${errorData.error}`);
             }
         } catch (error) {
             console.error("Error changing password:", error);
-            alert("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
+            toast.error("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
         } finally {
             setSaving(false);
         }
@@ -436,11 +437,11 @@ export default function ProfilePage() {
                     await update();
                 }
             } else {
-                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
             }
         } catch (error) {
             console.log("Error saving profile:", error);
-            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูل");
+            toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         } finally {
             setSaving(false);
         }
@@ -1132,11 +1133,6 @@ export default function ProfilePage() {
                                 onChange={(e) => handleInputChange('name', e.target.value)}
                                 className="col-span-3"
                             />
-                        </div>
-
-                        <div className="text-sm text-muted-foreground text-center">
-                            <p>ข้อมูลอื่นๆ เช่น นามปากกา, ที่อยู่, เว็บไซต์ และข้อมูลส่วนตัว</p>
-                            <p>จะเปิดให้แก้ไขในอนาคต</p>
                         </div>
                     </div>
 

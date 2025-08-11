@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Coins, Wallet, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadStripe } from '@stripe/stripe-js';
+import { toast } from 'sonner';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -57,7 +58,7 @@ export default function TopUpPage() {
 
     const handlePurchase = async (pkg: CoinPackage) => {
         if (!session) {
-            alert("กรุณาเข้าสู่ระบบก่อนซื้อ");
+            toast.warning("กรุณาเข้าสู่ระบบก่อนซื้อ");
             return;
         }
 
@@ -117,8 +118,8 @@ export default function TopUpPage() {
             console.log("Payment confirmation successful!");
 
         } catch (error) {
-            console.error("Payment error:", error);
-            alert(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการชำระเงิน");
+            console.error("Payment error", error);
+            toast.error(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการชำระเงิน");
         } finally {
             setIsProcessing(false);
             setSelectedPackage(null);
