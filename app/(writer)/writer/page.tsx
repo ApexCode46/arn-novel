@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import {
   Select,
@@ -58,61 +58,58 @@ export default function Page() {
   const [chapterPage, setChapterPage] = useState<number>(1)
   const [chapterPageSize, setChapterPageSize] = useState<number>(10)
 
-  // ดึงข้อมูลจาก API
-  const fetchDashboardData = async () => {
+  // ดึงข้อมูลจาก API (memoized เพื่อลด warning dependency และป้องกัน re-render loop)
+  const fetchDashboardData = useCallback(async () => {
     if (!session?.user?.email) return
-    
+
     setLoading(true)
     try {
       // Get user ID from email first
       const userResponse = await fetch(`/api/users?email=${encodeURIComponent(session.user.email)}`)
       if (!userResponse.ok) throw new Error("Failed to fetch user data")
       const userData = await userResponse.json()
-      
+
       const params = new URLSearchParams({
         userId: userData.user_id || userData.id,
         timeframe, // fixed value
         ...(selectedStory !== "all" ? { storyId: selectedStory } : {})
       })
-      
+
       const response = await fetch(`/api/writer/dashboard?${params}`)
       if (!response.ok) throw new Error("Failed to fetch dashboard data")
-      
+
       const data: DashboardData = await response.json()
       setDashboardData(data)
-      // ถ้าเลือก all ให้รีเฟรชรายการทั้งหมดตามที่ API ส่งมา
-      // ถ้าเลือกเรื่องเดียว ให้ merge อัพเดตเฉพาะเรื่องนั้น (ไม่ให้ options อื่นหายไปจาก Select)
       if (selectedStory === "all") {
         setStories(data.stories)
       } else {
         setStories(prev => {
           if (!prev.length) return data.stories // กรณีโหลดครั้งแรก safety
           const map = new Map(prev.map(s => [s.id, s]))
-            ;(data.stories || []).forEach(s => map.set(s.id, s))
+          ;(data.stories || []).forEach(s => map.set(s.id, s))
           return Array.from(map.values())
         })
       }
-      
+
       // Flatten all chapters from all stories
       const allChapters = data.stories.flatMap(story => story.chapters || [])
       setChapters(allChapters)
-      
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
-      // Set empty data on error
       setDashboardData({ stories: [], monthlyRevenue: [], currentMonthEarnings: 0 })
       setStories([])
       setChapters([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [session?.user?.email, selectedStory])
 
   useEffect(() => {
     if (session?.user?.email) {
       fetchDashboardData()
     }
-  }, [session?.user?.email, refreshTs, selectedStory])
+  }, [session?.user?.email, refreshTs, fetchDashboardData])
 
   // รีเซ็ตหน้าปัจจุบันเมื่อเปลี่ยนเรื่องหรือ query
   useEffect(() => {
@@ -120,22 +117,20 @@ export default function Page() {
   }, [selectedStory, chapterQuery])
 
   // รวมสถิติทั้งหมดหรือของเรื่องเดียว
-  const aggregate = useMemo(() => {
+  type AggregateStats = { views: number; comments: number; likes: number; followers: number }
+  const aggregate = useMemo<AggregateStats>(() => {
     const list = selectedStory === "all" ? stories : stories.filter(s => s.id === selectedStory)
-    const base = { views: 0, comments: 0, likes: 0, followers: 0 }
-    return list.reduce((acc, cur) => {
-      acc.views += cur.views
-      acc.comments += cur.comments
-      acc.likes += cur.likes
-      acc.followers += cur.followers
-      return acc
-    }, base)
+    return list.reduce<AggregateStats>((acc, cur) => ({
+      views: acc.views + cur.views,
+      comments: acc.comments + cur.comments,
+      likes: acc.likes + cur.likes,
+      followers: acc.followers + cur.followers,
+    }), { views: 0, comments: 0, likes: 0, followers: 0 })
   }, [stories, selectedStory])
 
   // สร้างข้อมูลรายได้จากข้อมูล API หรือ fallback เป็น mock
   const revenueData = useMemo(() => {
     if (dashboardData?.monthlyRevenue && dashboardData.monthlyRevenue.length > 0) {
-      // จัดเรียงเดือนให้เป็นลำดับ ม.ค. -> ธ.ค.
       const monthsInOrder = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
       // กรณี API ส่ง 12 เดือนย้อนหลังที่ข้ามปี ให้เรียงตามปฏิทิน 1-12
       const sorted = [...dashboardData.monthlyRevenue]
@@ -184,13 +179,7 @@ export default function Page() {
     )
   }
 
-  // Placeholder growth (สุ่มเพื่อโชว์ UI เท่านั้น)
-  function fakeGrowth(total: number) {
-    if (!total) return { pct: 0, dir: "neutral" as const }
-    const delta = (total % 17) - 8
-    const pct = Math.round((delta / (total + 100)) * 1000) / 10
-    return { pct: Math.abs(pct), dir: pct === 0 ? "neutral" : pct > 0 ? "up" : "down" }
-  }
+  // (เดิมมีฟังก์ชัน fakeGrowth แต่ไม่ถูกใช้งานจริง ลบออกเพื่อลด warning)
 
   const statsConfig = [
     { key: "views", label: "การรับชม", icon: Eye, color: "text-emerald-500" },
@@ -234,8 +223,7 @@ export default function Page() {
       {/* แถวการ์ดสถิติ */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsConfig.map(stat => {
-          const value = (aggregate as any)[stat.key] as number
-          const growth = fakeGrowth(value)
+          const value = aggregate[stat.key as keyof AggregateStats]
           return (
             <Card key={stat.key} className="relative overflow-hidden bg-backgroundCustom shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">

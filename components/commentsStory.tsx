@@ -102,6 +102,7 @@ export function CommentsStory({ storyId }: { storyId: string }) {
             }
         } catch (e) {
             toast.error('เกิดข้อผิดพลาดในการส่งความคิดเห็น');
+            console.error('Error submitting comment', e);
         } finally { setIsSubmitting(false); }
     };
 
@@ -124,6 +125,7 @@ export function CommentsStory({ storyId }: { storyId: string }) {
             } else { toast.dismiss(loadingToast); toast.error(data.error || 'แก้ไขไม่สำเร็จ'); }
         } catch (e) {
             toast.dismiss(loadingToast); toast.error('เกิดข้อผิดพลาดในการแก้ไข');
+            console.error('Error saving edit', e);
         }
     };
 
@@ -137,7 +139,10 @@ export function CommentsStory({ storyId }: { storyId: string }) {
                 setTotalComments(prev => Math.max(0, prev - 1));
                 toast.dismiss(loadingToast); toast.success('ลบสำเร็จ');
             } else { toast.dismiss(loadingToast); toast.error(data.error || 'ลบไม่สำเร็จ'); }
-        } catch (e) { toast.dismiss(loadingToast); toast.error('เกิดข้อผิดพลาดในการลบ'); }
+        } catch (e) {
+            toast.dismiss(loadingToast); toast.error('เกิดข้อผิดพลาดในการลบ');
+            console.error('Error deleting comment', e);
+        }
         finally { setPendingDeleteId(null); }
     };
 
