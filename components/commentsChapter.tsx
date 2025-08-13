@@ -539,7 +539,7 @@ export function CommentsChapter({
 
                                             {/* Reply Form */}
                                             {replyingTo === comment.id && (
-                                                <div className="mt-3 p-3 bg-gray-100 rounded-lg">
+                                                <div className="mt-3 p-3 bg-background rounded-lg">
                                                     <div className="flex gap-2 mb-2">
                                                         <input
                                                             type="text"
@@ -553,7 +553,7 @@ export function CommentsChapter({
                                                                 }
                                                             }}
                                                             disabled={isSubmitting}
-                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                            className="flex-1 px-3 py-2 bg-backgroundCustom border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                         />
                                                         <button
                                                             onClick={() => handleSubmitComment(comment.id)}
@@ -679,9 +679,9 @@ export function CommentsChapter({
                     </div>
 
                     <DrawerFooter className="">
-                        <div className="p-4 bg-background sticky bottom-0 shadow-xl">
+                        <div className="fixed bottom-0 left-0 right-0 bg-backgroundCustom p-4 z-50">
                             {session?.user ? (
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 w-full max-w-2xl mx-auto">
                                     <input
                                         type="text"
                                         placeholder="แสดงความคิดเห็น..."
@@ -694,7 +694,7 @@ export function CommentsChapter({
                                             }
                                         }}
                                         disabled={isSubmitting}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+                                        className="flex-1 w-full min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
                                     />
                                     <button
                                         onClick={() => handleSubmitComment()}
@@ -705,7 +705,7 @@ export function CommentsChapter({
                                     </button>
                                 </div>
                             ) : (
-                                <div className="text-center text-gray-500 py-3">
+                                <div className="text-center text-gray-500 py-3 max-w-2xl mx-auto">
                                     <p className="text-sm">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
                                 </div>
                             )}

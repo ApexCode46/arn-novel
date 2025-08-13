@@ -183,12 +183,7 @@ export async function GET(req, { params }) {
         },
       });
       updatedViews = story.views + 1;
-      console.log(`Story view incremented for ${storyId} from IP ${clientIP}`);
-    } else {
-      console.log(
-        `Story view blocked for ${storyId} from IP ${clientIP} (rate limited)`
-      );
-    }
+    } 
 
     // จัดรูปแบบข้อมูลที่จะส่งกลับ
     const responseData = {

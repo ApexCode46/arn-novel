@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface WriterStoryStat {
   id: string
@@ -151,7 +152,6 @@ export default function Page() {
     // Fallback mock data if no real data available - แสดงตามปีปฏิทิน
     const baseSeed = aggregate.views + aggregate.likes * 7 + aggregate.comments * 3 + refreshTs // เพิ่ม refreshTs
     
-    // แสดง 12 เดือนของปีปัจจุบัน (ม.ค. - ธ.ค.) - force new data
     const monthsInOrder = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
     
     // pseudo-random deterministic using seed
@@ -167,19 +167,76 @@ export default function Page() {
     })
   }, [dashboardData?.monthlyRevenue, aggregate.views, aggregate.likes, aggregate.comments, refreshTs])
 
-  // Show loading if no session
+  // Show skeleton placeholders while session (auth state) is resolving
   if (!session) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">กำลังโหลดข้อมูล...</p>
+      <div className="space-y-6 p-4">
+        {/* Header skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        {/* Filters skeleton */}
+        <div className="flex flex-col md:flex-row gap-3">
+          <Skeleton className="h-10 w-56" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        {/* Stat cards skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="p-4 rounded-lg border bg-backgroundCustom space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          ))}
+        </div>
+        {/* Chart & side list skeleton */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 h-[320px] rounded-lg border p-4 bg-backgroundCustom flex flex-col gap-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-full w-full" />
+          </div>
+          <div className="h-[320px] rounded-lg border p-4 bg-backgroundCustom space-y-3 overflow-hidden">
+            <Skeleton className="h-4 w-48" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-56" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Current month earnings skeleton */}
+        <div className="flex justify-between items-center bg-backgroundCustom p-4 border rounded-xl shadow-sm">
+          <Skeleton className="h-6 w-64" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        {/* Chapter table skeleton */}
+        <div className="rounded-xl border p-4 bg-backgroundCustom space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-9 w-56" />
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-6 gap-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
-
-  // (เดิมมีฟังก์ชัน fakeGrowth แต่ไม่ถูกใช้งานจริง ลบออกเพื่อลด warning)
 
   const statsConfig = [
     { key: "views", label: "การรับชม", icon: Eye, color: "text-emerald-500" },

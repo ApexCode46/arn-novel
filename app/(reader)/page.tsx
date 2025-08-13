@@ -6,6 +6,7 @@ import Ranking from "@/components/Ranking";
 import { Button } from "@/components/ui/button";
 import { Search, Pencil, ChartNoAxesCombined, Wallet, User } from "lucide-react";
 
+
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -29,6 +30,10 @@ export default function Home() {
 
   const handleToProfile = () => {
     router.push("/profile");
+  }
+
+  const handleToCategory = (category: string) => {
+    router.push(`/category/${category}`);
   }
 
   return (
@@ -72,33 +77,25 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">มาใหม่</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('new')}>ดูทั้งหมด</Button>
             </div>
-            <ListItem category="all" limit={10} />
+            <ListItem category="new" limit={10} />
           </div>
 
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">อัปเดตประจำสัปดาห์</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('weekly')}>ดูทั้งหมด</Button>
             </div>
-            <ListItem category="all" limit={10} />
-          </div>
-
-          <div className="w-full my-5">
-            <div className="flex justify-between items-center ">
-              <h3 className="text-lg md:text-xl font-bold">มาแรง</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
-            </div>
-            <ListItem category="all" limit={10} />
+            <ListItem category="weekly" limit={10} />
           </div>
 
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('following')}>ดูทั้งหมด</Button>
             </div>
-            <ListItem category="all" limit={10} />
+            <ListItem category="following" limit={10} />
           </div>
 
           <div className="w-full my-5">
@@ -109,7 +106,7 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">แอคชั่น</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('action')}>ดูทั้งหมด</Button>
             </div>
             <ListItem category="action" limit={10} />
           </div>
@@ -117,7 +114,7 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">ดราม่า</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('drama')}>ดูทั้งหมด</Button>
             </div>
             <ListItem category="drama" limit={10} />
           </div>
@@ -125,7 +122,7 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">นิยายรัก</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('romance')}>ดูทั้งหมด</Button>
             </div>
             <ListItem category="romance" limit={10} />
           </div>
@@ -133,7 +130,7 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">สยองขวัญ</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('horror')}>ดูทั้งหมด</Button>
             </div>
             <ListItem category="horror" limit={10} />
           </div>
@@ -141,7 +138,7 @@ export default function Home() {
           <div className="w-full my-5">
             <div className="flex justify-between items-center ">
               <h3 className="text-lg md:text-xl font-bold">แฟนตาซี</h3>
-              <Button variant="default">ดูทั้งหมด</Button>
+                <Button variant="default" onClick={() => handleToCategory('fantasy')}>ดูทั้งหมด</Button>
             </div>
             <ListItem category="fantasy" limit={10} />
           </div>

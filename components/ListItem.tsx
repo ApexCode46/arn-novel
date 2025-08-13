@@ -13,8 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Lock, EyeOff } from "lucide-react";
-import { ModalConfirm } from "@/components/ModalConfirm";
+
 
 // Interface สำหรับข้อมูลนิยาย
 interface Story {
@@ -26,9 +25,7 @@ interface Story {
   views: number;
   description: string;
   type: string;
-  price?: number; // ราคาของนิยาย
   is_hidden?: boolean; // สถานะซ่อน/แสดง
-  isPurchased?: boolean; // สถานะการซื้อแล้ว
 }
 
 interface ListItemProp {
@@ -41,9 +38,6 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
   const router = useRouter();
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const [userCoins, setUserCoins] = useState(0);
   
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchStories = useCallback(async () => {
@@ -61,6 +55,8 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
       if (response.ok) {
         const data = await response.json();
         setStories(data.stories);
+
+        console.log('Fetched stories:', data.stories);
       } else {
         console.log('Failed to fetch stories');
       }
@@ -71,75 +67,14 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
     }
   }, [category, limit, showHidden]);
 
-  // ฟังก์ชันดึงข้อมูลเหรียญของผู้ใช้
-  const fetchUserCoins = useCallback(async () => {
-    try {
-      const response = await fetch('/api/wallet');
-      if (response.ok) {
-        const data = await response.json();
-        setUserCoins(data.coins || 0);
-      }
-    } catch (error) {
-      console.log('Error fetching user coins:', error);
-    }
-  }, []);
-
   // ดึงข้อมูลเมื่อ component mount หรือ category เปลี่ยน
   useEffect(() => {
     fetchStories();
-    fetchUserCoins();
-  }, [category, limit, showHidden, fetchStories, fetchUserCoins]);
+  }, [category, limit, showHidden, fetchStories]);
   
   const handleReadClick = (story: Story) => {
-    // ตรวจสอบว่านิยายถูกซ่อนหรือไม่
-    if (story.is_hidden && !showHidden) {
-      return; // ไม่ให้คลิกได้หากถูกซ่อนและไม่อนุญาตให้แสดง
-    }
-
-    // ตรวจสอบว่าต้องซื้อหรือไม่
-    if (story.price && story.price > 0 && !story.isPurchased) {
-      setSelectedStory(story);
-      setModalOpen(true);
-      return;
-    }
-
-    // ไปยังหน้าอ่านนิยาย
+    if (story.is_hidden && !showHidden) return;
     router.push(`/novel/${story.id}`);
-  };
-
-  // ฟังก์ชันจัดการการซื้อ
-  const handlePurchase = async () => {
-    if (!selectedStory) return;
-
-    try {
-      const response = await fetch('/api/payment/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          storyId: selectedStory.id,
-          price: selectedStory.price,
-          type: 'novel'
-        }),
-      });
-
-      if (response.ok) {
-        // อัพเดทสถานะการซื้อ
-        setStories(prev => prev.map(story => 
-          story.id === selectedStory.id 
-            ? { ...story, isPurchased: true }
-            : story
-        ));
-        
-        // ไปยังหน้าอ่านนิยาย
-        router.push(`/novel/${selectedStory.id}`);
-      } else {
-        console.error('Purchase failed');
-      }
-    } catch (error) {
-      console.error('Error during purchase:', error);
-    }
   };
 
   if (isLoading) {
@@ -222,7 +157,7 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
               key={story.id}
               className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 p-2 py-6"
             >
-              <div onClick={() => handleReadClick(story)} className={`group relative flex flex-col bg-backgroundCustom hover:bg-card/80 rounded-lg border border-border/50 hover:border-border hover:shadow-lg hover:scale-110 transition-all duration-300 overflow-hidden shadow-sm ${story.is_hidden ? 'opacity-60' : ''}`}>
+              <div onClick={() => handleReadClick(story)} className="group relative flex flex-col bg-backgroundCustom hover:bg-card/80 rounded-lg border border-border/50 hover:border-border hover:shadow-lg hover:scale-105 transition-all duration-300 overflow-hidden shadow-sm h-full">
                 {/* Image Container */}
                 <div className="relative w-full aspect-[3/4] overflow-hidden">
                   <Image
@@ -239,44 +174,18 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
                       {story.categories}
                     </Badge>
                   </div>
-
-                  {/* Status Badges */}
-                  <div className="absolute top-2 right-2 flex flex-col gap-1">
-                    {story.is_hidden && (
-                      <Badge variant="destructive" className="text-xs flex items-center gap-1">
-                        <EyeOff className="w-3 h-3" />
-                        ซ่อน
-                      </Badge>
-                    )}
-                    
-                    {story.price && story.price > 0 && !story.isPurchased && (
-                      <Badge variant="default" className="bg-amber-500 text-white text-xs flex items-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        {story.price} เหรียญ
-                      </Badge>
-                    )}
-                  </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-3 space-y-2">
+                <div className="p-3 space-y-2 flex flex-col justify-between flex-1">
                   <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">
                     {story.title || "not found!"}
                   </h3>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+
+                  <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
                     <span>{story.chapter} ตอน</span>
                     <span>{story.views.toLocaleString()} อ่าน</span>
                   </div>
-
-                  {/* แสดงราคาเฉพาะเมื่อต้องซื้อ */}
-                  {story.price && story.price > 0 && !story.isPurchased && (
-                    <div className="flex items-center justify-center mt-2">
-                      <Badge variant="outline" className="text-xs text-amber-600 border-amber-200 bg-amber-50">
-                        ราคา {story.price} เหรียญ
-                      </Badge>
-                    </div>
-                  )}
                 </div>
               </div>
             </CarouselItem>
@@ -284,34 +193,10 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
         })}
       </CarouselContent>
       
-      {/* Navigation Buttons */}
       <div className="hidden sm:block">
         <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
         <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
       </div>
-
-      {/* Modal Confirm สำหรับการซื้อ */}
-      {selectedStory && (
-        <ModalConfirm
-          isOpen={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedStory(null);
-          }}
-          onConfirm={handlePurchase}
-          item={{
-            storyId: selectedStory.id,
-            chapterId: selectedStory.id,
-            title: selectedStory.title,
-            price: selectedStory.price || 0,
-            imageUrl: selectedStory.imageUrl || "/novelImg/Test-novel.png",
-            description: selectedStory.description,
-            quantity: 1
-          }}
-          userCoins={userCoins}
-          paymentMethod="coins"
-        />
-      )}
     </Carousel>
   );
 }

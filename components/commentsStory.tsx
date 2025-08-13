@@ -165,7 +165,7 @@ export function CommentsStory({ storyId }: { storyId: string }) {
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !newComment.trim()}
-                        className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200"
+                        className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200 shadow-sm border"
                     >ส่ง</button>
                 </div>
             ) : (

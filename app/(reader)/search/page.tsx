@@ -116,10 +116,9 @@ function useNovels() {
   }
 }
 
-// Hook สำหรับจัดการ Like และ Bookmark
+// Hook สำหรับจัดการ Like
 function useNovelActions() {
   const [likedNovels, setLikedNovels] = useState<Set<string>>(new Set())
-  const [bookmarkedNovels, setBookmarkedNovels] = useState<Set<string>>(new Set())
 
   const handleLike = async (novelId: string) => {
     try {
@@ -160,58 +159,13 @@ function useNovelActions() {
       }
     } catch (error) {
       toast.error('เกิดข้อผิดพลาดในการไลค์')
-      console.error('Like error:', error)
-    }
-  }
-
-  const handleBookmark = async (novelId: string) => {
-    try {
-      const isCurrentlyBookmarked = bookmarkedNovels.has(novelId)
-      const action = isCurrentlyBookmarked ? 'unbookmark' : 'bookmark'
-
-      const response = await fetch(`/api/novels/${novelId}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: 1, // ในการใช้งานจริงควรได้มาจาก Authentication
-          action
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to bookmark novel')
-      }
-
-      const data = await response.json()
-
-      if (data.success) {
-        setBookmarkedNovels(prev => {
-          const newSet = new Set(prev)
-          if (data.data.isBookmarked) {
-            newSet.add(novelId)
-          } else {
-            newSet.delete(novelId)
-          }
-          return newSet
-        })
-
-        toast.success(
-          data.data.isBookmarked ? 'เพิ่มในบุ๊กมาร์กแล้ว' : 'ลบออกจากบุ๊กมาร์กแล้ว'
-        )
-      }
-    } catch (error) {
-      toast.error('เกิดข้อผิดพลาดในการบุ๊กมาร์ก')
-      console.error('Bookmark error:', error)
+      console.log('Like error:', error)
     }
   }
 
   return {
     likedNovels,
-    bookmarkedNovels,
-    handleLike,
-    handleBookmark
+    handleLike
   }
 }
 
@@ -219,7 +173,7 @@ function useNovelActions() {
 export default function NovelBrowsePage() {
   const router = useRouter()
   const { novels, loading, error, pagination, fetchNovels } = useNovels()
-  const { likedNovels, bookmarkedNovels } = useNovelActions()
+  const { likedNovels } = useNovelActions()
 
   // States สำหรับ Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -509,7 +463,6 @@ export default function NovelBrowsePage() {
                   key={novel.id}
                   onClick={() => handleNovelClick(novel)}
                   className={`cursor-pointer transition-all duration-200 hover:scale-105 ${likedNovels.has(novel.id) ? 'ring-2 ring-red-200' : ''
-                    } ${bookmarkedNovels.has(novel.id) ? 'ring-2 ring-blue-200' : ''
                     }`}
                 >
                   <CardNovel
