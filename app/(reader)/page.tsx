@@ -5,12 +5,12 @@ import { ListItem } from "@/components/ListItem";
 import Ranking from "@/components/Ranking";
 import { Button } from "@/components/ui/button";
 import { Search, Pencil, ChartNoAxesCombined, Wallet, User } from "lucide-react";
-
-
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleToSearch = () => {
     router.push("/search");
@@ -90,13 +90,15 @@ export default function Home() {
             <ListItem category="weekly" limit={10} />
           </div>
 
-          <div className="w-full my-5">
-            <div className="flex justify-between items-center ">
-              <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
+          {session?.user && (
+            <div className="w-full my-5">
+              <div className="flex justify-between items-center ">
+                <h3 className="text-lg md:text-xl font-bold">คุณกำลังติดตาม</h3>
                 <Button variant="default" onClick={() => handleToCategory('following')}>ดูทั้งหมด</Button>
             </div>
-            <ListItem category="following" limit={10} />
+            <ListItem category="following" limit={10} userId={(session?.user as { id?: string })?.id} />
           </div>
+        )}
 
           <div className="w-full my-5">
             <h3 className="text-lg md:text-xl font-bold">ยอดนิยม</h3>

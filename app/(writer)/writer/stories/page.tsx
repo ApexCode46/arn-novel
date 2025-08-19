@@ -150,7 +150,7 @@ export default function Stories() {
       <hr className="py-2" />
 
 
-      <div className="w-full h-auto mb-3 border rounded bg-backgroundCustom ">
+      <div className="w-full h-auto mb-3 border rounded bg-backgroundCustom shadow-sm">
         <div className="flex justify-between p-6 border-b ">
           <div className="flex items-center gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>

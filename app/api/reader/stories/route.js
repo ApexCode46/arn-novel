@@ -5,21 +5,89 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
+    const userId = searchParams.get('userId'); // เพิ่มการรับ userId
     const limit = parseInt(searchParams.get('limit')) || 20;
     const page = parseInt(searchParams.get('page')) || 1;
     const skip = (page - 1) * limit;
 
-    // สร้าง where clause สำหรับการกรองตามหมวดหมู่
     let whereClause = {
-      status: "published" // แสดงเฉพาะนิยายที่เผยแพร่แล้ว
+      status: "published"
     };
     
-    if (category && category !== 'all') {
-      // ใช้ contains สำหรับค้นหาคำที่อยู่ในข้อความ
-      // เช่น หา "แฟนตาซี" ใน "นิยายตื่นเต้น แฟนตาซี"
-      whereClause.category = {
-        contains: category
-      };
+    if (category) {
+      if (category === 'weekly') {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      // กรองจากตอนของนิยายที่อัปเดตในช่วง 7 วันที่ผ่านมา  
+        const recentChapterIds = await prisma.chapters.findMany({
+          where: {
+            updated_at: {
+              gte: oneWeekAgo
+            }
+          },
+          select: {
+            story_id: true
+          }
+        });
+
+        const storyIds = recentChapterIds.map(chapter => chapter.story_id);
+        whereClause.story_id = {
+          in: storyIds
+        };
+
+      } else if (category === 'new') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        // กรองจากนิยายที่สร้างในช่วง 30 วันที่ผ่านมา
+        whereClause.created_at = {
+          gte: thirtyDaysAgo
+        };
+
+      } else if (category === 'following') {
+        // ตรวจสอบว่ามี userId หรือไม่
+        if (!userId) {
+          return NextResponse.json(
+            { error: 'User ID is required for following category' },
+            { status: 400 }
+          );
+        }
+
+        // ค้นหานิยายที่ user กำลังติดตามอยู่
+        const followedStories = await prisma.follow.findMany({
+          where: {
+            user_id: userId
+          },
+          select: {
+            story_id: true
+          }
+        });
+
+        const followedStoryIds = followedStories.map(follow => follow.story_id);
+        
+        if (followedStoryIds.length === 0) {
+          // หากไม่มีนิยายที่ติดตาม ให้ return ข้อมูลว่าง
+          return NextResponse.json({
+            stories: [],
+            pagination: {
+              currentPage: page,
+              totalPages: 0,
+              totalCount: 0,
+              hasNext: false,
+              hasPrev: false
+            }
+          });
+        }
+
+        whereClause.story_id = {
+          in: followedStoryIds
+        };
+      } else {
+        whereClause.category = {
+          contains: category
+        };
+      }
     }
 
     // ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อน

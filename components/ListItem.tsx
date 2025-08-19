@@ -1,5 +1,7 @@
+"use client";
+
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import {
   Carousel,
@@ -32,12 +34,15 @@ interface ListItemProp {
   category?: string;
   limit?: number;
   showHidden?: boolean; // แสดงนิยายที่ซ่อนหรือไม่
+  userId?: string; // เพิ่ม userId สำหรับ category following
 }
 
-export function ListItem({ category = "all", limit = 20, showHidden = false }: ListItemProp) {
+export function ListItem({ category = "all", limit = 20, showHidden = false, userId }: ListItemProp) {
   const router = useRouter();
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
   
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchStories = useCallback(async () => {
@@ -49,6 +54,11 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
         page: '1',
         showHidden: showHidden.toString()
       });
+
+      // เพิ่ม userId ถ้า category เป็น following
+      if (category === 'following' && userId) {
+        params.append('userId', userId);
+      }
       
       const response = await fetch(`/api/reader/stories?${params}`);
       
@@ -65,17 +75,94 @@ export function ListItem({ category = "all", limit = 20, showHidden = false }: L
     } finally {
       setIsLoading(false);
     }
-  }, [category, limit, showHidden]);
+  }, [category, limit, showHidden, userId]);
 
-  // ดึงข้อมูลเมื่อ component mount หรือ category เปลี่ยน
+  // ดึงข้อมูลเมื่อ component เข้าสู่หน้าจอ หรือเมื่อพารามิเตอร์เปลี่ยนขณะมองเห็น
   useEffect(() => {
+    if (!isInView) return;
     fetchStories();
-  }, [category, limit, showHidden, fetchStories]);
+  }, [isInView, category, limit, showHidden, userId, fetchStories]);
+
+  // ตั้ง IntersectionObserver เพื่อตรวจสอบเมื่อคอมโพเนนต์เข้ามาใน viewport
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+          }
+        });
+      },
+      { root: null, rootMargin: "200px", threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [containerRef]);
   
   const handleReadClick = (story: Story) => {
     if (story.is_hidden && !showHidden) return;
     router.push(`/novel/${story.id}`);
   };
+
+  // ถ้ายังไม่เข้า viewport ให้แสดง skeleton loading แทน (ยังไม่ดึงข้อมูล)
+  if (!isInView) {
+    return (
+      <div ref={containerRef} className="w-full">
+        <Carousel
+          opts={{
+            align: "start",
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="w-full">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <CarouselItem
+                key={index}
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 p-2 py-6"
+              >
+                <div className="group relative flex flex-col bg-backgroundCustom rounded-lg border overflow-hidden shadow-sm">
+                  {/* Image Skeleton */}
+                  <div className="relative w-full aspect-[3/4] overflow-hidden">
+                    <Skeleton className="w-full h-full bg-background" />
+                    
+                    {/* Category Badge Skeleton */}
+                    <div className="absolute top-2 left-2">
+                      <Skeleton className="h-5 w-16 rounded-full bg-backgroundCustom" />
+                    </div>
+                  </div>
+
+                  {/* Content Skeleton */}
+                  <div className="p-3 space-y-2">
+                    {/* Title Skeleton */}
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-full bg-background" />
+                      <Skeleton className="h-4 w-3/4 bg-background" />
+                    </div>
+                    
+                    {/* Stats Skeleton */}
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-3 w-12 bg-background" />
+                      <Skeleton className="h-3 w-16 bg-background" />
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          {/* Navigation Buttons */}
+          <div className="hidden sm:block">
+            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
+            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-border/50 hover:border-border" />
+          </div>
+        </Carousel>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
