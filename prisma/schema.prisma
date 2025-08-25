@@ -74,6 +74,8 @@ model stories {
   user_id           String
   title             String
   category          String
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
   allowComments     Boolean
   blurb             String?
   commentPermission String
@@ -88,15 +90,13 @@ model stories {
   views             Int             @default(0)
   status            String          @default("draft")
   is_end            Boolean         @default(false)
-  created_at        DateTime        @default(now())
-  updated_at        DateTime        @updatedAt
   chapter           chapters[]
   favorite          favorite[]
   follow            follow[]
   user              User            @relation(fields: [user_id], references: [id])
   storyComments     storyComments[]
-  voice             voice[]
   transaction       transaction[]
+  voice             voice[]
 }
 
 model chapters {
@@ -105,13 +105,13 @@ model chapters {
   title           String
   content         String
   price           Int
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
   order           Int
   is_hidden       Boolean           @default(false)
   scheduled_date  DateTime?
   status          String            @default("draft")
   views           Int               @default(0)
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
   chapterComments chapterComments[]
   story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
@@ -222,7 +222,6 @@ model transaction {
   wallet_id                String
   amount                   Int
   type                     TransactionType
-  story_id                 String?
   chapter_id               String?
   created_at               DateTime        @default(now())
   coin_package_id          String?
@@ -232,9 +231,10 @@ model transaction {
   payment_status           PaymentStatus   @default(PENDING)
   stripe_charge_id         String?
   stripe_payment_intent_id String?
-  story                    stories?        @relation(fields: [story_id], references: [story_id])
+  story_id                 String?
   chapter                  chapters?       @relation(fields: [chapter_id], references: [chapter_id])
   coinPackage              coinPackage?    @relation(fields: [coin_package_id], references: [package_id])
+  story                    stories?        @relation(fields: [story_id], references: [story_id])
   wallet                   wallet          @relation(fields: [wallet_id], references: [wallet_id])
 }
 

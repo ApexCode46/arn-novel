@@ -21,7 +21,7 @@ export default function Home() {
   }
 
   const handleToRanking = () => {
-    router.push("/ranking");
+    router.push("/rank");
   }
 
   const handleToWallet = () => {
@@ -101,7 +101,10 @@ export default function Home() {
         )}
 
           <div className="w-full my-5">
-            <h3 className="text-lg md:text-xl font-bold">ยอดนิยม</h3>
+            <div className="flex justify-between items-center pb-5 ">
+              <h3 className="text-lg md:text-xl font-bold">ยอดนิยม</h3>
+              <Button variant="default" onClick={() => handleToRanking()}>ดูทั้งหมด</Button>
+            </div>
             <Ranking />
           </div>
 

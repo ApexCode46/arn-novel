@@ -106,6 +106,10 @@ export default function Page({ params }: { params: Promise<{ category: string }>
         router.push(`/novel/${storyId}`);
     };
 
+    const handleGoHome = () => {
+        router.push("/");
+    };
+
     if (loading) {
         return (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -126,9 +130,16 @@ export default function Page({ params }: { params: Promise<{ category: string }>
 
     return (
         <>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{category}</h3>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 mt-4 gap-2">
+            <div>
+               <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{category}</h3>
             <p className="text-muted-foreground text-sm">แสดง {category} ทั้งหมด</p>
-            <hr className="my-2" />
+            </div>
+            <div>
+                <Button onClick={handleGoHome}>หน้าหลัก</Button>
+            </div>
+        </div>
+            <hr className="my-2" /> 
 
             {pagination.totalPages > 1 && (
                 <div className="flex justify-center items-center gap-4 pb-8">

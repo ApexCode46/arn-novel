@@ -118,8 +118,53 @@ function StoryInfoDisplay({ content }: { content: string }) {
     },
   });
 
+  // เพิ่มการป้องกันการคัดลอกด้วย JavaScript
+  useEffect(() => {
+    const preventCopy = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const preventKeyboardShortcuts = (e: KeyboardEvent) => {
+      // ป้องกัน Ctrl+A, Ctrl+C, Ctrl+S, Ctrl+P, F12
+      if (e.ctrlKey && (e.key === 'a' || e.key === 'c' || e.key === 's' || e.key === 'p')) {
+        e.preventDefault();
+        return false;
+      }
+      // ป้องกัน F12 (Developer Tools)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    const preventRightClick = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // เพิ่ม event listeners
+    document.addEventListener('copy', preventCopy);
+    document.addEventListener('selectstart', preventCopy);
+    document.addEventListener('dragstart', preventCopy);
+    document.addEventListener('keydown', preventKeyboardShortcuts);
+    document.addEventListener('contextmenu', preventRightClick);
+
+    // ทำความสะอาดเมื่อ component unmount
+    return () => {
+      document.removeEventListener('copy', preventCopy);
+      document.removeEventListener('selectstart', preventCopy);
+      document.removeEventListener('dragstart', preventCopy);
+      document.removeEventListener('keydown', preventKeyboardShortcuts);
+      document.removeEventListener('contextmenu', preventRightClick);
+    };
+  }, []);
+
   return (
-    <div className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-xl">
+    <div 
+      className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-xl story-content-protected"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div className="p-6">
         <EditorContent
           editor={editor}

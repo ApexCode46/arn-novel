@@ -90,11 +90,7 @@ export async function GET(req) {
       }
     }
 
-    // ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อน
-    await prisma.$connect();
-
-    // ดึงข้อมูลนิยายพร้อมนับจำนวน chapter และจำนวนทั้งหมดพร้อมกัน
-    const [stories, totalCount] = await Promise.all([
+    const [stories, totalCount] = await prisma.$transaction([
       prisma.stories.findMany({
         where: whereClause,
         include: {

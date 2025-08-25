@@ -779,11 +779,11 @@ export default function ProfilePage() {
                                                                         <Eye className="w-4 h-4" />
                                                                         {story.views.toLocaleString()}
                                                                     </span>
-                                                                    <span className="flex items-center gap-1">
+                                                                    <span className="md:flex items-center gap-1 hidden">
                                                                         <BookOpen className="w-4 h-4" />
                                                                         {story.totalChapters}
                                                                     </span>
-                                                                    <span className="flex items-center gap-1">
+                                                                    <span className="md:flex items-center gap-1 hidden">
                                                                         <Heart className="w-4 h-4" />
                                                                         {story.totalFavorites}
                                                                     </span>
@@ -820,6 +820,7 @@ export default function ProfilePage() {
                                     <CardDescription>เรื่องที่คุณชื่นชอบ</CardDescription>
                                 </CardHeader>
                                 <CardContent>
+
                                     {tabLoading.favorites ? (
                                         <div className="flex justify-center py-8">
                                             <Loader2 className="h-8 w-8 animate-spin" />
@@ -827,11 +828,12 @@ export default function ProfilePage() {
                                         </div>
                                     ) : favoriteStories.length > 0 ? (
                                         <div className="space-y-4">
-                                            {favoriteStories.map((favorite) => (
-                                                <div key={favorite.favorite_id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                                    <div className="flex gap-4">
-                                                        <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
-                                                            {favorite.story.verticalImage ? (
+                                            <ScrollArea className="h-120 sm:h-80 w-full bg-backgroundCustom border rounded">
+                                                {favoriteStories.map((favorite) => (
+                                                    <div key={favorite.favorite_id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                                        <div className="flex gap-4">
+                                                            <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
+                                                                {favorite.story.verticalImage ? (
                                                                 <Image
                                                                     src={favorite.story.verticalImage}
                                                                     alt={favorite.story.title}
@@ -872,6 +874,7 @@ export default function ProfilePage() {
                                                     </div>
                                                 </div>
                                             ))}
+                                            </ScrollArea>
                                         </div>
                                     ) : (
                                         <div className="text-center py-8 text-muted-foreground">
@@ -931,11 +934,11 @@ export default function ProfilePage() {
                                                                     <Eye className="w-4 h-4" />
                                                                     {follow.story.views.toLocaleString()}
                                                                 </span>
-                                                                <span className="flex items-center gap-1">
+                                                                <span className="md:flex items-center gap-1 hidden">
                                                                     <BookOpen className="w-4 h-4" />
                                                                     {follow.story.totalChapters} ตอน
                                                                 </span>
-                                                                <span className="flex items-center gap-1">
+                                                                <span className="md:flex items-center gap-1 hidden">
                                                                     <Heart className="w-4 h-4" />
                                                                     {follow.story.totalFavorites}
                                                                 </span>

@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // ใช้ Map เพื่อเก็บข้อมูล rate limiting (ในโปรดักชั่นควรใช้ Redis)
 const viewTracker = new Map();
@@ -9,33 +9,45 @@ function shouldIncrementView(identifier, chapterId) {
   const key = `${identifier}-${chapterId}`;
   const now = Date.now();
   const lastView = viewTracker.get(key);
-  
+
   // หากไม่เคยดู หรือดูเมื่อนานกว่า 5 นาทีที่แล้ว ให้เพิ่ม view
-  if (!lastView || (now - lastView) > 5 * 60 * 1000) {
+  if (!lastView || now - lastView > 5 * 60 * 1000) {
     viewTracker.set(key, now);
     return true;
   }
-  
+
   return false;
 }
 
 // ฟังก์ชันสำหรับตรวจสอบ bot/crawler
 function isBot(userAgent) {
   const botPatterns = [
-    /bot/i, /crawler/i, /spider/i, /scraper/i,
-    /googlebot/i, /bingbot/i, /slurp/i, /duckduckbot/i,
-    /facebookexternalhit/i, /twitterbot/i, /whatsapp/i,
-    /curl/i, /wget/i, /python/i, /java/i, /go-http-client/i
+    /bot/i,
+    /crawler/i,
+    /spider/i,
+    /scraper/i,
+    /googlebot/i,
+    /bingbot/i,
+    /slurp/i,
+    /duckduckbot/i,
+    /facebookexternalhit/i,
+    /twitterbot/i,
+    /whatsapp/i,
+    /curl/i,
+    /wget/i,
+    /python/i,
+    /java/i,
+    /go-http-client/i,
   ];
-  
-  return botPatterns.some(pattern => pattern.test(userAgent));
+
+  return botPatterns.some((pattern) => pattern.test(userAgent));
 }
 
 // ทำความสะอาด cache เก่า ๆ (เรียกทุกๆ 1 ชั่วโมง)
 setInterval(() => {
   const now = Date.now();
   const oneHourAgo = now - 60 * 60 * 1000;
-  
+
   for (const [key, timestamp] of viewTracker.entries()) {
     if (timestamp < oneHourAgo) {
       viewTracker.delete(key);
@@ -98,7 +110,7 @@ export async function GET(request, { params }) {
       where: {
         story_id: storyId,
         order: chapterOrder,
-        status: "published", 
+        status: "published",
       },
       select: {
         chapter_id: true,
@@ -119,25 +131,37 @@ export async function GET(request, { params }) {
     });
 
     if (!chapterData) {
-      return NextResponse.json({ error: "Chapter not found or not published" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Chapter not found or not published" },
+        { status: 404 }
+      );
     }
 
     // ตรวจสอบ rate limiting ก่อนเพิ่ม views
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-    
+    const clientIP =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
     // ตรวจสอบว่าเป็น bot/crawler หรือไม่
     if (isBot(userAgent)) {
-      console.log(`Bot detected for chapter ${chapterData.chapter_id}: ${userAgent.slice(0, 100)}`);
+      console.log(
+        `Bot detected for chapter ${chapterData.chapter_id}: ${userAgent.slice(
+          0,
+          100
+        )}`
+      );
       // ไม่เพิ่ม view สำหรับ bot แต่ยังคงส่ง response ปกติ
     } else {
       // สร้าง identifier ที่เฉพาะเจาะจงกว่า
       const identifier = `${clientIP}-${userAgent.slice(0, 50)}`;
-      
-      const shouldIncrement = shouldIncrementView(identifier, chapterData.chapter_id);
-      
+
+      const shouldIncrement = shouldIncrementView(
+        identifier,
+        chapterData.chapter_id
+      );
+
       // เพิ่มการนับ views สำหรับ chapter และ story (หากผ่าน rate limiting)
       if (shouldIncrement) {
         await Promise.all([
@@ -164,14 +188,18 @@ export async function GET(request, { params }) {
             },
           }),
         ]);
-        
+
         // อัพเดท views ใน chapterData สำหรับ response
         chapterData.views = (chapterData.views || 0) + 1;
         // อัพเดท views ใน story สำหรับ response
         story.views = (story.views || 0) + 1;
-        console.log(`Chapter view incremented for ${chapterData.chapter_id} (order: ${chapterOrder}) from IP ${clientIP}`);
+        console.log(
+          `Chapter view incremented for ${chapterData.chapter_id} (order: ${chapterOrder}) from IP ${clientIP}`
+        );
       } else {
-        console.log(`Chapter view blocked for ${chapterData.chapter_id} (order: ${chapterOrder}) from IP ${clientIP} (rate limited)`);
+        console.log(
+          `Chapter view blocked for ${chapterData.chapter_id} (order: ${chapterOrder}) from IP ${clientIP} (rate limited)`
+        );
       }
     }
 
