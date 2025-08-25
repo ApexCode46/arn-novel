@@ -12,7 +12,7 @@ export async function GET(request, { params }) {
     const userEmail = session?.user?.email;
 
     const story = await prisma.stories.findUnique({
-      where: { story_id: storyId, status: 'published' },
+      where: { story_id: storyId, status: 'published', admin_hidden: false },
       select: { story_id: true, _count: { select: { follow: true } } }
     });
     if (!story) return NextResponse.json({ error: 'Story not found' }, { status: 404 });

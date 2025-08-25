@@ -82,10 +82,12 @@ export async function GET(request, { params }) {
       );
     }
 
-    // ตรวจสอบว่า story มีอยู่จริงหรือไม่
+    // ตรวจสอบว่า story มีอยู่จริงหรือไม่ และไม่ถูก admin ซ่อน
     const story = await prisma.stories.findUnique({
       where: {
         story_id: storyId,
+        status: "published",
+        admin_hidden: false,
       },
       select: {
         story_id: true,
@@ -105,12 +107,13 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Story not found" }, { status: 404 });
     }
 
-    // ดึงข้อมูล chapter ตาม order (เฉพาะที่เผยแพร่แล้ว)
+    // ดึงข้อมูล chapter ตาม order (เฉพาะที่เผยแพร่แล้วและไม่ถูก admin ซ่อน)
     const chapterData = await prisma.chapters.findFirst({
       where: {
         story_id: storyId,
         order: chapterOrder,
         status: "published",
+        admin_hidden: false,
       },
       select: {
         chapter_id: true,

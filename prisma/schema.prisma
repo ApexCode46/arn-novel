@@ -26,8 +26,45 @@ model User {
   storyComments   storyComments[]
   voice           voice[]
   wallet          wallet?
+  ads             ads[]
+  registerWriter  RegisterWriter?
 
   @@map("users")
+}
+
+model ads {
+  ad_id      Int      @id @default(autoincrement()) @map("ad_id")
+  name_as    String
+  user_id    String
+  path_img   String
+  link       String?
+  status     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("ads")
+}
+
+model RegisterWriter {
+  registerWriter_id   String   @id @default(cuid()) @map("register_writer_id")
+  user_id            String   @unique
+  realName           String
+  IdCard             String   // path to ID card image
+  SelfieWithIdCard   String   // path to selfie with ID card image
+  numIdCard          String   // ID card number
+  email              String
+  phoneNumber        String
+  BankAccount        String   // path to bank account document
+  numBank            String
+  status             String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("register_writers")
 }
 
 model Account {
@@ -90,6 +127,8 @@ model stories {
   views             Int             @default(0)
   status            String          @default("draft")
   is_end            Boolean         @default(false)
+  admin_hidden      Boolean         @default(false)
+  admin_hide_reason String?
   chapter           chapters[]
   favorite          favorite[]
   follow            follow[]
@@ -112,6 +151,8 @@ model chapters {
   scheduled_date  DateTime?
   status          String            @default("draft")
   views           Int               @default(0)
+  admin_hidden    Boolean           @default(false)
+  admin_hide_reason String?
   chapterComments chapterComments[]
   story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]

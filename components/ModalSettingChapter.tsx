@@ -28,6 +28,8 @@ interface ModalSettingChapterProps {
         scheduledDate?: Date;
         isHidden: boolean;
         price: number;
+        adminHidden?: boolean;
+        adminHideReason?: string;
     };
     previousChapterStatus?: "draft" | "published" | "scheduled" | null; // เพิ่มสถานะตอนก่อนหน้า
 }export default function ModalSettingChapter({
@@ -64,6 +66,13 @@ interface ModalSettingChapterProps {
     const handleSave = async () => {
         if (!chapterData?.storyId || !chapterData?.order) {
             toast.error("ข้อมูลไม่ครบถ้วน");
+            return;
+        }
+
+        // ตรวจสอบว่าถูก admin ซ่อนหรือไม่
+        if (chapterData?.adminHidden) {
+            const reason = chapterData.adminHideReason || 'ถูกระงับโดยผู้ดูแลระบบ';
+            toast.error(`ไม่สามารถแก้ไขได้: ${reason}`);
             return;
         }
 
@@ -156,17 +165,40 @@ interface ModalSettingChapterProps {
                                         </p>
                                     </div>
                                 )}
+
+                                {/* แสดงข้อความเตือนถ้าถูก admin ซ่อน */}
+                                {chapterData?.adminHidden && (
+                                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                                        <div className="flex items-center gap-2 text-red-800">
+                                            <span className="font-medium">🚫 ถูกระงับโดยผู้ดูแลระบบ</span>
+                                        </div>
+                                        <p className="text-sm text-red-700 mt-1">
+                                            เหตุผล: {chapterData.adminHideReason || 'ไม่ระบุเหตุผล'}
+                                        </p>
+                                        <p className="text-xs text-red-600 mt-1">
+                                            ไม่สามารถเปลี่ยนสถานะการเผยแพร่ได้จนกว่าผู้ดูแลจะยกเลิกการระงับ
+                                        </p>
+                                    </div>
+                                )}
                                 
-                                <RadioGroup value={publishStatus} onValueChange={(value: "draft" | "published" | "scheduled") => setPublishStatus(value)}>
+                                <RadioGroup 
+                                    value={publishStatus} 
+                                    onValueChange={(value: "draft" | "published" | "scheduled") => setPublishStatus(value)}
+                                    disabled={!!chapterData?.adminHidden}
+                                >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem 
                                             value="draft" 
                                             id="draft" 
-                                            disabled={chapterData?.status === "published"}
+                                            disabled={chapterData?.status === "published" || !!chapterData?.adminHidden}
                                         />
                                         <Label 
                                             htmlFor="draft" 
-                                            className={`flex items-center gap-2 ${chapterData?.status === "published" ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            className={`flex items-center gap-2 ${
+                                                chapterData?.status === "published" || chapterData?.adminHidden 
+                                                    ? "opacity-50 cursor-not-allowed" 
+                                                    : ""
+                                            }`}
                                         >
                                             <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
                                             ร่าง
@@ -176,12 +208,16 @@ interface ModalSettingChapterProps {
                                         <RadioGroupItem 
                                             value="published" 
                                             id="published" 
-                                            disabled={!!(chapterData?.order && chapterData.order > 1 && previousChapterStatus !== "published")}
+                                            disabled={
+                                                !!(chapterData?.order && chapterData.order > 1 && previousChapterStatus !== "published") ||
+                                                !!chapterData?.adminHidden
+                                            }
                                         />
                                         <Label 
                                             htmlFor="published" 
                                             className={`flex items-center gap-2 ${
-                                                chapterData?.order && chapterData.order > 1 && previousChapterStatus !== "published" 
+                                                (chapterData?.order && chapterData.order > 1 && previousChapterStatus !== "published") ||
+                                                chapterData?.adminHidden
                                                     ? "opacity-50 cursor-not-allowed" 
                                                     : ""
                                             }`}
@@ -194,11 +230,15 @@ interface ModalSettingChapterProps {
                                         <RadioGroupItem 
                                             value="scheduled" 
                                             id="scheduled" 
-                                            disabled={chapterData?.status === "published"}
+                                            disabled={chapterData?.status === "published" || !!chapterData?.adminHidden}
                                         />
                                         <Label 
                                             htmlFor="scheduled" 
-                                            className={`flex items-center gap-2 ${chapterData?.status === "published" ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            className={`flex items-center gap-2 ${
+                                                chapterData?.status === "published" || chapterData?.adminHidden 
+                                                    ? "opacity-50 cursor-not-allowed" 
+                                                    : ""
+                                            }`}
                                         >
                                             <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
                                             <div className="flex flex-col">
@@ -403,7 +443,10 @@ interface ModalSettingChapterProps {
                     <Button variant="outline" onClick={onClose}>
                         ยกเลิก
                     </Button>
-                    <Button onClick={handleSave}>
+                    <Button 
+                        onClick={handleSave}
+                        disabled={!!chapterData?.adminHidden}
+                    >
                         บันทึกการตั้งค่า
                     </Button>
                 </div>

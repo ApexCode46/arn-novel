@@ -71,6 +71,7 @@ export async function GET(req, { params }) {
       where: {
         story_id: storyId,
         status: "published", // แสดงเฉพาะนิยายที่เผยแพร่แล้ว
+        admin_hidden: false, // ไม่แสดงนิยายที่ถูก admin ซ่อน
       },
       include: {
         user: {
@@ -83,6 +84,7 @@ export async function GET(req, { params }) {
         chapter: {
           where: {
             status: "published", // แสดงเฉพาะตอนที่เผยแพร่แล้ว
+            admin_hidden: false, // ไม่แสดงตอนที่ถูก admin ซ่อน
           },
           orderBy: {
             order: "asc",
@@ -101,6 +103,7 @@ export async function GET(req, { params }) {
             chapter: {
               where: {
                 status: "published", // นับเฉพาะตอนที่เผยแพร่แล้ว
+                admin_hidden: false, // ไม่นับตอนที่ถูก admin ซ่อน
               },
             },
             favorite: true,

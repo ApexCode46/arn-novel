@@ -45,6 +45,8 @@ export async function GET(req, { params }) {
         status: true,
         scheduled_date: true,
         is_hidden: true,
+        admin_hidden: true,
+        admin_hide_reason: true,
         created_at: true,
         updated_at: true,
       },

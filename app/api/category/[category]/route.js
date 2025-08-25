@@ -20,12 +20,14 @@ export async function GET(req, { params }) {
             user_id: userId,
           },
         },
+        admin_hidden: false,
       };
     } else {
       whereCondition = {
         category:
           category === "new" || category === "weekly" ? undefined : { contains: category },
         status: "published",
+        admin_hidden: false,
         ...(category === "new" && {
           created_at: {
             gte: subDays(new Date(), 30),
@@ -39,6 +41,7 @@ export async function GET(req, { params }) {
                 lte: endOfWeek(new Date()),
               },
               status: "published",
+              admin_hidden: false,
             },
           },
         }),

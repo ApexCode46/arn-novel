@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
@@ -63,6 +63,8 @@ type ModalSettingStoryProps = {
         commentPermission?: string;
         publishStatus?: "draft" | "published";
         userId?: string;
+        adminHidden?: boolean;
+        adminHideReason?: string;
     };
 }
 
@@ -110,6 +112,10 @@ export default function Modalsettingstory({
 
     // สถานะการเผยแพร่
     const [publishStatus, setPublishStatus] = useState<"draft" | "published">(initialData?.publishStatus || "draft");
+
+    // สถานะการลงทะเบียนนักเขียน
+    const [writerRegistrationStatus, setWriterRegistrationStatus] = useState<string | null>(null);
+    const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
 
     // Loading state
     const [isLoading, setIsLoading] = useState(false);
@@ -185,6 +191,27 @@ export default function Modalsettingstory({
         setTags(tags.filter((t) => t !== tag));
     };
 
+    // ตรวจสอบสถานะการลงทะเบียนนักเขียน
+    const checkWriterRegistrationStatus = useCallback(async () => {
+        if (!session?.user?.email) return;
+        
+        setIsCheckingRegistration(true);
+        try {
+            const response = await fetch('/api/users/register-writer');
+            if (response.ok) {
+                const data = await response.json();
+                setWriterRegistrationStatus(data.application?.status || null);
+            } else {
+                setWriterRegistrationStatus(null);
+            }
+        } catch (error) {
+            console.error('Error checking writer registration:', error);
+            setWriterRegistrationStatus(null);
+        } finally {
+            setIsCheckingRegistration(false);
+        }
+    }, [session?.user?.email]);
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -201,6 +228,23 @@ export default function Modalsettingstory({
         if (!userId) {
             setError('กรุณาเข้าสู่ระบบก่อนบันทึกนิยาย');
             setIsLoading(false);
+            return;
+        }
+
+        // ตรวจสอบสถานะการลงทะเบียนนักเขียนหากต้องการเผยแพร่
+        if (mode === 'edit' && publishStatus === 'published' && writerRegistrationStatus !== 'approved') {
+            setError('กรุณาลงทะเบียนนักเขียนและรอการอนุมัติก่อนเผยแพร่นิยาย');
+            setIsLoading(false);
+            toast.error('ไม่สามารถเผยแพร่ได้ กรุณาลงทะเบียนนักเขียนก่อน');
+            return;
+        }
+
+        // ตรวจสอบว่าถูก admin ซ่อนไว้หรือไม่
+        if (mode === 'edit' && publishStatus === 'published' && initialData?.adminHidden) {
+            const reason = initialData.adminHideReason || 'ถูกระงับโดยผู้ดูแลระบบ';
+            setError(`ไม่สามารถเผยแพร่นิยายนี้ได้ เนื่องจาก: ${reason}`);
+            setIsLoading(false);
+            toast.error(`ไม่สามารถเผยแพร่ได้: ${reason}`);
             return;
         }
 
@@ -342,6 +386,13 @@ export default function Modalsettingstory({
             setPublishStatus("draft");
         }
     }, [mode, initialData]);
+
+    // ตรวจสอบสถานะการลงทะเบียนนักเขียนเมื่อ session เปลี่ยน
+    useEffect(() => {
+        if (session?.user) {
+            checkWriterRegistrationStatus();
+        }
+    }, [session, checkWriterRegistrationStatus]);
 
     return (
         <div className="contents">
@@ -587,24 +638,78 @@ export default function Modalsettingstory({
                                 <h4 className='font-bold'>สถานะการเผยแพร่</h4>
                                 <div className="grid w-full max-w-sm items-center gap-3 py-3">
                                     <Label htmlFor="publishStatus">เลือกสถานะการเผยแพร่</Label>
-                                    <RadioGroup value={publishStatus} onValueChange={(value: "draft" | "published") => setPublishStatus(value)}>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="draft" id="draft" />
-                                            <Label htmlFor="draft" className="flex items-center gap-2">
-                                                <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
-                                                ร่าง
-                                            </Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="published" id="published" />
-                                            <Label htmlFor="published" className="flex items-center gap-2">
-                                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                                เผยแพร่
-                                            </Label>
-                                        </div>
-                                    </RadioGroup>
                                     
-                                    {publishStatus === "draft" && (
+                                    {/* ตรวจสอบสถานะการลงทะเบียนนักเขียน */}
+                                    {isCheckingRegistration ? (
+                                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <p className="text-sm text-blue-600">
+                                                🔄 กำลังตรวจสอบสถานะการลงทะเบียนนักเขียน...
+                                            </p>
+                                        </div>
+                                    ) : writerRegistrationStatus !== 'approved' ? (
+                                        <div className="p-3 bg-red-600 border rounded-lg">
+                                            <p className="text-sm text-white">
+                                                ⚠️ <strong>ไม่สามารถเผยแพร่ได้:</strong> กรุณาลงทะเบียนนักเขียนและรอการอนุมัติก่อน
+                                            </p>
+                                            <p className="text-xs text-red-600 mt-1">
+                                                สถานะปัจจุบัน: {writerRegistrationStatus || 'ไม่มีข้อมูล'}
+                                            </p>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="mt-2"
+                                                onClick={() => router.push('/writer/registerWriter')}
+                                            >
+                                                ลงทะเบียนนักเขียน
+                                            </Button>
+                                        </div>
+                                    ) : initialData?.adminHidden ? (
+                                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-red-500">🚫</span>
+                                                <p className="text-sm font-medium text-red-700">
+                                                    นิยายนี้ถูกระงับโดยผู้ดูแลระบบ
+                                                </p>
+                                            </div>
+                                            <p className="text-sm text-red-600 mb-2">
+                                                <strong>เหตุผล:</strong> {initialData.adminHideReason || 'ไม่ได้ระบุเหตุผล'}
+                                            </p>
+                                            <p className="text-xs text-red-600">
+                                                ไม่สามารถเปลี่ยนสถานะการเผยแพร่ได้จนกว่าผู้ดูแลจะยกเลิกการระงับ
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <RadioGroup 
+                                            value={publishStatus} 
+                                            onValueChange={(value: "draft" | "published") => setPublishStatus(value)}
+                                            disabled={initialData?.adminHidden}
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem 
+                                                    value="draft" 
+                                                    id="draft" 
+                                                    disabled={initialData?.adminHidden}
+                                                />
+                                                <Label htmlFor="draft" className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                                    ร่าง
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem 
+                                                    value="published" 
+                                                    id="published" 
+                                                    disabled={initialData?.adminHidden}
+                                                />
+                                                <Label htmlFor="published" className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                                    เผยแพร่
+                                                </Label>
+                                            </div>
+                                        </RadioGroup>
+                                    )}
+                                    
+                                    {writerRegistrationStatus === 'approved' && publishStatus === "draft" && (
                                         <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                                             <p className="text-sm text-gray-600">
                                                 💡 <strong>ร่าง:</strong> นิยายจะไม่แสดงในรายการสาธารณะ และเฉพาะคุณเท่านั้นที่เห็นได้
@@ -612,7 +717,7 @@ export default function Modalsettingstory({
                                         </div>
                                     )}
                                     
-                                    {publishStatus === "published" && (
+                                    {writerRegistrationStatus === 'approved' && publishStatus === "published" && (
                                         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                             <p className="text-sm text-green-700">
                                                 ✅ <strong>เผยแพร่:</strong> นิยายจะแสดงในรายการสาธารณะ และผู้อ่านสามารถค้นหาและอ่านได้

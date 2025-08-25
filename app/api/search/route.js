@@ -77,6 +77,9 @@ function buildSearchConditions(query, category, status, searchType) {
     }
   }
 
+  // กรองนิยายที่ถูก admin ซ่อน
+  conditions.push({ admin_hidden: false });
+
   return conditions.length > 0 ? { AND: conditions } : {};
 }
 

@@ -31,6 +31,7 @@ export async function GET() {
       where: {
         story_id: { in: storyIds },
         status: "published",
+        admin_hidden: false,
       },
       include: {
         user: { select: { id: true, name: true } },

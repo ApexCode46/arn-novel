@@ -41,6 +41,8 @@ type Chapter = {
     scheduled_date?: string; // เพิ่มเพื่อรองรับข้อมูลจาก API
     isHidden?: boolean;
     is_hidden?: boolean; // เพิ่มเพื่อรองรับข้อมูลจาก API
+    admin_hidden?: boolean; // เพิ่มสำหรับ admin hidden
+    admin_hide_reason?: string; // เพิ่มสำหรับเหตุผลการซ่อน
 };
 
 export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
@@ -279,6 +281,11 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                                                         <EyeOff className="inline-block w-3 h-3" />
                                                     </span>
                                                 )}
+                                                {chapter.admin_hidden && (
+                                                    <span className="flex justify-center items-center text-xs bg-red-600 text-white px-2 py-0.5 rounded font-medium">
+                                                        🚫 Admin
+                                                    </span>
+                                                )}
                                                 {chapter.status === "draft" && (
                                                     <span className="flex justify-center items-center text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
                                                         <Pen className="inline-block w-3 h-3" />
@@ -326,7 +333,9 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                             scheduledDate: selectedChapter.scheduledDate ? new Date(selectedChapter.scheduledDate) :
                                 selectedChapter.scheduled_date ? new Date(selectedChapter.scheduled_date) : undefined,
                             isHidden: selectedChapter.isHidden || selectedChapter.is_hidden || false,
-                            price: selectedChapter.price
+                            price: selectedChapter.price,
+                            adminHidden: selectedChapter.admin_hidden || false,
+                            adminHideReason: selectedChapter.admin_hide_reason || undefined
                         }}
                         previousChapterStatus={
                             selectedChapter.order > 1

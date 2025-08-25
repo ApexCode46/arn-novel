@@ -9,18 +9,43 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
-import { dummyAds } from "@/dummy/dummyAds";
+interface Ad {
+  ad_id: number;
+  name_as: string;
+  path_img: string;
+  link: string;
+  updated_at: string;
+}
 
 export function Ads() {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
-
-  const adsData = dummyAds;
+  const [adsData, setAdsData] = React.useState<Ad[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
   const plugin = React.useRef(
     Autoplay({ delay: 3000, stopOnInteraction: false })
   );
+
+  // ดึงข้อมูลโฆษณาจาก API
+  React.useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const response = await fetch('/api/ads');
+        if (response.ok) {
+          const data = await response.json();
+          setAdsData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching ads:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAds();
+  }, []);
 
   React.useEffect(() => {
     if (!api) {
@@ -34,6 +59,23 @@ export function Ads() {
       setCurrent(api.selectedScrollSnap());
     });
   }, [api]);
+
+  // แสดง loading หรือไม่มีโฆษณา
+  if (loading) {
+    return (
+      <div className="w-full h-48 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+        <p className="text-gray-500">กำลังโหลดโฆษณา...</p>
+      </div>
+    );
+  }
+
+  if (adsData.length === 0) {
+    return (
+      <div className="w-full h-48 bg-gray-50 rounded flex items-center justify-center">
+        <p className="text-gray-500">ไม่มีโฆษณาในขณะนี้</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full">
@@ -49,17 +91,40 @@ export function Ads() {
         }}
       >
         <CarouselContent className="-ml-4">
-          {adsData.map((ad) => (
-            <CarouselItem key={ad.id} className="pl-4 md:basis-1/3 lg:basis-1/3">
+          {adsData.map((ad: Ad, index: number) => (
+            <CarouselItem key={ad.ad_id} className="pl-4 md:basis-1/3 lg:basis-1/3">
               <div className="relative aspect-[16/9] w-full">
-                <Image
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  fill
-                  priority={ad.id === 1} // เพิ่ม priority สำหรับโฆษณาแรก
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover rounded"
-                />
+                {ad.link ? (
+                  <a 
+                    href={ad.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full h-full"
+                  >
+                    <Image
+                      src={ad.path_img}
+                      alt={ad.name_as}
+                      fill
+                      priority={index === 0} // เพิ่ม priority สำหรับโฆษณาแรก
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover rounded hover:scale-105 transition-transform duration-300"
+                    />
+                  </a>
+                ) : (
+                  <Image
+                    src={ad.path_img}
+                    alt={ad.name_as}
+                    fill
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover rounded"
+                  />
+                )}
+                
+                {/* แสดงชื่อโฆษณาเมื่อ hover */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                  <p className="text-white text-sm font-medium truncate">{ad.name_as}</p>
+                </div>
               </div>
             </CarouselItem>
           ))}
@@ -83,7 +148,7 @@ function CarouselDots({
 
   return (
     <div className="flex justify-center gap-2 mt-1">
-      {Array.from({ length: 10 }).map((_, index) => (
+      {Array.from({ length: count }).map((_, index) => (
         <button
           key={index}
           onClick={() => api?.scrollTo(index)}

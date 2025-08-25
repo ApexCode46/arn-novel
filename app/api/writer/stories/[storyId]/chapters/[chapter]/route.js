@@ -114,6 +114,11 @@ export async function PUT(req, { params }) {
       where: {
         story_id: storyId,
         order: chapterOrder
+      },
+      select: {
+        chapter_id: true,
+        admin_hidden: true,
+        admin_hide_reason: true
       }
     });
 
@@ -121,6 +126,17 @@ export async function PUT(req, { params }) {
       return NextResponse.json(
         { error: 'Chapter not found' },
         { status: 404 }
+      );
+    }
+
+    // ตรวจสอบว่าถูก admin ซ่อนไว้หรือไม่
+    if (existingChapter.admin_hidden) {
+      return NextResponse.json(
+        { 
+          error: "ไม่สามารถแก้ไขตอนนี้ได้ เนื่องจากถูกระงับโดยผู้ดูแลระบบ",
+          reason: existingChapter.admin_hide_reason 
+        },
+        { status: 403 }
       );
     }
 

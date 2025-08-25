@@ -11,7 +11,8 @@ export async function GET(req) {
 
   // สร้าง where clause สำหรับ story
     let storyWhereClause = {
-      status: "published"
+      status: "published",
+      admin_hidden: false
     };
 
     if (category !== 'all') {

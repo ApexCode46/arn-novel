@@ -11,7 +11,8 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
 
     let whereClause = {
-      status: "published"
+      status: "published",
+      admin_hidden: false
     };
     
     if (category) {

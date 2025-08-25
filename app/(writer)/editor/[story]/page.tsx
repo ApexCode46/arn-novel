@@ -31,6 +31,8 @@ export default function Page() {
   const [allowComments, setAllowComments] = useState<boolean>();
   const [commentPermission, setCommentPermission] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [adminHidden, setAdminHidden] = useState<boolean>(false);
+  const [adminHideReason, setAdminHideReason] = useState<string>("");
 
   type Story = {
   title?: string;
@@ -46,6 +48,8 @@ export default function Page() {
   allowComments?: boolean;
   commentPermission?: string;
   status?: string;
+  admin_hidden?: boolean;
+  admin_hide_reason?: string;
 };
 
 
@@ -64,6 +68,8 @@ export default function Page() {
     setAllowComments(updatedStory.allowComments);
     setCommentPermission(updatedStory.commentPermission || "");
     setStatus(updatedStory.status || "");
+    setAdminHidden(updatedStory.admin_hidden || false);
+    setAdminHideReason(updatedStory.admin_hide_reason || "");
   };
 
 
@@ -94,6 +100,8 @@ export default function Page() {
         setAllowComments(getResult.allowComments);
         setCommentPermission(getResult.commentPermission || "");
         setStatus(getResult.status || "");
+        setAdminHidden(getResult.admin_hidden || false);
+        setAdminHideReason(getResult.admin_hide_reason || "");
       } catch (error) {
         console.error("Error fetching story data:", error);
       }
@@ -190,6 +198,8 @@ export default function Page() {
             allowComments: allowComments,
             commentPermission: commentPermission,
             publishStatus: status as "draft" | "published",
+            adminHidden: adminHidden,
+            adminHideReason: adminHideReason,
           }}
           onSubmit={handleStoryUpdate}
         />

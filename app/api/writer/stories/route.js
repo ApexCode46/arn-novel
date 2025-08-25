@@ -116,12 +116,28 @@ export async function POST(req) {
           story_id: storyId,
           user_id: userId,
         },
+        select: {
+          admin_hidden: true,
+          admin_hide_reason: true,
+          status: true
+        }
       });
 
       if (!existingStory) {
         return NextResponse.json(
           { error: "Story not found or you don't have permission to edit" },
           { status: 404 }
+        );
+      }
+
+      // ถ้า admin ซ่อนไว้ และ writer พยายามเปลี่ยนเป็น published
+      if (existingStory.admin_hidden && publishStatus === 'published') {
+        return NextResponse.json(
+          { 
+            error: "ไม่สามารถเผยแพร่เรื่องนี้ได้ เนื่องจากถูกระงับโดยผู้ดูแลระบบ",
+            reason: existingStory.admin_hide_reason 
+          },
+          { status: 403 }
         );
       }
 
@@ -143,7 +159,7 @@ export async function POST(req) {
           hideComments: hideComments,
           allowComments: allowComments,
           commentPermission: commentPermission,
-          status: publishStatus || "draft",
+          status: existingStory.admin_hidden ? existingStory.status : (publishStatus || "draft"),
         },
       });
 

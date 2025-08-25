@@ -176,6 +176,25 @@ async function main() {
         }
     }
 
+    // Seed ads (exactly 10 records)
+    console.log('📣 Seeding ads...')
+
+    // Remove existing ads to ensure exactly 10 seeded records
+    await (prisma as any).ads.deleteMany({})
+
+    const adsData = Array.from({ length: 10 }).map((_, i) => ({
+        name_as: `Ad sample ${i + 1}`,
+        user_id: adminUser.id,
+        path_img: `/ads/ad_${i + 1}.png`,
+        link: `https://example.com/ad-${i + 1}`,
+        status: i === 0 ? true : false, // make first ad active as example
+    }))
+
+    for (const ad of adsData) {
+        await (prisma as any).ads.create({ data: ad })
+        console.log(`✅ Created ad: ${ad.name_as}`)
+    }
+
     console.log('Seed completed successfully!')
     console.log('Admin user created:', adminUser.email)
     console.log('Regular user created:', regularUser.email)

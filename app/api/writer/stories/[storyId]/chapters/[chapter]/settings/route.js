@@ -69,10 +69,27 @@ export async function PATCH(req, { params }) {
         story_id: storyId,
         order: chapterOrder,
       },
+      select: {
+        chapter_id: true,
+        status: true,
+        admin_hidden: true,
+        admin_hide_reason: true
+      }
     });
 
     if (!existingChapter) {
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+    }
+
+    // ตรวจสอบว่าถูก admin ซ่อนไว้หรือไม่
+    if (existingChapter.admin_hidden) {
+      return NextResponse.json(
+        { 
+          error: "ไม่สามารถแก้ไขการตั้งค่าตอนนี้ได้ เนื่องจากถูกระงับโดยผู้ดูแลระบบ",
+          reason: existingChapter.admin_hide_reason 
+        },
+        { status: 403 }
+      );
     }
 
     // ตรวจสอบว่าไม่สามารถเปลี่ยนจาก published กลับเป็น draft หรือ scheduled ได้

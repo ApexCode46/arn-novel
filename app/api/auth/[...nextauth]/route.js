@@ -62,6 +62,30 @@ const authOptions = {
       return token;
     },
   },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        // ดึงข้อมูล user จากฐานข้อมูลเพื่อเอา role
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { id: true, email: true, role: true, name: true }
+        });
+        
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.userId = dbUser.id;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.userId;
+        session.user.role = token.role;
+      }
+      return session;
+    },
+  },
   events: {
     async createUser({ user }) {
       // สร้าง wallet สำหรับผู้ใช้ใหม่ (เมื่อ login ด้วย Google ครั้งแรก)
