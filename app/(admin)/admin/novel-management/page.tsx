@@ -64,7 +64,7 @@ interface Pagination {
 }
 
 export default function NovelManagementPage() {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const [stories, setStories] = useState<Story[]>([])
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState(false)
@@ -200,6 +200,15 @@ export default function NovelManagementPage() {
         'ดราม่า', 'ตลก', 'ไซไฟ', 'แอคชั่น', 'ผจญภัย', 'อื่นๆ'
     ]
 
+    if (status === "loading") {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+            </div>
+        )
+    }
+
     if (!session?.user) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -216,6 +225,7 @@ export default function NovelManagementPage() {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังโหลดข้อมูลนิยาย...</span>
             </div>
         )
     }
@@ -490,7 +500,7 @@ export default function NovelManagementPage() {
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
-                        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="p-4 bg-backgroundCustom border rounded-lg">
                             <p className="text-sm">
                                 <strong>
                                     {actionType === 'hide' ? 'ซ่อน' : 'แสดง'}

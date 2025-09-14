@@ -40,7 +40,7 @@ interface Pagination {
 }
 
 export default function WriterApplicationsPage() {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const [applications, setApplications] = useState<WriterApplication[]>([])
     const [loading, setLoading] = useState(true)
     const [viewingApplication, setViewingApplication] = useState<WriterApplication | null>(null)
@@ -83,6 +83,15 @@ export default function WriterApplicationsPage() {
         fetchApplications()
     }, [pagination.page, fetchApplications])
 
+    if (status === "loading") {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+            </div>
+        )
+    }
+
     if (!session?.user) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -91,6 +100,15 @@ export default function WriterApplicationsPage() {
                         <p className="text-lg mb-4">กรุณาเข้าสู่ระบบ</p>
                     </CardContent>
                 </Card>
+            </div>
+        )
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังโหลดข้อมูลคำขอสมัครนักเขียน...</span>
             </div>
         )
     }

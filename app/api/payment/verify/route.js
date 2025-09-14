@@ -2,43 +2,26 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-// Import authOptions from NextAuth config
-const authOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [],
-  callbacks: {
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-  },
-  session: {
-    strategy: "jwt",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+import { authOptions } from "@/lib/auth";
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
+
+    console.log('Verify session:', JSON.stringify(session, null, 2));
+    console.log('Verify session user:', session?.user);
+    console.log('Verify session user id:', session?.user?.id);
+    console.log('Verify session user sub:', session?.user?.sub);
+
+    if (!session?.user?.id && !session?.user?.sub) {
+      console.log('No user ID found in verify session');
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบก่อน", success: false },
         { status: 401 }
       );
     }
+
+    const userId = session.user.id || session.user.sub;
 
     const { sessionId } = await request.json();
 
@@ -75,7 +58,7 @@ export async function POST(request) {
     const { transaction_id, user_id, coin_amount } = checkoutSession.metadata;
 
     // ตรวจสอบว่าเป็นผู้ใช้เดียวกัน
-    if (user_id !== session.user.id) {
+    if (user_id !== userId) {
       return NextResponse.json(
         { error: "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้", success: false },
         { status: 403 }

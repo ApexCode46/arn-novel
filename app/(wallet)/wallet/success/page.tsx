@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Coins, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Coins, RefreshCw } from "lucide-react";
 
 function PaymentSuccessContent() {
     const searchParams = useSearchParams();
@@ -78,7 +78,7 @@ function PaymentSuccessContent() {
                 <CardContent className="pt-6 text-center">
                     {status === 'loading' && (
                         <>
-                            <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
+                            <RefreshCw className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
                             <h2 className="text-xl font-semibold mb-2">กำลังตรวจสอบการชำระเงิน</h2>
                             <p className="text-muted-foreground">กรุณารอสักครู่...</p>
                         </>
@@ -139,7 +139,7 @@ function PaymentSuccessLoading() {
         <div className="min-h-screen flex items-center justify-center">
             <Card className="w-full max-w-md">
                 <CardContent className="p-8 text-center">
-                    <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
+                    <RefreshCw className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
                     <h1 className="text-xl font-semibold mb-2">กำลังโหลด...</h1>
                     <p className="text-gray-600">กำลังตรวจสอบข้อมูลการชำระเงิน</p>
                 </CardContent>

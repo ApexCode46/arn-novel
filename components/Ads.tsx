@@ -9,12 +9,15 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
+import { RefreshCw } from "lucide-react";
+
 interface Ad {
   ad_id: number;
   name_as: string;
   path_img: string;
   link: string;
   updated_at: string;
+  status: boolean;
 }
 
 export function Ads() {
@@ -35,6 +38,7 @@ export function Ads() {
         const response = await fetch('/api/ads');
         if (response.ok) {
           const data = await response.json();
+          // แสดงโฆษณาทั้งหมด ไม่กรองตาม status
           setAdsData(data);
         }
       } catch (error) {
@@ -64,7 +68,7 @@ export function Ads() {
   if (loading) {
     return (
       <div className="w-full h-48 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-        <p className="text-gray-500">กำลังโหลดโฆษณา...</p>
+        <RefreshCw className="w-6 h-6 mr-2 animate-spin" />
       </div>
     );
   }
@@ -124,6 +128,9 @@ export function Ads() {
                 {/* แสดงชื่อโฆษณาเมื่อ hover */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 hover:opacity-100 transition-opacity duration-300">
                   <p className="text-white text-sm font-medium truncate">{ad.name_as}</p>
+                  <p className="text-white/70 text-xs">
+                    อัปเดต: {new Date(ad.updated_at).toLocaleDateString('th-TH')}
+                  </p>
                 </div>
               </div>
             </CarouselItem>

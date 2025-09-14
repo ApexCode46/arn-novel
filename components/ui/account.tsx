@@ -136,7 +136,7 @@ export default function Account() {
             </DropdownMenuItem>
             {(userProfile?.role === 'admin' || session?.user?.role === 'admin') && (
               <DropdownMenuItem onClick={handleNavigationToAdmin}>
-                <Settings /> admin
+                <Settings /> Admin
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => signOut()}>

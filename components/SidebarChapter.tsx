@@ -22,6 +22,32 @@ import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Settings, Coins, EyeOff, Clock, Pen } from "lucide-react";
 import ModalSettingChapter from "@/components/ModalSettingChapter";
+import { ModalConfirm } from "@/components/ModalConfirm";
+import { useSession } from "next-auth/react";
+
+// Interface สำหรับ purchased chapter item
+interface PurchasedChapterItem {
+  transaction_id: string;
+  chapter_id: string;
+  amount: number;
+  created_at: string;
+  chapter: {
+    chapter_id: string;
+    title: string;
+    order: number;
+    price: number;
+  };
+}
+
+// Interface สำหรับ Session ที่มี user id
+interface ExtendedSession {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  }
+}
 
 type SidebarChapterProps = {
     trigger?: React.ReactNode;
@@ -49,6 +75,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const params = useParams();
     const storyId = params.story as string;
     const router = useRouter();
+    const { data: session } = useSession() as { data: ExtendedSession | null };
 
     // State สำหรับเก็บข้อมูล chapters และ story
     const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -58,6 +85,10 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const [currentPage, setCurrentPage] = useState("page-1");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [chapterToConfirm, setChapterToConfirm] = useState<Chapter | null>(null);
+    const [purchasedChapters, setPurchasedChapters] = useState<Set<string>>(new Set());
+    const [userCoins, setUserCoins] = useState<number>(0);
 
     const handlePageChange = (value: SetStateAction<string>) => {
         setCurrentPage(value);
@@ -96,6 +127,52 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     useEffect(() => {
         fetchData();
     }, [storyId, fetchData]);
+
+    // ดึงข้อมูล purchased chapters เมื่ออยู่ใน reader mode
+    useEffect(() => {
+        const fetchPurchasedChapters = async () => {
+            if (mode === 'reader' && storyId && session?.user?.id) {
+                try {
+                    const response = await fetch(`/api/reader/purchased-chapters?user_id=${session.user.id}&story_id=${storyId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        // สมมติว่า API ส่งกลับ array ของ chapter_id ที่ซื้อแล้ว
+                        const purchasedIds = new Set<string>();
+                        data.purchasedChapters.forEach((item: PurchasedChapterItem) => {
+                            if (item.chapter_id) {
+                                purchasedIds.add(item.chapter_id);
+                            }
+                        });
+                        setPurchasedChapters(purchasedIds);
+                    }
+                } catch (error) {
+                    console.log('Error fetching purchased chapters:', error);
+                }
+            }
+        };
+
+        fetchPurchasedChapters();
+    }, [mode, storyId, session?.user?.id]);
+
+    // ดึงข้อมูล wallet balance
+    useEffect(() => {
+        const fetchWalletBalance = async () => {
+            if (session?.user?.id) {
+                try {
+                    const response = await fetch('/api/wallet');
+                    if (response.ok) {
+                        const walletData = await response.json();
+                        setUserCoins(walletData.balance || 0);
+                    }
+                } catch (error) {
+                    console.log('Error fetching wallet balance:', error);
+                    setUserCoins(0);
+                }
+            }
+        };
+
+        fetchWalletBalance();
+    }, [session?.user?.id]);
 
     // คำนวณจำนวนหน้าสำหรับ pagination (20 ตอนต่อหน้า)
     const chaptersPerPage = 20;
@@ -193,6 +270,24 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
         setSelectedChapter(null);
     };
 
+    const handleConfirmPurchase = async () => {
+        if (!chapterToConfirm) return;
+        
+        // อัพเดท purchased chapters
+        setPurchasedChapters(prev => new Set([...prev, chapterToConfirm.chapter_id]));
+        
+        // อัพเดท user coins (หักราคาตอน)
+        setUserCoins(prev => Math.max(0, prev - chapterToConfirm.price));
+        
+        // นำไปหน้าอ่าน chapter
+        router.push(`/novel/${storyId}/${chapterToConfirm.order}`);
+    };
+
+    const handleCloseConfirmModal = () => {
+        setIsConfirmModalOpen(false);
+        setChapterToConfirm(null);
+    };
+
     return (
         <Sheet>
             <SheetTrigger >
@@ -254,26 +349,47 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                             currentChapters.map((chapter: Chapter) => (
                                 <div
                                     key={chapter.chapter_id}
-                                    className="text-sm my-2 p-4 bg-background border rounded hover:bg-backgroundCustom transition-colors relative group"
+                                    className={`text-sm my-2 p-4 bg-background border rounded transition-colors relative group ${
+                                        chapter.admin_hidden 
+                                            ? 'opacity-60 bg-red-50 border-red-200 cursor-not-allowed' 
+                                            : 'hover:bg-backgroundCustom cursor-pointer'
+                                    }`}
                                 >
                                     <div
                                         onClick={() => {
+                                            // ตรวจสอบว่าถูก admin hidden หรือไม่
+                                            if (chapter.admin_hidden) {
+                                                return; // ไม่ให้คลิกถ้าถูก admin hidden
+                                            }
+
                                             if (mode === 'writer') {
                                                 // นำไปหน้าแก้ไข chapter
                                                 router.push(`/editor/${storyId}/${chapter.order}`);
                                             } else {
-                                                // นำไปหน้าอ่าน chapter
-                                                router.push(`/novel/${storyId}/${chapter.order}`);
+                                                // ตรวจสอบว่าต้องซื้อหรือไม่
+                                                if (chapter.price > 0 && !purchasedChapters.has(chapter.chapter_id)) {
+                                                    // แสดง ModalConfirm
+                                                    setChapterToConfirm(chapter);
+                                                    setIsConfirmModalOpen(true);
+                                                } else {
+                                                    // นำไปหน้าอ่าน chapter
+                                                    router.push(`/novel/${storyId}/${chapter.order}`);
+                                                }
                                             }
                                         }}
-                                        className="cursor-pointer"
+                                        className={`cursor-pointer ${chapter.admin_hidden ? 'cursor-not-allowed opacity-60' : ''}`}
                                     >
                                         <div className="text-bold mt-1 pr-10">
                                             <div className="flex items-center gap-2">
                                                 <span>ตอนที่ {chapter.order} : {chapter.title}</span>
-                                                {chapter.price > 0 && (
+                                                {chapter.price > 0 && (mode !== 'reader' || !session?.user?.id || !purchasedChapters.has(chapter.chapter_id)) && (
                                                     <span className="flex justify-center items-center text-xs bg-yellow-900 text-yellow-200 px-2 py-0.5 rounded">
                                                         {chapter.price} <Coins className="inline-block w-3 h-3" />
+                                                    </span>
+                                                )}
+                                                {mode === 'reader' && chapter.price > 0 && purchasedChapters.has(chapter.chapter_id) && (
+                                                    <span className="flex justify-center items-center text-xs bg-green-900 text-green-200 px-2 py-0.5 rounded font-medium">
+                                                        ซื้อแล้ว
                                                     </span>
                                                 )}
                                                 {(chapter.isHidden || chapter.is_hidden) && (
@@ -342,6 +458,24 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                                 ? chapters.find(ch => ch.order === selectedChapter.order - 1)?.status || null
                                 : null
                         }
+                    />
+                )}
+
+                {/* Modal Confirm Purchase */}
+                {chapterToConfirm && (
+                    <ModalConfirm
+                        isOpen={isConfirmModalOpen}
+                        onClose={handleCloseConfirmModal}
+                        onConfirm={handleConfirmPurchase}
+                        item={{
+                            storyId: storyId,
+                            chapterId: chapterToConfirm.chapter_id,
+                            title: `ตอนที่ ${chapterToConfirm.order}: ${chapterToConfirm.title}`,
+                            price: chapterToConfirm.price,
+                            description: `ตอนที่ ${chapterToConfirm.order} ของเรื่อง ${storyTitle}`
+                        }}
+                        paymentMethod="coins"
+                        userCoins={userCoins}
                     />
                 )}
             </SheetContent>

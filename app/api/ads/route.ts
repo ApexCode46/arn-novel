@@ -12,13 +12,14 @@ export async function GET() {
         name_as: true,
         path_img: true,
         link: true,
-        updated_at: true
+        updated_at: true,
+        status: true
       }
     })
     
     return NextResponse.json(ads)
   } catch (error) {
-    console.error('Error fetching public ads:', error)
+    console.error('Error fetching ads:', error)
     return NextResponse.json(
       { error: 'Failed to fetch ads' },
       { status: 500 }

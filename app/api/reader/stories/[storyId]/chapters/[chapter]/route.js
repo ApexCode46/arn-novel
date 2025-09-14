@@ -206,18 +206,20 @@ export async function GET(request, { params }) {
       }
     }
 
-    // ดึง chapter ก่อนหน้าและถัดไป (เฉพาะที่เผยแพร่แล้ว)
+    // ดึง chapter ก่อนหน้าและถัดไป (เฉพาะที่เผยแพร่แล้วและไม่ถูก admin ซ่อน)
     const previousChapter = await prisma.chapters.findFirst({
       where: {
         story_id: storyId,
         order: chapterOrder - 1,
         status: "published", // เพิ่มเงื่อนไข status
+        admin_hidden: false, // เพิ่มเงื่อนไขไม่ถูก admin ซ่อน
       },
       select: {
         chapter_id: true,
         order: true,
         title: true,
         status: true, // เพิ่ม status
+        admin_hidden: true, // เพิ่ม admin_hidden
       },
     });
 
@@ -226,20 +228,23 @@ export async function GET(request, { params }) {
         story_id: storyId,
         order: chapterOrder + 1,
         status: "published", // เพิ่มเงื่อนไข status
+        admin_hidden: false, // เพิ่มเงื่อนไขไม่ถูก admin ซ่อน
       },
       select: {
         chapter_id: true,
         order: true,
         title: true,
         status: true, // เพิ่ม status
+        admin_hidden: true, // เพิ่ม admin_hidden
       },
     });
 
-    // ดึงรายการ chapter ทั้งหมดของเรื่องนี้ (เฉพาะที่เผยแพร่แล้ว)
+    // ดึงรายการ chapter ทั้งหมดของเรื่องนี้ (เฉพาะที่เผยแพร่แล้วและไม่ถูก admin ซ่อน)
     const allChapters = await prisma.chapters.findMany({
       where: {
         story_id: storyId,
         status: "published",
+        admin_hidden: false, // เพิ่มเงื่อนไขไม่ถูก admin ซ่อน
       },
       orderBy: {
         order: "asc",
@@ -249,6 +254,7 @@ export async function GET(request, { params }) {
         order: true,
         title: true,
         price: true,
+        admin_hidden: true, // เพิ่ม admin_hidden
       },
     });
 

@@ -62,10 +62,7 @@ export async function middleware(request: NextRequest) {
       }
       
       if (token.role !== 'admin') {
-        return NextResponse.json(
-          { error: 'Forbidden: Admin access required' },
-          { status: 403 }
-        );
+        return NextResponse.redirect(new URL('/', request.url));
       }
     }
 

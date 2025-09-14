@@ -58,6 +58,12 @@ interface Comment {
     isLiked: boolean;
 }
 
+interface CommentSettings {
+    allowComments: boolean;
+    hideComments: boolean;
+    commentPermission: string;
+}
+
 export function CommentsChapter({ 
     customTrigger, 
     storyId, 
@@ -78,6 +84,11 @@ export function CommentsChapter({
     const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({});
     const [editingComment, setEditingComment] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
+    const [commentSettings, setCommentSettings] = useState<CommentSettings>({
+        allowComments: true,
+        hideComments: false,
+        commentPermission: 'comfortable'
+    });
     const { data: session } = useSession();
 
     // ฟังก์ชันสำหรับดึงข้อมูล comments
@@ -101,6 +112,10 @@ export function CommentsChapter({
                 if (data.success) {
                     setComments(data.data.comments || []);
                     setTotalComments(data.data.totalComments || 0);
+                    // อัปเดตการตั้งค่าคอมเมนต์
+                    if (data.data.commentSettings) {
+                        setCommentSettings(data.data.commentSettings);
+                    }
                 } else {
                     console.log('Failed to fetch comments:', data.error);
                     setComments([]);
@@ -354,10 +369,6 @@ export function CommentsChapter({
 
     // ฟังก์ชันสำหรับลบ comment
     const handleDeleteComment = async (commentId: string) => {
-        if (!confirm('คุณแน่ใจหรือไม่ที่จะลบความคิดเห็นนี้?')) {
-            return;
-        }
-
         const loadingToast = toast.loading('กำลังลบความคิดเห็น...');
 
         try {
@@ -393,8 +404,6 @@ export function CommentsChapter({
 
     // ฟังก์ชันตรวจสอบว่าเป็นเจ้าของ comment หรือไม่
     const isCommentOwner = (commentUserId: string) => {
-        // For now, we'll use email since that's what we have in session
-        // and what we use for API calls
         return session?.user?.email && commentUserId === session.user.email;
     };
 
@@ -414,21 +423,29 @@ export function CommentsChapter({
                 <div className="mx-auto w-full">
                     <DrawerHeader>
                         <DrawerTitle className="text-base font-semibold">
-                            {loading ? "กำลังโหลด..." : `${totalComments} ความคิดเห็น`}
+                            {commentSettings.hideComments ? "ความคิดเห็น" : loading ? "กำลังโหลด..." : `${totalComments} ความคิดเห็น`}
                         </DrawerTitle>
                     </DrawerHeader>
                     <div className="px-5 mt-3 h-[30rem]">
-                        <ScrollArea className="h-165 w-full">
-                            <div className="mb-[15rem]">
-                                {loading ? (
-                                    <div className="flex justify-center items-center h-40">
-                                        <div className="text-gray-500">กำลังโหลดความคิดเห็น...</div>
-                                    </div>
-                                ) : comments.length === 0 ? (
-                                    <div className="flex justify-center items-center h-40">
-                                        <div className="text-gray-500">ยังไม่มีความคิดเห็น</div>
-                                    </div>
-                                ) : (
+                        {commentSettings.hideComments ? (
+                            <div className="flex flex-col justify-center items-center h-40">
+                                <div className="text-gray-500 text-center">
+                                    <div className="mb-2">🔒</div>
+                                    <div>ผู้เขียนได้ปิดการแสดงความคิดเห็นสำหรับเรื่องนี้</div>
+                                </div>
+                            </div>
+                        ) : (
+                            <ScrollArea className="h-165 w-full">
+                                <div className="mb-[15rem]">
+                                    {loading ? (
+                                        <div className="flex justify-center items-center h-40">
+                                            <div className="text-gray-500">กำลังโหลดความคิดเห็น...</div>
+                                        </div>
+                                    ) : comments.length === 0 ? (
+                                        <div className="flex justify-center items-center h-40">
+                                            <div className="text-gray-500">ยังไม่มีความคิดเห็น</div>
+                                        </div>
+                                    ) : (
                                     comments.map((comment) => (
                                         <div key={comment.id} className="bg-backgroundCustom rounded-lg p-4 hover:bg-backgroundCustom/80 mb-4">
                                             <div className="flex items-center justify-between mb-2">
@@ -539,7 +556,7 @@ export function CommentsChapter({
 
                                             {/* Reply Form */}
                                             {replyingTo === comment.id && (
-                                                <div className="mt-3 p-3 bg-background rounded-lg">
+                                                <div className="mt-3 p-3 bg-backgroundCustom rounded-lg">
                                                     <div className="flex gap-2 mb-2">
                                                         <input
                                                             type="text"
@@ -576,7 +593,7 @@ export function CommentsChapter({
                                             {showReplies[comment.id] && comment.replies.length > 0 && (
                                                 <div className="mt-3 ml-6 space-y-3">
                                                     {comment.replies.map((reply) => (
-                                                        <div key={reply.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                                                        <div key={reply.id} className="bg-background rounded-lg p-3 border border-gray-200">
                                                             <div className="flex items-center justify-between mb-2">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
@@ -589,11 +606,11 @@ export function CommentsChapter({
                                                                                 className="w-6 h-6 rounded-full object-cover"
                                                                             />
                                                                         ) : (
-                                                                            <span className="text-white text-xs">{reply.user.avatar}</span>
+                                                                            <span className="text-xs">{reply.user.avatar}</span>
                                                                         )}
                                                                     </div>
                                                                     <div>
-                                                                        <div className="font-medium text-gray-800 text-sm">{reply.user.name}</div>
+                                                                        <div className="font-medium text-sm">{reply.user.name}</div>
                                                                         <div className="text-xs text-gray-500">
                                                                             {reply.timestamp}
                                                                             {reply.updated_at && reply.updated_at !== reply.created_at && (
@@ -606,7 +623,7 @@ export function CommentsChapter({
                                                                 {isCommentOwner(reply.user.id) && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
-                                                                            <button className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600">
+                                                                            <button className="p-1 rounded-full hover:bg-gray-200 hover:text-gray-600">
                                                                                 <MoreHorizontal size={14} />
                                                                             </button>
                                                                         </DropdownMenuTrigger>
@@ -654,7 +671,7 @@ export function CommentsChapter({
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <p className="text-gray-700 text-sm mb-2 leading-relaxed">
+                                                                <p className="text-sm mb-2 leading-relaxed">
                                                                     {reply.content}
                                                                 </p>
                                                             )}
@@ -674,42 +691,55 @@ export function CommentsChapter({
                                         </div>
                                     ))
                                 )}
-                            </div>
-                        </ScrollArea>
+                                </div>
+                            </ScrollArea>
+                        )}
                     </div>
 
                     <DrawerFooter className="">
-                        <div className="fixed bottom-0 left-0 right-0 bg-backgroundCustom p-4 z-50">
-                            {session?.user ? (
-                                <div className="flex gap-2 w-full max-w-2xl mx-auto">
-                                    <input
-                                        type="text"
-                                        placeholder="แสดงความคิดเห็น..."
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSubmitComment();
-                                            }
-                                        }}
-                                        disabled={isSubmitting}
-                                        className="flex-1 w-full min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
-                                    />
-                                    <button
-                                        onClick={() => handleSubmitComment()}
-                                        disabled={isSubmitting || !newComment.trim()}
-                                        className="p-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200"
-                                    >
-                                        <Send size={18} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="text-center text-gray-500 py-3 max-w-2xl mx-auto">
-                                    <p className="text-sm">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
-                                </div>
-                            )}
-                        </div>
+                        {!commentSettings.hideComments && (
+                            <div className="fixed bottom-0 left-0 right-0 bg-backgroundCustom p-4 z-50">
+                                {session?.user ? (
+                                    commentSettings.allowComments ? (
+                                        <div className="flex gap-2 w-full max-w-2xl mx-auto">
+                                            <input
+                                                type="text"
+                                                placeholder={
+                                                    commentSettings.commentPermission === 'followers' 
+                                                        ? "เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่แสดงความคิดเห็นได้..."
+                                                        : "แสดงความคิดเห็น..."
+                                                }
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleSubmitComment();
+                                                    }
+                                                }}
+                                                disabled={isSubmitting}
+                                                className="flex-1 w-full min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+                                            />
+                                            <button
+                                                onClick={() => handleSubmitComment()}
+                                                disabled={isSubmitting || !newComment.trim()}
+                                                className="p-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200"
+                                            >
+                                                <Send size={18} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-gray-500 py-3 max-w-2xl mx-auto">
+                                            <p className="text-sm">ผู้เขียนได้ปิดการแสดงความคิดเห็นสำหรับเรื่องนี้</p>
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="text-center text-gray-500 py-3 max-w-2xl mx-auto">
+                                        <p className="text-sm">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </DrawerFooter>
 
                 </div>

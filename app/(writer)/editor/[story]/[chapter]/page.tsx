@@ -7,6 +7,7 @@ import { useEditor } from "@/context/EditorContext";
 import { TiptapEditor } from "@/components/editor-bar"
 import { Input } from "@/components/ui/input"
 import { VoiceUpload } from "@/components/VoiceUpload"
+import { RefreshCw } from "lucide-react";
 
 interface ChapterData {
   chapter_id: string;
@@ -132,9 +133,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-2xl flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg">กำลังโหลดข้อมูล...</div>
-        </div>
+        <RefreshCw className="w-8 h-8 animate-spin" />
       </div>
     );
   }

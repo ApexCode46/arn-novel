@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Wallet, Check } from "lucide-react";
+import { Coins, Wallet, Check, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'sonner';
@@ -141,8 +141,9 @@ export default function TopUpPage() {
             {/* Coin Packages Grid */}
             {loading ? (
                 <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-lg">กำลังโหลด...</span>
+                    <div className="flex items-center justify-center min-h-screen">
+                        <RefreshCw className="w-8 h-8 animate-spin" />
+                    </div>
                 </div>
             ) : error ? (
                 <div className="text-center py-12">

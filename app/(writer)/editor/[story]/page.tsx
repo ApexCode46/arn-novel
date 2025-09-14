@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useEditor } from "@/context/EditorContext";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 export default function Page() {
   const { content, setContent } = useEditor();
@@ -33,6 +34,7 @@ export default function Page() {
   const [status, setStatus] = useState<string>("");
   const [adminHidden, setAdminHidden] = useState<boolean>(false);
   const [adminHideReason, setAdminHideReason] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   type Story = {
   title?: string;
@@ -104,11 +106,22 @@ export default function Page() {
         setAdminHideReason(getResult.admin_hide_reason || "");
       } catch (error) {
         console.error("Error fetching story data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     dataNovel();
   }, [storyId, setContent]); // เพิ่ม storyId และ setContent ใน dependencies
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังโหลดข้อมูลนิยาย...</span>
+      </div>
+    )
+  }
 
   return (
 

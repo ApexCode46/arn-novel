@@ -26,7 +26,7 @@ import { ModalConfirm } from "@/components/ModalConfirm";
 import { useSession } from "next-auth/react";
 import { CommentsStory } from "@/components/commentsStory";
 import { Button } from '@/components/ui/button';
-import { Heart, Bell } from 'lucide-react';
+import { Heart, Bell, MessageCircle, MessageCircleOff, Users, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Interface สำหรับ Session
@@ -89,6 +89,10 @@ interface Story {
   views: number;
   created_at: string;
   updated_at: string;
+  // เพิ่มการตั้งค่าคอมเมนต์
+  allowComments: boolean;
+  commentPermission: string;
+  hideComments: boolean;
   author: Author;
   chapters: Chapter[];
   stats: {
@@ -427,8 +431,8 @@ export default function Page() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">กำลังโหลด...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin" />
       </div>
     );
   }
@@ -511,6 +515,36 @@ export default function Page() {
                 <div className="flex flex-wrap items-start gap-2">
                   <span className="font-semibold text-muted-foreground min-w-0">จำนวนการดู:</span>
                   <span className="text-foreground">{story.views.toLocaleString()} ครั้ง</span>
+                </div>
+
+                {/* แสดงสถานะการตั้งค่าคอมเมนต์ */}
+                <div className="flex flex-wrap items-start gap-2">
+                  <span className="font-semibold text-muted-foreground min-w-0">คอมเมนต์:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {story.hideComments ? (
+                      <div className="flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                        <MessageCircleOff className="w-3 h-3" />
+                        <span>ซ่อนคอมเมนต์</span>
+                      </div>
+                    ) : !story.allowComments ? (
+                      <div className="flex items-center gap-1 bg-red-100 text-red-600 px-2 py-1 rounded text-xs">
+                        <MessageCircleOff className="w-3 h-3" />
+                        <span>ปิดคอมเมนต์</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 bg-green-100 text-green-600 px-2 py-1 rounded text-xs">
+                        <MessageCircle className="w-3 h-3" />
+                        <span>เปิดคอมเมนต์</span>
+                        {story.commentPermission === 'followers' && (
+                          <>
+                            <span>-</span>
+                            <Users className="w-3 h-3" />
+                            <span>เฉพาะผู้ติดตาม</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {story.blurb && (
@@ -628,7 +662,14 @@ export default function Page() {
           paymentMethod="coins"
         />
       )}
-  <CommentsStory storyId={story.story_id} />
+        <CommentsStory 
+        storyId={story.story_id} 
+        commentSettings={{
+          allowComments: story.allowComments,
+          hideComments: story.hideComments,
+          commentPermission: story.commentPermission
+        }}
+      />
     </>
   );
 }

@@ -195,7 +195,7 @@ export default function NovelBrowsePage() {
       sortOrder
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchType, sortBy, sortOrder])
+  }, []) // เปลี่ยนเป็นรันครั้งเดียวตอน mount
 
   // รีเฟรชผลลัพธ์อัตโนมัติเมื่อเปลี่ยนสถานะหรือหมวดหมู่
   useEffect(() => {
@@ -210,7 +210,7 @@ export default function NovelBrowsePage() {
       sortOrder,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, selectedCategory])
+  }, [selectedStatus, selectedCategory, sortBy, sortOrder])
 
   // Handle search and filters
   const handleSearch = () => {

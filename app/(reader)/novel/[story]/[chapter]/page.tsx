@@ -18,7 +18,8 @@ import {
     Plus,
     Sidebar,
     MessageCircle,
-    EyeOff
+    EyeOff,
+    RefreshCw
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -60,6 +61,7 @@ interface NavigationChapter {
     order: number;
     title: string;
     status?: string; // เพิ่ม status
+    admin_hidden?: boolean; // เพิ่ม admin_hidden
 }
 
 interface ChapterData {
@@ -137,7 +139,7 @@ function ChapterContentDisplay({ content, fontSize, fontFamily }: { content: str
     }, []);
 
     return (
-        <div 
+        <div
             className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-2xl story-content-protected"
             onContextMenu={(e) => e.preventDefault()}
         >
@@ -145,7 +147,7 @@ function ChapterContentDisplay({ content, fontSize, fontFamily }: { content: str
                 <EditorContent
                     editor={editor}
                     className="text-foreground leading-relaxed [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror]:min-h-[65rem]"
-                    style={{ 
+                    style={{
                         fontSize: `${fontSize}px`,
                         fontFamily: fontFamily
                     }}
@@ -159,23 +161,23 @@ function ChapterContentDisplay({ content, fontSize, fontFamily }: { content: str
 function HiddenContentDisplay() {
     return (
         <Card className="w-full max-w-md mx-auto bg-backgroundCustom backdrop-blur-sm shadow-xl">
-                    <CardHeader className="text-center">
-                        <div className="mx-auto mb-4 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                            <EyeOff className="w-8 h-8 text-gray-500" />
-                        </div>
-                        <CardTitle className="text-xl font-bold">
-                            เนื้อหาถูกปิดการมองเห็น
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                        <p className="text-gray-600 mb-4">
-                            เนื้อหาตอนนี้ถูกซ่อนโดยผู้เขียน
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            กรุณาติดต่อผู้เขียนหรือรอการเปิดเผยเนื้อหา
-                        </p>
-                    </CardContent>
-                </Card>
+            <CardHeader className="text-center">
+                <div className="mx-auto mb-4 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <EyeOff className="w-8 h-8 text-gray-500" />
+                </div>
+                <CardTitle className="text-xl font-bold">
+                    เนื้อหาถูกปิดการมองเห็น
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <p className="text-gray-600 mb-4">
+                    เนื้อหาตอนนี้ถูกซ่อนโดยผู้เขียน
+                </p>
+                <p className="text-sm text-gray-500">
+                    กรุณาติดต่อผู้เขียนหรือรอการเปิดเผยเนื้อหา
+                </p>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -309,7 +311,7 @@ function FooterMenu({
                         <SidebarChapter
                             trigger={
                                 <div
-                                    
+
                                     className="flex flex-col items-center gap-1 h-auto py-2"
                                 >
                                     <Sidebar className="w-4 h-4" />
@@ -370,10 +372,7 @@ export default function Page() {
                 if (!response.ok) {
                     throw new Error('Failed to fetch chapter');
                 }
-
                 const data = await response.json();
-
-                
                 setChapterData(data.data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
@@ -390,8 +389,8 @@ export default function Page() {
     // Loading state
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-lg">กำลังโหลด...</div>
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
             </div>
         );
     }
@@ -406,7 +405,7 @@ export default function Page() {
     }
 
     const { chapter, story, navigation } = chapterData;
-    
+
     const isHidden = chapter.is_hidden === true;
 
     return (
@@ -433,8 +432,8 @@ export default function Page() {
                     </h1>
                     <h1 className="text-lg font-semibold text-muted-foreground break-words hyphens-auto">ตอนที่ {chapter.order} : {chapter.title}</h1>
                     <p className="text-sm text-muted-foreground">โดย {story.penName}</p>
-                    </div>
-                
+                </div>
+
                 {!isHidden && (
                     <div className="mb-6">
                         <VoicePlayer
@@ -461,7 +460,7 @@ export default function Page() {
                 <div className="flex justify-between items-center">
                     {/* Previous Chapter */}
                     <div className="flex-1">
-                        {navigation.previous && navigation.previous.status === "published" ? (
+                        {navigation.previous && navigation.previous.status === "published" && !navigation.previous.admin_hidden ? (
                             <Link href={`/novel/${storyId}/${navigation.previous.order}`}>
                                 <Button variant="default" className="w-auto max-w-xs">
                                     <ChevronLeft className="w-4 h-4 mr-2" />
@@ -478,7 +477,7 @@ export default function Page() {
 
                     {/* Next Chapter */}
                     <div className="flex-1 flex justify-end">
-                        {navigation.next && navigation.next.status === "published" ? (
+                        {navigation.next && navigation.next.status === "published" && !navigation.next.admin_hidden ? (
                             <Link href={`/novel/${storyId}/${navigation.next.order}`}>
                                 <Button variant="default" className="w-auto max-w-xs">
                                     <div className="text-right hidden sm:block">
@@ -516,7 +515,7 @@ export default function Page() {
 
             {/* Desktop Comments Component */}
             <div className="hidden sm:block">
-                <CommentsChapter 
+                <CommentsChapter
                     storyId={storyId}
                     chapterOrder={chapterOrder}
                 />

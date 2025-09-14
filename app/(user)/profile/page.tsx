@@ -41,11 +41,11 @@ import {
     Trophy,
     Save,
     X,
-    Loader2,
     UserPlus,
     Lock,
     Upload,
-    EyeOff
+    EyeOff,
+    RefreshCw
 } from "lucide-react";
 
 // Interface สำหรับข้อมูลผู้ใช้
@@ -454,9 +454,8 @@ export default function ProfilePage() {
     // Loading state
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <span className="ml-2">กำลังโหลดข้อมูล...</span>
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
             </div>
         );
     }
@@ -476,8 +475,8 @@ export default function ProfilePage() {
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <Button variant="default" className="mb-4" onClick={handleToHomePage}>
-                    กลับหน้าหลัก
-                </Button>
+                กลับหน้าหลัก
+            </Button>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Profile Overview */}
                 <div className="lg:col-span-1">
@@ -504,7 +503,7 @@ export default function ProfilePage() {
                                     )}
                                     {uploadingImage && (
                                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                            <RefreshCw className="w-8 h-8 text-white animate-spin" />
                                         </div>
                                     )}
                                 </div>
@@ -743,7 +742,7 @@ export default function ProfilePage() {
                                 <CardContent>
                                     {tabLoading.stories ? (
                                         <div className="flex justify-center py-8">
-                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                            <RefreshCw className="h-8 w-8 animate-spin" />
                                             <span className="ml-2">กำลังโหลด...</span>
                                         </div>
                                     ) : userStories.length > 0 ? (
@@ -823,7 +822,7 @@ export default function ProfilePage() {
 
                                     {tabLoading.favorites ? (
                                         <div className="flex justify-center py-8">
-                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                            <RefreshCw className="h-8 w-8 animate-spin" />
                                             <span className="ml-2">กำลังโหลด...</span>
                                         </div>
                                     ) : favoriteStories.length > 0 ? (
@@ -834,46 +833,46 @@ export default function ProfilePage() {
                                                         <div className="flex gap-4">
                                                             <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
                                                                 {favorite.story.verticalImage ? (
-                                                                <Image
-                                                                    src={favorite.story.verticalImage}
-                                                                    alt={favorite.story.title}
-                                                                    width={64}
-                                                                    height={80}
-                                                                    className="object-cover rounded"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center">
-                                                                    <BookOpen className="w-6 h-6 text-gray-400" />
+                                                                    <Image
+                                                                        src={favorite.story.verticalImage}
+                                                                        alt={favorite.story.title}
+                                                                        width={64}
+                                                                        height={80}
+                                                                        className="object-cover rounded"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center">
+                                                                        <BookOpen className="w-6 h-6 text-gray-400" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <h3 className="font-semibold text-lg">{favorite.story.title}</h3>
+                                                                <div className="text-sm text-muted-foreground">
+                                                                    โดย {favorite.story.user.penName || favorite.story.user.name}
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <h3 className="font-semibold text-lg">{favorite.story.title}</h3>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                โดย {favorite.story.user.penName || favorite.story.user.name}
-                                                            </div>
-                                                            {favorite.story.blurb && (
-                                                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                                    {favorite.story.blurb}
-                                                                </p>
-                                                            )}
-                                                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                                                <span className="flex items-center gap-1">
-                                                                    <Eye className="w-4 h-4" />
-                                                                    {favorite.story.views.toLocaleString()}
-                                                                </span>
-                                                                <Badge variant={favorite.story.status === 'published' ? 'default' : 'secondary'}>
-                                                                    {favorite.story.status === 'published' ? 'เผยแพร่' :
-                                                                        favorite.story.status === 'draft' ? 'แบบร่าง' : 'สิ้นสุด'}
-                                                                </Badge>
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground mt-1">
-                                                                เพิ่มในรายการโปรด: {new Date(favorite.created_at).toLocaleDateString('th-TH')}
+                                                                {favorite.story.blurb && (
+                                                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                                                        {favorite.story.blurb}
+                                                                    </p>
+                                                                )}
+                                                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Eye className="w-4 h-4" />
+                                                                        {favorite.story.views.toLocaleString()}
+                                                                    </span>
+                                                                    <Badge variant={favorite.story.status === 'published' ? 'default' : 'secondary'}>
+                                                                        {favorite.story.status === 'published' ? 'เผยแพร่' :
+                                                                            favorite.story.status === 'draft' ? 'แบบร่าง' : 'สิ้นสุด'}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="text-xs text-muted-foreground mt-1">
+                                                                    เพิ่มในรายการโปรด: {new Date(favorite.created_at).toLocaleDateString('th-TH')}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
                                             </ScrollArea>
                                         </div>
                                     ) : (
@@ -896,7 +895,7 @@ export default function ProfilePage() {
                                 <CardContent>
                                     {tabLoading.following ? (
                                         <div className="flex justify-center py-8">
-                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                            <RefreshCw className="h-8 w-8 animate-spin" />
                                             <span className="ml-2">กำลังโหลด...</span>
                                         </div>
                                     ) : followingStories.length > 0 ? (
@@ -1105,7 +1104,7 @@ export default function ProfilePage() {
                             }
                         >
                             {saving ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                             ) : (
                                 <Lock className="w-4 h-4 mr-2" />
                             )}
@@ -1150,7 +1149,7 @@ export default function ProfilePage() {
                         </Button>
                         <Button onClick={handleSaveProfile} disabled={saving}>
                             {saving ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                             ) : (
                                 <Save className="w-4 h-4 mr-2" />
                             )}

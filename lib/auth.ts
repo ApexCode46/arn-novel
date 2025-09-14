@@ -1,6 +1,110 @@
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { NextAuthOptions } from 'next-auth';
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { compare } from "bcrypt";
 import { prisma } from './prisma';
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("กรุณากรอกอีเมลและรหัสผ่าน");
+        }
+
+        const account = await prisma.account.findFirst({
+          where: {
+            email: credentials.email,
+            provider: "local",
+            type: "credentials",
+          },
+          include: {
+            user: true, // สำคัญ! ต้อง include user เพื่อส่งให้ NextAuth
+          },
+        });
+
+        if (!account || !account.password) {
+          throw new Error("ไม่พบผู้ใช้หรือยังไม่ได้ตั้งรหัสผ่าน");
+        }
+
+        const isValid = await compare(credentials.password, account.password);
+        if (!isValid) {
+          throw new Error("รหัสผ่านไม่ถูกต้อง");
+        }
+
+        return account.user; 
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        // ดึงข้อมูล user จากฐานข้อมูลเพื่อเอา role
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { id: true, email: true, role: true, name: true }
+        });
+        
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.userId = dbUser.id;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session.user as any).id = token.userId as string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session.user as any).role = token.role as string;
+      }
+      return session;
+    },
+  },
+  events: {
+    async createUser({ user }) {
+      // สร้าง wallet สำหรับผู้ใช้ใหม่ (เมื่อ login ด้วย Google ครั้งแรก)
+      try {
+        const existingWallet = await prisma.wallet.findUnique({
+          where: { user_id: user.id }
+        });
+
+        if (!existingWallet) {
+          await prisma.wallet.create({
+            data: {
+              user_id: user.id,
+              balance: 0,
+            },
+          });
+          console.log(`Wallet created for user: ${user.id}`);
+        }
+      } catch (error) {
+        console.error("Error creating wallet:", error);
+      }
+    },
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
 
 export interface AuthUser {
   id: string;

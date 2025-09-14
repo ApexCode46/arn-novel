@@ -108,7 +108,7 @@ export default function Modalsettingstory({
     // สิทธิ์การเข้าถึงนิยาย
     const [isChecked1, setIsChecked1] = useState(initialData?.hideComments || false);
     const [isChecked2, setIsChecked2] = useState(initialData?.allowComments ?? true);
-    const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "comfortable");
+    const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "followers");
 
     // สถานะการเผยแพร่
     const [publishStatus, setPublishStatus] = useState<"draft" | "published">(initialData?.publishStatus || "draft");
@@ -365,7 +365,7 @@ export default function Modalsettingstory({
             setHorizontalImage(initialData.horizontalImage || null);
             setIsChecked1(initialData.hideComments || false);
             setIsChecked2(initialData.allowComments ?? true);
-            setSelectedOption(initialData.commentPermission || "comfortable");
+            setSelectedOption(initialData.commentPermission || "followers");
             setPublishStatus(initialData.publishStatus || "draft");
         } else if (mode === 'create') {
             // รีเซ็ตค่าเมื่อเป็นโหมดสร้างใหม่
@@ -382,7 +382,7 @@ export default function Modalsettingstory({
             setHorizontalImageFile(null);
             setIsChecked1(false);
             setIsChecked2(true);
-            setSelectedOption("comfortable");
+            setSelectedOption("followers");
             setPublishStatus("draft");
         }
     }, [mode, initialData]);
@@ -796,11 +796,11 @@ export default function Modalsettingstory({
                                                     className="mt-2"
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <RadioGroupItem value="default" id="r1" />
+                                                        <RadioGroupItem value="all" id="r1" />
                                                         <Label htmlFor="r1">ทุกคน</Label>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <RadioGroupItem value="comfortable" id="r2" />
+                                                        <RadioGroupItem value="followers" id="r2" />
                                                         <Label htmlFor="r2">เฉพาะคนที่ติดตามนิยายเรื่องนี้</Label>
                                                     </div>
                                                 </RadioGroup>

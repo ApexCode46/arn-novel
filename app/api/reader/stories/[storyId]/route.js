@@ -145,6 +145,10 @@ export async function GET(req, { params }) {
         views: story.views, // ไม่เพิ่ม view
         created_at: story.created_at,
         updated_at: story.updated_at,
+        // เพิ่มการตั้งค่าคอมเมนต์
+        allowComments: story.allowComments,
+        commentPermission: story.commentPermission,
+        hideComments: story.hideComments,
         author: {
           id: story.user.id,
           name: story.user.name,
@@ -200,9 +204,12 @@ export async function GET(req, { params }) {
       storyInfo: story.storyInfo,
       verticalImage: story.verticalImage,
       horizontalImage: story.horizontalImage,
-      views: updatedViews, // แสดงจำนวน views ที่อัพเดทแล้ว
+      views: updatedViews,
       created_at: story.created_at,
       updated_at: story.updated_at,
+      allowComments: story.allowComments,
+      commentPermission: story.commentPermission,
+      hideComments: story.hideComments,
       author: {
         id: story.user.id,
         name: story.user.name,

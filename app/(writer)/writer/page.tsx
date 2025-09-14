@@ -50,7 +50,6 @@ export default function Page() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [stories, setStories] = useState<WriterStoryStat[]>([])
   const [selectedStory, setSelectedStory] = useState<string>("all")
-  // Fixed timeframe (formerly selectable) -- default 30d
   const timeframe = "30d"
   const [loading, setLoading] = useState<boolean>(false)
   const [refreshTs, setRefreshTs] = useState<number>(Date.now())
@@ -290,7 +289,7 @@ export default function Page() {
                 {/* timeframe label removed */}
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold tabular-nums">{loading ? <span className="animate-pulse text-muted-foreground">•••</span> : value.toLocaleString()}</div>
+                <div className="text-2xl font-bold tabular-nums">{loading ? <span className="animate-pulse text-muted-foreground"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : value.toLocaleString()}</div>
               </CardContent>
               <div className="pointer-events-none absolute inset-x-0 -bottom-6 h-20 bg-gradient-to-t from-primary/5 to-transparent" />
             </Card>
@@ -306,7 +305,7 @@ export default function Page() {
           </CardHeader>
           <CardContent className="flex-1">
             {loading ? (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm animate-pulse">กำลังโหลดกราฟ...</div>
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm animate-pulse"><RefreshCw className="w-4 h-4 mr-2 animate-spin" />กำลังโหลดกราฟ...</div>
             ) : (
               <div className="w-full h-full overflow-x-auto pb-2 scrollbar-thin">
                 {/* กว้างคำนวณตามจำนวนเดือน (barSize 34 + gap ~18) เพื่อเลื่อนภายใน ไม่ให้ทะลุการ์ดบนจอเล็ก */}
@@ -339,7 +338,7 @@ export default function Page() {
           </CardHeader>
           <CardContent className="space-y-3 overflow-auto text-sm pr-1">
             {stories.map(s => (
-              <div key={s.id} className="p-3 rounded-md border bg-background/40 flex flex-col gap-1">
+              <div key={s.id} className="w-[17.7rem] p-3 rounded-md border bg-background/40 flex flex-col gap-1">
                 <div className="font-medium truncate">{s.title}</div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-3">
                   <span className="inline-flex items-center gap-1"><Eye size={16} className="text-emerald-500" /> {s.views.toLocaleString()}</span>
@@ -360,7 +359,7 @@ export default function Page() {
           รายได้ทั้งหมดของเดือนนี้:
         </span>
         <span className="font-bold md:text-xl">
-          {loading ? <span className="animate-pulse text-muted-foreground">•••</span> : (dashboardData?.currentMonthEarnings || 0).toLocaleString()} coins
+          {loading ? <span className="animate-pulse text-muted-foreground"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : (dashboardData?.currentMonthEarnings || 0).toLocaleString()} coins
         </span>
       </div>
 
@@ -407,7 +406,7 @@ export default function Page() {
                     <TableBody>
                       {loading && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">กำลังโหลด...</TableCell>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></TableCell>
                         </TableRow>
                       )}
                       {!loading && pageItems.map(ch => (

@@ -58,7 +58,7 @@ interface Stats {
 }
 
 export default function CoinTransactionPage() {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState<Stats | null>(null)
@@ -152,6 +152,15 @@ export default function CoinTransactionPage() {
         return `${amount.toLocaleString()} เหรียญ`
     }
 
+    if (status === "loading") {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+            </div>
+        )
+    }
+
     if (!session?.user) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -168,6 +177,7 @@ export default function CoinTransactionPage() {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังโหลดข้อมูลธุรกรรม...</span>
             </div>
         )
     }
@@ -192,7 +202,7 @@ export default function CoinTransactionPage() {
             {/* สถิติ */}
             {stats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
+                    <Card className='bg-backgroundCustom'>
                         <CardContent className="py-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -206,7 +216,7 @@ export default function CoinTransactionPage() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className='bg-backgroundCustom'>
                         <CardContent className="py-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -221,7 +231,7 @@ export default function CoinTransactionPage() {
                     </Card>
 
                     {stats.byType.map((stat) => (
-                        <Card key={stat.type}>
+                        <Card key={stat.type} className='bg-backgroundCustom'>
                             <CardContent className="py-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -244,7 +254,7 @@ export default function CoinTransactionPage() {
             )}
 
             {/* ฟิลเตอร์และค้นหา */}
-            <Card>
+            <Card className='bg-backgroundCustom'>
                 <CardContent className="py-4">
                     <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-end">
                         <div className="lg:col-span-2">
@@ -326,7 +336,7 @@ export default function CoinTransactionPage() {
             </Card>
 
             {/* ตารางรายการ */}
-            <Card>
+            <Card className='bg-backgroundCustom'>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
                         <TrendingUp className="w-5 h-5" />
@@ -437,7 +447,7 @@ export default function CoinTransactionPage() {
             </Card>
 
             {transactions.length === 0 && !loading && (
-                <Card>
+                <Card className='bg-backgroundCustom'>
                     <CardContent className="py-8 text-center">
                         <Coins className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">ไม่พบข้อมูลธุรกรรม</p>

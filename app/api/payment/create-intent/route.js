@@ -1,47 +1,27 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-
-// Import authOptions from NextAuth config
-const authOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    // Your providers will be imported from the auth config
-  ],
-  callbacks: {
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-  },
-  session: {
-    strategy: "jwt",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+import { authOptions } from "@/lib/auth";
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
+
+    console.log('Payment session:', JSON.stringify(session, null, 2));
+    console.log('Payment session user:', session?.user);
+    console.log('Payment session user id:', session?.user?.id);
+    console.log('Payment session user sub:', session?.user?.sub);
+
+    if (!session?.user?.id && !session?.user?.sub) {
+      console.log('No user ID found in payment session');
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบก่อน" },
         { status: 401 }
       );
     }
+
+    const userId = session.user.id || session.user.sub;
 
     const { packageId, amount, price } = await request.json();
 
@@ -66,7 +46,7 @@ export async function POST(request) {
 
     // ค้นหา wallet ของผู้ใช้
     const wallet = await prisma.wallet.findUnique({
-      where: { user_id: session.user.id }
+      where: { user_id: userId }
     });
 
     if (!wallet) {
@@ -110,7 +90,7 @@ export async function POST(request) {
       cancel_url: `${request.headers.get('origin')}/wallet/success?payment=cancelled`,
       metadata: {
         transaction_id: transaction.transaction_id,
-        user_id: session.user.id,
+        user_id: userId,
         package_id: packageId,
         coin_amount: amount.toString()
       },

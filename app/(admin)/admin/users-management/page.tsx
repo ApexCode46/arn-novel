@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Trash2, Edit, Search, RefreshCw, Plus, Users } from 'lucide-react'
 import { toast } from 'sonner'
-
 interface User {
     id: string
     name: string
@@ -45,11 +45,13 @@ interface Filters {
 }
 
 export default function ManageUsersPage() {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const [users, setUsers] = useState<User[]>([])
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState<boolean>(true)
     const [editingUser, setEditingUser] = useState<Partial<User> | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [userToDelete, setUserToDelete] = useState<string | null>(null)
     const [pagination, setPagination] = useState<Pagination>({
         page: 1,
         limit: 10,
@@ -88,6 +90,15 @@ export default function ManageUsersPage() {
         fetchUsers()
     }, [pagination.page, fetchUsers])
 
+    if (status === "loading" || !session) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+            </div>
+        )
+    }
+
     if (!session?.user) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -96,6 +107,15 @@ export default function ManageUsersPage() {
                         <p className="text-lg mb-4">กรุณาเข้าสู่ระบบ</p>
                     </CardContent>
                 </Card>
+            </div>
+        )
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 animate-spin" />
+                <span className="ml-2 text-lg">กำลังโหลดข้อมูลผู้ใช้...</span>
             </div>
         )
     }
@@ -150,10 +170,16 @@ export default function ManageUsersPage() {
 
     // ลบผู้ใช้
     const deleteUser = async (userId: string) => {
-        if (!confirm('คุณแน่ใจว่าต้องการลบผู้ใช้นี้?')) return
+        setUserToDelete(userId)
+        setDeleteDialogOpen(true)
+    }
+
+    // ยืนยันการลบผู้ใช้
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return
 
         try {
-            const response = await fetch(`/api/admin/users/${userId}`, {
+            const response = await fetch(`/api/admin/users/${userToDelete}`, {
                 method: 'DELETE'
             })
 
@@ -166,6 +192,9 @@ export default function ManageUsersPage() {
         } catch (error) {
             toast.error('เกิดข้อผิดพลาด')
             console.error('Error deleting user:', error)
+        } finally {
+            setDeleteDialogOpen(false)
+            setUserToDelete(null)
         }
     }
 
@@ -180,13 +209,7 @@ export default function ManageUsersPage() {
         setPagination(prev => ({ ...prev, page: newPage }))
     }
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <RefreshCw className="w-8 h-8 animate-spin" />
-            </div>
-        )
-    }
+    
 
     return (
         <div className="container mx-auto py-4 lg:py-6 space-y-4 lg:space-y-6 px-4">
@@ -306,6 +329,24 @@ export default function ManageUsersPage() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Alert Dialog สำหรับยืนยันการลบผู้ใช้ */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>ยืนยันการลบผู้ใช้</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            คุณแน่ใจว่าต้องการลบผู้ใช้นี้? การดำเนินการนี้จะลบข้อมูลทั้งหมดของผู้ใช้ รวมถึงนิยาย คอมเมนต์ และข้อมูลอื่นๆ ที่เกี่ยวข้อง และไม่สามารถยกเลิกได้
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive text-white hover:bg-destructive/90">
+                            ลบผู้ใช้
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* ตารางผู้ใช้ */}
             <Card className='bg-backgroundCustom shadow-sm'>

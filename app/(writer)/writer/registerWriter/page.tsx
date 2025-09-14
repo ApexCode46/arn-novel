@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, User, CreditCard, Phone, Mail, Building2 } from 'lucide-react'
+import { Upload, User, CreditCard, Phone, Mail, Building2 ,RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface FormData {
@@ -34,7 +34,7 @@ interface ApplicationStatus {
 }
 
 export default function RegisterWriterPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [loading, setLoading] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(true)
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus | null>(null)
@@ -91,6 +91,15 @@ export default function RegisterWriterPage() {
     }
   }, [session])
 
+  if (status === "loading" || !session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+      </div>
+    )
+  }
+
   if (!session?.user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -106,12 +115,8 @@ export default function RegisterWriterPage() {
   if (checkingStatus) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Card>
-          <CardContent className="py-8 px-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p className="text-lg">กำลังตรวจสอบสถานะ...</p>
-          </CardContent>
-        </Card>
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังตรวจสอบสถานะ...</span>
       </div>
     )
   }
@@ -132,7 +137,7 @@ export default function RegisterWriterPage() {
             title: 'อนุมัติแล้ว',
             message: 'ยินดีด้วย! คำขอสมัครของคุณได้รับการอนุมัติแล้ว คุณสามารถเริ่มเขียนนิยายได้ เผยแพร่ได้แล้ว',
             color: 'text-green-600',
-            bgColor: 'bg-backgroundCustom0'
+            bgColor: 'bg-backgroundCustom'
           }
         case 'rejected':
           return {

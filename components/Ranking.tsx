@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Heart, BookOpen, Eye, Tag } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Story {
   id: string;
@@ -56,6 +57,11 @@ export default function Ranking() {
     fetchTopFavorites();
   }, []);
 
+  const router = useRouter();
+  const handleStoryClick = (storyId: string) => {
+    router.push(`/novel/${storyId}`);
+  };
+
   if (loading) {
     return (
       <div className="w-full space-y-6">
@@ -89,7 +95,8 @@ export default function Ranking() {
     <div className="w-full space-y-6">
       {stories.map((story, index) => (
         <Card 
-          key={story.id} 
+          key={story.id}
+          onClick={() => handleStoryClick(story.id)}
           className="w-full drop-shadow-lg hover:drop-shadow-xl transition-all duration-300 bg-backgroundCustom from-white to-gray-50 border-0 overflow-hidden group hover:scale-[1.02]"
         >
           <CardContent className="p-6">

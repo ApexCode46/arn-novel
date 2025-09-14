@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wallet, Plus, History, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Search, X } from "lucide-react";
+import { Wallet, Plus, History, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Search, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -189,8 +189,7 @@ export default function WalletPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">กำลังโหลดข้อมูล...</p>
+            <RefreshCw className="w-12 h-12 animate-spin text-gray-400 mx-auto" />
           </div>
         </div>
       </div>
@@ -399,7 +398,7 @@ export default function WalletPage() {
 
                             {/* ข้อมูลสินค้า/บริการ */}
                             {(transaction?.chapter || transaction?.voice) && (
-                              <div className="bg-backgroundCustom from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100">
+                              <div className="bg-backgroundCustom from-blue-50 to-indigo-50 p-3 rounded-lg border">
                                 <div className="flex items-start gap-2">
                                   <div className="text-blue-600 mt-0.5">
                                     {transaction?.chapter ? "📖" : "🎵"}
@@ -441,7 +440,7 @@ export default function WalletPage() {
                             </div>
 
                             {/* สถานะและราคาเพิ่มเติม */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 pt-2 border-t border-gray-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 pt-2 border-t">
                               <div className="flex items-center gap-4">
                                 <div className="text-xs">
                                   ประเภท: {transaction?.type || "N/A"}
@@ -466,7 +465,7 @@ export default function WalletPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="border-t border-gray-100 p-4 sm:p-6">
+                  <div className="border-t p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <Button
                         variant="outline"

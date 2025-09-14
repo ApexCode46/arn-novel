@@ -33,7 +33,7 @@ export function NavMain() {
       <SidebarGroupLabel>โหมดนักเขียน</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuButton onClick={handleNavigationToDashBoard}>
-          <ChartColumnBig /> <strong>หน้าหลัก</strong>
+          <ChartColumnBig /> <strong>สรุปภาพรวม</strong>
         </SidebarMenuButton>
         
         <SidebarMenuButton onClick={handleNavigationToStories}>

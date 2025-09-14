@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Trash2, Save, RefreshCw, Plus, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -30,13 +31,15 @@ interface Ad {
 }
 
 export default function AdsManagementPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [ads, setAds] = useState<Ad[]>([])
   const [loading, setLoading] = useState(true)
   const [editingAd, setEditingAd] = useState<Partial<Ad> | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [adToDelete, setAdToDelete] = useState<number | null>(null)
 
   // ดึงข้อมูลโฆษณา
   const fetchAds = async () => {
@@ -125,10 +128,16 @@ export default function AdsManagementPage() {
 
   // ลบโฆษณา
   const deleteAd = async (ad_id: number) => {
-    if (!confirm('คุณแน่ใจว่าต้องการลบโฆษณานี้?')) return
+    setAdToDelete(ad_id)
+    setDeleteDialogOpen(true)
+  }
+
+  // ยืนยันการลบโฆษณา
+  const confirmDelete = async () => {
+    if (!adToDelete) return
 
     try {
-      const response = await fetch(`/api/admin/ads/${ad_id}`, {
+      const response = await fetch(`/api/admin/ads/${adToDelete}`, {
         method: 'DELETE'
       })
 
@@ -141,6 +150,9 @@ export default function AdsManagementPage() {
     } catch (error) {
       console.error('Error deleting ad:', error)
       toast.error('เกิดข้อผิดพลาด')
+    } finally {
+      setDeleteDialogOpen(false)
+      setAdToDelete(null)
     }
   }
 
@@ -170,6 +182,15 @@ export default function AdsManagementPage() {
   }, [])
 
   // ตรวจสอบการ login และสิทธิ์ admin
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังตรวจสอบการเข้าสู่ระบบ...</span>
+      </div>
+    )
+  }
+
   if (!session?.user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -186,6 +207,7 @@ export default function AdsManagementPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังโหลดข้อมูลโฆษณา...</span>
       </div>
     )
   }
@@ -288,6 +310,24 @@ export default function AdsManagementPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Alert Dialog สำหรับยืนยันการลบ */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบโฆษณา</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจว่าต้องการลบโฆษณานี้? การดำเนินการนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              ลบโฆษณา
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* รายการโฆษณา */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ads.map((ad) => (
@@ -350,19 +390,6 @@ export default function AdsManagementPage() {
             <p className="text-muted-foreground">ยังไม่มีโฆษณาในระบบ</p>
             <Button className="mt-4" onClick={startCreate}>
               เพิ่มโฆษณาแรก
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {ads.length > 0 && ads.length < 10 && (
-        <Card className="border-dashed">
-          <CardContent className="py-6 text-center">
-            <p className="text-muted-foreground mb-4">
-              ยังมี {10 - ads.length} slot ว่าง
-            </p>
-            <Button onClick={startCreate}>
-              เพิ่มโฆษณา
             </Button>
           </CardContent>
         </Card>

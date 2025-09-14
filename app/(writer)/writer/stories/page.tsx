@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import Modalsettingstory from "@/components/ModalSettingStory"
 
-import { Calendar, BookOpen, Eye } from "lucide-react"
+import { Calendar, BookOpen, Eye, RefreshCw } from "lucide-react"
 
 // Extend the session user type to include id
 interface ExtendedUser {
@@ -154,7 +154,7 @@ export default function Stories() {
         <div className="flex justify-between p-6 border-b ">
           <div className="flex items-center gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto bg-backgroundCustom">
                 <SelectValue placeholder="เลือกเรื่อง" />
               </SelectTrigger>
               <SelectContent>
@@ -165,7 +165,7 @@ export default function Stories() {
             </Select>
 
             <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto bg-backgroundCustom">
                 <SelectValue placeholder="เรียงตาม" />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +182,7 @@ export default function Stories() {
           <div>
             <Modalsettingstory 
               trigger={
-                <div className="flex items-center justify-center gap-2 cursor-pointer bg-background hover:bg-secondary border-1 p-2 rounded ">
+                <div className="flex items-center justify-center bg-backgroundCustom gap-2 cursor-pointer hover:bg-secondary border p-2 rounded shadow-sm text-sm">
                   เขียนใหม่
                 </div>
               }
@@ -196,7 +196,7 @@ export default function Stories() {
             <div className="p-3 space-y-3">
               {isLoading ? (
                 <div className="flex items-center justify-center h-40">
-                  <div className="text-muted-foreground">กำลังโหลด...</div>
+                  <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : filteredStories.length === 0 ? (
                 <div className="flex items-center justify-center h-40">

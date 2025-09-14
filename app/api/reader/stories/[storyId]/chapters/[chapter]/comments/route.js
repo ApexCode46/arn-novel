@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    // ตรวจสอบว่า story มีอยู่จริงหรือไม่
+    // ตรวจสอบว่า story มีอยู่จริงหรือไม่ และดึงการตั้งค่าคอมเมนต์
     const story = await prisma.stories.findUnique({
       where: {
         story_id: storyId,
@@ -36,6 +36,9 @@ export async function GET(request, { params }) {
       select: {
         story_id: true,
         title: true,
+        allowComments: true,
+        hideComments: true,
+        commentPermission: true,
       },
     });
 
@@ -58,6 +61,27 @@ export async function GET(request, { params }) {
 
     if (!chapterData) {
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+    }
+
+    // ตรวจสอบการตั้งค่าคอมเมนต์ - ถ้าซ่อนคอมเมนต์ให้ส่งข้อมูลว่าง
+    if (story.hideComments) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          story: { 
+            story_id: story.story_id, 
+            title: story.title 
+          },
+          chapter: chapterData,
+          comments: [],
+          totalComments: 0,
+          commentSettings: {
+            allowComments: story.allowComments,
+            hideComments: story.hideComments,
+            commentPermission: story.commentPermission
+          }
+        },
+      });
     }
 
     // ดึงข้อมูล comments ของ chapter (เฉพาะ parent comments)
@@ -157,6 +181,11 @@ export async function GET(request, { params }) {
         },
         comments: formattedComments,
         totalComments: totalComments,
+        commentSettings: {
+          allowComments: story.allowComments,
+          hideComments: story.hideComments,
+          commentPermission: story.commentPermission
+        }
       },
     });
   } catch (error) {
@@ -263,6 +292,40 @@ export async function POST(request, { params }) {
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // ตรวจสอบการตั้งค่าคอมเมนต์ของ story
+    const story = await prisma.stories.findUnique({
+      where: { story_id: storyId },
+      select: {
+        allowComments: true,
+        commentPermission: true,
+        hideComments: true
+      }
+    });
+
+    if (!story) {
+      return NextResponse.json({ error: "Story not found" }, { status: 404 });
+    }
+
+    // ตรวจสอบว่าเปิดให้คอมเมนต์หรือไม่
+    if (!story.allowComments) {
+      return NextResponse.json({ error: 'ไม่อนุญาตให้แสดงความคิดเห็นในเรื่องนี้' }, { status: 403 });
+    }
+
+    // ตรวจสอบการอนุญาตคอมเมนต์
+    if (story.commentPermission === 'followers') {
+      // ตรวจสอบว่าผู้ใช้ติดตามเรื่องนี้หรือไม่
+      const isFollowing = await prisma.follow.findFirst({
+        where: {
+          user_id: user.id,
+          story_id: storyId
+        }
+      });
+      
+      if (!isFollowing) {
+        return NextResponse.json({ error: 'เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่สามารถแสดงความคิดเห็นได้' }, { status: 403 });
+      }
     }
 
     // หา chapter ที่ต้องการ

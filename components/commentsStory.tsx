@@ -21,7 +21,19 @@ interface Comment {
     updated_at?: string;
 }
 
-export function CommentsStory({ storyId }: { storyId: string }) {
+interface CommentSettings {
+    allowComments: boolean;
+    hideComments: boolean;
+    commentPermission: string;
+}
+
+export function CommentsStory({ 
+    storyId, 
+    commentSettings: initialCommentSettings 
+}: { 
+    storyId: string;
+    commentSettings?: CommentSettings;
+}) {
     const { data: session } = useSession();
     const [comments, setComments] = useState<Comment[]>([]);
     const [totalComments, setTotalComments] = useState(0);
@@ -33,6 +45,13 @@ export function CommentsStory({ storyId }: { storyId: string }) {
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [commentSettings, setCommentSettings] = useState<CommentSettings>(
+        initialCommentSettings || {
+            allowComments: true,
+            hideComments: false,
+            commentPermission: 'followers'
+        }
+    );
 
     const fetchComments = useCallback(async () => {
         if (!storyId) return;
@@ -45,6 +64,10 @@ export function CommentsStory({ storyId }: { storyId: string }) {
                     setComments(data.data.comments || []);
                     setTotalComments(data.data.totalComments || 0);
                     setNextCursor(data.data.nextCursor || null);
+                    // อัปเดตการตั้งค่าคอมเมนต์
+                    if (data.data.commentSettings) {
+                        setCommentSettings(data.data.commentSettings);
+                    }
                 }
             }
         } catch (e) {
@@ -150,97 +173,118 @@ export function CommentsStory({ storyId }: { storyId: string }) {
 
     return (
         <div className="mt-10 w-full bg-backgroundCustom border shadow-xl rounded-lg p-6" id="story-comments">
-            <h3 className="text-lg font-semibold mb-4">ความคิดเห็น ({totalComments})</h3>
-            {session?.user ? (
-                <div className="flex gap-2 mb-6">
-                    <input
-                        type="text"
-                        placeholder="แสดงความคิดเห็นเกี่ยวกับเรื่องนี้..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                        disabled={isSubmitting}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
-                    />
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || !newComment.trim()}
-                        className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200 shadow-sm border"
-                    >ส่ง</button>
+            {commentSettings.hideComments ? (
+                <div className="text-center text-gray-500 py-10">
+                    <h3 className="text-lg font-semibold mb-4">ความคิดเห็น</h3>
+                    <p>ผู้เขียนได้ปิดการแสดงความคิดเห็นสำหรับเรื่องนี้</p>
                 </div>
             ) : (
-                <div className="text-center text-gray-500 py-3 mb-6 text-sm">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
-            )}
-            {loading ? (
-                <div className="text-center text-gray-500 py-10">กำลังโหลดความคิดเห็น...</div>
-            ) : comments.length === 0 ? (
-                <div className="text-center text-gray-500 py-10">ยังไม่มีความคิดเห็น</div>
-            ) : (
-                <div className="space-y-4">
-                    {comments.map(comment => (
-                        <div key={comment.id} className="bg-background rounded-lg p-4 hover:bg-background/80">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center overflow-hidden`}>
-                                        {comment.user.image ? (
-                                            <Image src={comment.user.image} alt={comment.user.name} width={32} height={32} className="w-8 h-8 object-cover" />
-                                        ) : (
-                                            <span className="text-xs text-white font-medium">{comment.user.avatar}</span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="font-medium text-sm">{comment.user.name}</div>
-                                        <div className="text-xs text-gray-500">{comment.timestamp}{comment.updated_at && comment.updated_at !== comment.created_at && <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>}</div>
-                                    </div>
-                                </div>
-                                {isOwner(comment.user.id) && (
-                                    <div className="flex gap-2 text-gray-400">
-                                        <button onClick={() => startEdit(comment.id, comment.content)} className="p-1 rounded hover:bg-gray-200 hover:text-gray-600"><Edit2 size={14} /></button>
-                                        {pendingDeleteId === comment.id ? (
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => deleteComment(comment.id)}
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-[10px] hover:bg-red-600"
-                                                >ยืนยัน</button>
-                                                <button
-                                                    onClick={() => { setPendingDeleteId(null); toast.info('ยกเลิกการลบ'); }}
-                                                    className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-[10px] hover:bg-gray-400"
-                                                >ยกเลิก</button>
-                                            </div>
-                                        ) : (
-                                            <button onClick={() => setPendingDeleteId(comment.id)} className="p-1 rounded hover:bg-red-200 hover:text-red-600"><Trash2 size={14} /></button>
-                                        )}
-                                    </div>
-                                )}
+                <>
+                    <h3 className="text-lg font-semibold mb-4">ความคิดเห็น ({totalComments})</h3>
+                    {session?.user ? (
+                        commentSettings.allowComments ? (
+                            <div className="flex gap-2 mb-6">
+                                <input
+                                    type="text"
+                                    placeholder={
+                                        commentSettings.commentPermission === 'followers' 
+                                            ? "เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่แสดงความคิดเห็นได้..."
+                                            : "แสดงความคิดเห็นเกี่ยวกับเรื่องนี้..."
+                                    }
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+                                />
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting || !newComment.trim()}
+                                    className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200 shadow-sm border"
+                                >ส่ง</button>
                             </div>
-                            {editingComment === comment.id ? (
-                                <div>
-                                    <textarea
-                                        value={editContent}
-                                        onChange={(e) => setEditContent(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                                        rows={3}
-                                    />
-                                    <div className="flex gap-2 mt-2">
-                                        <button onClick={() => saveEdit(comment.id)} disabled={!editContent.trim()} className="px-3 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600">บันทึก</button>
-                                        <button onClick={cancelEdit} className="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">ยกเลิก</button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm leading-relaxed">{comment.content}</p>
-                            )}
-                        </div>
-                    ))}
-                    {nextCursor && (
-                        <div className="pt-2">
-                            <button
-                                onClick={fetchMore}
-                                disabled={loadingMore}
-                                className="w-full py-2 text-sm bg-backgroundCustom hover:bg-gray-200 rounded-md shadow-sm border disabled:opacity-50"
-                            >{loadingMore ? 'กำลังโหลด...' : 'แสดงเพิ่มเติม'}</button>
+                        ) : (
+                            <div className="text-center text-gray-500 py-3 mb-6 text-sm">
+                                ผู้เขียนได้ปิดการแสดงความคิดเห็นสำหรับเรื่องนี้
+                            </div>
+                        )
+                    ) : (
+                        <div className="text-center text-gray-500 py-3 mb-6 text-sm">
+                            กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น
                         </div>
                     )}
-                </div>
+                    {loading ? (
+                        <div className="text-center text-gray-500 py-10">กำลังโหลดความคิดเห็น...</div>
+                    ) : comments.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">ยังไม่มีความคิดเห็น</div>
+                    ) : (
+                        <div className="space-y-4">
+                            {comments.map(comment => (
+                                <div key={comment.id} className="bg-background rounded-lg p-4 hover:bg-background/80">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center overflow-hidden`}>
+                                                {comment.user.image ? (
+                                                    <Image src={comment.user.image} alt={comment.user.name} width={32} height={32} className="w-8 h-8 object-cover" />
+                                                ) : (
+                                                    <span className="text-xs text-white font-medium">{comment.user.avatar}</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-sm">{comment.user.name}</div>
+                                                <div className="text-xs text-gray-500">{comment.timestamp}{comment.updated_at && comment.updated_at !== comment.created_at && <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>}</div>
+                                            </div>
+                                        </div>
+                                        {isOwner(comment.user.id) && (
+                                            <div className="flex gap-2 text-gray-400">
+                                                <button onClick={() => startEdit(comment.id, comment.content)} className="p-1 rounded hover:bg-gray-200 hover:text-gray-600"><Edit2 size={14} /></button>
+                                                {pendingDeleteId === comment.id ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => deleteComment(comment.id)}
+                                                            className="px-2 py-1 bg-red-500 text-white rounded text-[10px] hover:bg-red-600"
+                                                        >ยืนยัน</button>
+                                                        <button
+                                                            onClick={() => { setPendingDeleteId(null); toast.info('ยกเลิกการลบ'); }}
+                                                            className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-[10px] hover:bg-gray-400"
+                                                        >ยกเลิก</button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => setPendingDeleteId(comment.id)} className="p-1 rounded hover:bg-red-200 hover:text-red-600"><Trash2 size={14} /></button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {editingComment === comment.id ? (
+                                        <div>
+                                            <textarea
+                                                value={editContent}
+                                                onChange={(e) => setEditContent(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                                rows={3}
+                                            />
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={() => saveEdit(comment.id)} disabled={!editContent.trim()} className="px-3 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600">บันทึก</button>
+                                                <button onClick={cancelEdit} className="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">ยกเลิก</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm leading-relaxed">{comment.content}</p>
+                                    )}
+                                </div>
+                            ))}
+                            {nextCursor && (
+                                <div className="pt-2">
+                                    <button
+                                        onClick={fetchMore}
+                                        disabled={loadingMore}
+                                        className="w-full py-2 text-sm bg-backgroundCustom hover:bg-gray-200 rounded-md shadow-sm border disabled:opacity-50"
+                                    >{loadingMore ? 'กำลังโหลด...' : 'แสดงเพิ่มเติม'}</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

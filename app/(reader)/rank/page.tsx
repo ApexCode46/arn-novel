@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Eye, BookOpen, Trophy, Crown, Award } from "lucide-react";
+import { Heart, Eye, BookOpen, Trophy, Crown, Award, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -140,8 +140,9 @@ export default function RankingPage() {
             <h1 className="text-3xl font-bold">อันดับนิยาย</h1>
             <p className="text-muted-foreground">จัดอันดับตามจำนวน Favorites</p>
           </div>
-          
-          <div className="flex justify-center">
+
+          <div className="flex justify-between">
+            <Skeleton className="h-10 w-48" />
             <Skeleton className="h-10 w-48" />
           </div>
 
@@ -206,7 +207,7 @@ export default function RankingPage() {
           {stories.map((story) => (
             <Card 
               key={story.id} 
-              className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group"
+              className="bg-backgroundCustom border-0 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group shadow-sm"
               onClick={() => handleStoryClick(story.id)}
             >
               <CardContent className="p-4">
@@ -304,8 +305,7 @@ export default function RankingPage() {
             >
               {loadingMore ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  กำลังโหลด...
+                  <RefreshCw className="w-5 h-5 animate-spin" />
                 </div>
               ) : (
                 `ดูเพิ่มเติม (${Math.min(20, pagination.totalCount - stories.length)} เรื่อง)`

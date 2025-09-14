@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, useRef } from "react"
-import { Upload, Play, Pause, Volume2, X, Loader2, Trash2 } from "lucide-react"
+import { Upload, Play, Pause, Volume2, X, Loader2, Trash2, RefreshCw } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -346,7 +346,7 @@ export function VoiceUpload({
                     >
                         {isUploading ? (
                             <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                                 กำลังอัพโหลด...
                             </>
                         ) : (

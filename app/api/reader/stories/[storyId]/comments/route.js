@@ -15,10 +15,34 @@ export async function GET(request, { params }) {
 
     const story = await prisma.stories.findUnique({
       where: { story_id: storyId },
-      select: { story_id: true, title: true }
+      select: { 
+        story_id: true, 
+        title: true,
+        allowComments: true,
+        hideComments: true,
+        commentPermission: true
+      }
     });
     if (!story) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
+    }
+
+    // ตรวจสอบว่าคอมเมนต์ถูกซ่อนหรือไม่
+    if (story.hideComments) {
+      return NextResponse.json({ 
+        success: true, 
+        data: { 
+          story, 
+          comments: [], 
+          totalComments: 0, 
+          nextCursor: null,
+          commentSettings: {
+            allowComments: story.allowComments,
+            hideComments: story.hideComments,
+            commentPermission: story.commentPermission
+          }
+        } 
+      });
     }
 
     const whereClause = { story_id: storyId };
@@ -54,7 +78,20 @@ export async function GET(request, { params }) {
 
     const totalCount = await prisma.storyComments.count({ where: whereClause });
 
-    return NextResponse.json({ success: true, data: { story, comments: formatted, totalComments: totalCount, nextCursor } });
+    return NextResponse.json({ 
+      success: true, 
+      data: { 
+        story, 
+        comments: formatted, 
+        totalComments: totalCount, 
+        nextCursor,
+        commentSettings: {
+          allowComments: story.allowComments,
+          hideComments: story.hideComments,
+          commentPermission: story.commentPermission
+        }
+      } 
+    });
   } catch (error) {
     console.error('Error fetching story comments:', error);
     return NextResponse.json({ error: 'Internal server error', message: error.message }, { status: 500 });
@@ -75,8 +112,37 @@ export async function POST(request, { params }) {
     const user = await prisma.user.findUnique({ where: { email: userId }, select: { id: true, name: true, email: true, image: true } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    const story = await prisma.stories.findUnique({ where: { story_id: storyId }, select: { story_id: true } });
+    const story = await prisma.stories.findUnique({ 
+      where: { story_id: storyId }, 
+      select: { 
+        story_id: true, 
+        allowComments: true, 
+        commentPermission: true,
+        hideComments: true 
+      } 
+    });
     if (!story) return NextResponse.json({ error: 'Story not found' }, { status: 404 });
+
+    // ตรวจสอบว่าเปิดให้คอมเมนต์หรือไม่
+    if (!story.allowComments) {
+      return NextResponse.json({ error: 'ไม่อนุญาตให้แสดงความคิดเห็นในเรื่องนี้' }, { status: 403 });
+    }
+
+    // ตรวจสอบการอนุญาตคอมเมนต์
+    if (story.commentPermission === 'followers') {
+      // ตรวจสอบว่าผู้ใช้ติดตามเรื่องนี้หรือไม่
+      const isFollowing = await prisma.follow.findFirst({
+        where: {
+          user_id: user.id,
+          story_id: storyId
+        }
+      });
+      
+      if (!isFollowing) {
+        return NextResponse.json({ error: 'เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่สามารถแสดงความคิดเห็นได้' }, { status: 403 });
+      }
+    }
+    // หาก commentPermission เป็น 'comfortable' หรือ undefined ให้ทุกคนคอมเมนต์ได้
 
     const newComment = await prisma.storyComments.create({
       data: { content: content.trim(), user_id: user.id, story_id: story.story_id },
