@@ -221,7 +221,7 @@ export default function RulesPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6">
+    <main className="max-w-7xl mx-auto px-4 py-8 min-h-screen">
       <style jsx>{`
         html {
           scroll-behavior: smooth;
@@ -236,32 +236,71 @@ export default function RulesPage() {
             scroll-behavior: auto;
           }
         }
+        
+        .glass-effect {
+          backdrop-filter: blur(12px);
+          background: rgba(255, 255, 255, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hover-lift {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
       `}</style>
       
+      {/* Hero Section */}
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            กฎกติกาการใช้งาน
+          </h1>
+        </div>
+        <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
+          ข้อกำหนดและเงื่อนไขการใช้งานแพลตฟอร์ม เพื่อให้ทุกคนได้รับประสบการณ์ที่ดีร่วมกัน
+        </p>
+      </div>
+      
       {/* Mobile Menu - ใช้ dropdown แทน Sheet */}
-      <div className="md:hidden flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">กฎกติกาการใช้งาน</h1>
+      <div className="md:hidden flex justify-between items-center mb-6">
         <div className="relative">
           <button 
             onClick={() => setOpenMenu(!openMenu)}
-            className="bg-gray-800 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors"
+            className="glass-effect hover-lift px-4 py-3 rounded-xl text-gray-700 font-medium flex items-center gap-2 shadow-lg"
           >
-            ☰ สารบัญ
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            สารบัญ
           </button>
           {openMenu && (
-            <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-              <div className="p-4">
-                <h4 className="font-bold mb-3">สารบัญ</h4>
-                <ul className="space-y-2 text-sm text-gray-700">
+            <div className="absolute left-0 top-full mt-2 w-80 glass-effect rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto">
+              <div className="p-6">
+                <h4 className="font-bold mb-4 text-gray-800 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  สารบัญ
+                </h4>
+                <ul className="space-y-1">
                   {sections.map(sec => (
                     <li key={sec.id}>
                       <a
                         href={`#${sec.id}`}
                         onClick={(e) => handleAnchorClick(e, sec.id)}
-                        className={`block py-2 px-3 rounded transition-all cursor-pointer ${
+                        className={`block py-3 px-4 rounded-xl transition-all cursor-pointer text-sm font-medium ${
                           activeSection === sec.id
-                            ? 'bg-orange-100 text-orange-700 font-semibold'
-                            : 'hover:bg-gray-50 hover:text-orange-600'
+                            ? 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 shadow-sm'
+                            : 'hover:bg-white/50 text-gray-700 hover:text-orange-600'
                         }`}
                       >
                         {sec.label}
@@ -283,46 +322,79 @@ export default function RulesPage() {
         />
       )}
 
-      {/* Layout: Content + Sidebar ขวาชิด */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Layout: Content + Sidebar ชิดขวา */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
         {/* Main Content */}
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">กฎกติกาการใช้งาน</h2>
-          {sections.map(section => (
-            <section key={section.id} id={section.id} className="mb-12 scroll-mt-24">
-              <h3 className="text-xl font-bold mb-4 text-gray-800 border-b-2 border-orange-200 pb-2">
-                {section.label}
-              </h3>
-              <ul className="list-disc pl-6 space-y-3 text-gray-700 leading-relaxed">
+        <div className="space-y-8">
+          {sections.map((section, index) => (
+            <section 
+              key={section.id} 
+              id={section.id} 
+              className="glass-effect hover-lift p-8 rounded-2xl shadow-lg scroll-mt-24 border-l-4 border-gradient-to-b from-orange-400 to-red-400"
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    {section.label}
+                  </h3>
+                  <div className="w-16 h-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-full"></div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
                 {section.items.map((item, i) => (
-                  <li key={i} className="text-sm md:text-base">{item}</li>
+                  <div key={i} className="flex items-start gap-3 group">
+                    <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mt-2 group-hover:scale-125 transition-transform"></div>
+                    <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors">
+                      {item}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </section>
           ))}
         </div>
 
         {/* Sidebar ชิดขวา */}
-        <aside className="hidden md:block self-start sticky top-24 pb-[30rem]">
-          <div className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
-            <h4 className="font-bold mb-4 text-xl text-gray-800">เนื้อหาในหน้านี้</h4>
-            <ul className="space-y-2 text-gray-700">
-              {sections.map(sec => (
-                <li key={sec.id}>
-                  <a
-                    href={`#${sec.id}`}
-                    onClick={(e) => handleAnchorClick(e, sec.id)}
-                    className={`block py-1 px-2 rounded transition-all duration-200 cursor-pointer text-base ${
-                      activeSection === sec.id
-                        ? 'bg-orange-100 text-orange-700 font-semibold'
-                        : 'hover:bg-gray-50 hover:text-orange-600'
-                    }`}
-                  >
-                    {sec.label}
-                  </a>
-                </li>
+        <aside className="hidden lg:block self-start sticky top-6">
+          <div className="glass-effect p-6 rounded-2xl shadow-lg border-l-4 border-gradient-to-b from-orange-400 to-red-400">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+              </div>
+              <h4 className="font-bold text-xl text-gray-800">เนื้อหาในหน้านี้</h4>
+            </div>
+            
+            <nav className="space-y-2">
+              {sections.map((sec, index) => (
+                <a
+                  key={sec.id}
+                  href={`#${sec.id}`}
+                  onClick={(e) => handleAnchorClick(e, sec.id)}
+                  className={`group flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 cursor-pointer ${
+                    activeSection === sec.id
+                      ? 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 shadow-sm border-l-2 border-orange-400'
+                      : 'hover:bg-white/70 text-gray-700 hover:text-orange-600 hover:shadow-sm'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
+                    activeSection === sec.id
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                      : 'bg-gray-200 text-gray-600 group-hover:bg-orange-200 group-hover:text-orange-700'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <span className="font-medium text-sm leading-tight">
+                    {sec.label.replace(/^\d+\.\s*/, '')}
+                  </span>
+                </a>
               ))}
-            </ul>
+            </nav>
           </div>
         </aside>
       </div>
