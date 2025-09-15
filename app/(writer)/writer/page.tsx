@@ -238,10 +238,10 @@ export default function Page() {
   }
 
   const statsConfig = [
-    { key: "views", label: "การรับชม", icon: Eye, color: "text-emerald-500" },
-    { key: "comments", label: "ความคิดเห็น", icon: MessageSquare, color: "text-sky-500" },
-    { key: "likes", label: "ถูกใจ", icon: Heart, color: "text-rose-500" },
-    { key: "followers", label: "ติดตาม", icon: UserPlus, color: "text-indigo-500" },
+    { key: "views", label: "การรับชม", icon: Eye, color: "text-orange-500" },
+    { key: "comments", label: "ความคิดเห็น", icon: MessageSquare, color: "text-orange-600" },
+    { key: "likes", label: "ถูกใจ", icon: Heart, color: "text-red-500" },
+    { key: "followers", label: "ติดตาม", icon: UserPlus, color: "text-red-600" },
   ] as const
 
   const revenueChartConfig = {
@@ -253,11 +253,11 @@ export default function Page() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h3 className="text-2xl md:text-3xl font-bold tracking-tight">สรุปภาพรวม</h3>
-          <p className="text-muted-foreground text-sm">แดชบอร์ดข้อมูลสถิตินักเขียน</p>
+          <p className="text-sm">แดชบอร์ดข้อมูลสถิตินักเขียน</p>
         </div>
   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <Select value={selectedStory} onValueChange={setSelectedStory}>
-            <SelectTrigger className="w-full min-w-[180px] bg-backgroundCustom shadow-sm">
+            <SelectTrigger className="w-full min-w-[180px] bg-white border-orange-200 shadow-sm">
               <SelectValue placeholder="เลือกเรื่อง" />
             </SelectTrigger>
             <SelectContent>
@@ -269,7 +269,7 @@ export default function Page() {
           </Select>
           <button
             onClick={() => setRefreshTs(Date.now())}
-            className="inline-flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm font-medium bg-backgroundCustom hover:bg-accent transition-colors shadow-sm"
+            className="inline-flex items-center justify-center gap-1 rounded-md border border-orange-300 px-3 py-2 text-sm font-medium bg-orange-600 text-white hover:bg-red-600 transition-colors shadow-sm"
           >
             <RefreshCw className="h-4 w-4" /> รีเฟรช
           </button>
@@ -281,17 +281,17 @@ export default function Page() {
         {statsConfig.map(stat => {
           const value = aggregate[stat.key as keyof AggregateStats]
           return (
-            <Card key={stat.key} className="relative overflow-hidden bg-backgroundCustom shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out">
+            <Card key={stat.key} className="relative overflow-hidden bg-backgroundCustom border-orange-200 shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-orange-700">
                   <stat.icon className={`h-4 w-4 ${stat.color}`} /> {stat.label}
                 </CardTitle>
                 {/* timeframe label removed */}
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold tabular-nums">{loading ? <span className="animate-pulse text-muted-foreground"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : value.toLocaleString()}</div>
+                <div className="text-2xl font-bold tabular-nums text-orange-800">{loading ? <span className="animate-pulse text-orange-500"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : value.toLocaleString()}</div>
               </CardContent>
-              <div className="pointer-events-none absolute inset-x-0 -bottom-6 h-20 bg-gradient-to-t from-primary/5 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 -bottom-6 h-20 bg-gradient-to-t from-orange-400/10 to-transparent" />
             </Card>
           )
         })}
@@ -299,31 +299,31 @@ export default function Page() {
 
       {/* พื้นที่กราฟ (Placeholder) */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2 h-[320px] flex flex-col bg-backgroundCustom shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out overflow-hidden relative">
+        <Card className="lg:col-span-2 h-[320px] flex flex-col bg-backgroundCustom border-orange-200 shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out overflow-hidden relative">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">รายได้ 12 เดือนล่าสุด</CardTitle>
           </CardHeader>
           <CardContent className="flex-1">
             {loading ? (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm animate-pulse"><RefreshCw className="w-4 h-4 mr-2 animate-spin" />กำลังโหลดกราฟ...</div>
+              <div className="w-full h-full flex items-center justify-center text-orange-600 text-sm animate-pulse"><RefreshCw className="w-4 h-4 mr-2 animate-spin" />กำลังโหลดกราฟ...</div>
             ) : (
-              <div className="w-full h-full overflow-x-auto pb-2 scrollbar-thin">
+              <div className="w-full h-full bg-backgroundCustom overflow-x-auto pb-2 scrollbar-thin">
                 {/* กว้างคำนวณตามจำนวนเดือน (barSize 34 + gap ~18) เพื่อเลื่อนภายใน ไม่ให้ทะลุการ์ดบนจอเล็ก */}
                 <div className="h-full md:w-full" style={{ width: `calc(${/* months */revenueData.length} * 52px + 32px)` }}>
                   <ChartContainer config={revenueChartConfig} className="h-full w-full aspect-auto">
                     <BarChart data={revenueData} margin={{ left: 8, right: 8, top: 8, bottom: 4 }} barCategoryGap={10}>
                       <defs>
                         <linearGradient id="coinsBar" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.95} />
-                          <stop offset="70%" stopColor="#38bdf8" stopOpacity={0.35} />
-                          <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#ea580c" stopOpacity={0.95} />
+                          <stop offset="70%" stopColor="#fb923c" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#fed7aa" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-                      <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                      <YAxis width={56} tickFormatter={(v: number) => v.toLocaleString()} tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                      <Bar dataKey="coins" fill="url(#coinsBar)" stroke="#0ea5e9" strokeWidth={1.5} radius={[6, 6, 0, 0]} barSize={34} />
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-orange-200" />
+                      <XAxis dataKey="month" tickLine={false} axisLine={false} className="text-orange-700" />
+                      <YAxis width={56} tickFormatter={(v: number) => v.toLocaleString()} tickLine={false} axisLine={false} className="text-orange-700" />
+                      <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: 'rgb(254 215 170 / 0.3)', opacity: 0.3 }} />
+                      <Bar dataKey="coins" fill="url(#coinsBar)" stroke="#ea580c" strokeWidth={1.5} radius={[6, 6, 0, 0]} barSize={34} />
                       <ChartLegend content={<ChartLegendContent />} />
                     </BarChart>
                   </ChartContainer>
@@ -332,48 +332,48 @@ export default function Page() {
             )}
           </CardContent>
         </Card>
-        <Card className="h-[320px] flex flex-col bg-backgroundCustom shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out">
+        <Card className="h-[320px] flex flex-col bg-backgroundCustom border-orange-200 shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">สถิติของแต่ละเรื่อง</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 overflow-auto text-sm pr-1">
             {stories.map(s => (
-              <div key={s.id} className="w-[17.7rem] p-3 rounded-md border bg-background/40 flex flex-col gap-1">
+              <div key={s.id} className="w-[17.7rem] p-3 rounded-md border border-orange-200 bg-backgroundCustom flex flex-col gap-1">
                 <div className="font-medium truncate">{s.title}</div>
-                <div className="text-xs text-muted-foreground flex flex-wrap gap-3">
-                  <span className="inline-flex items-center gap-1"><Eye size={16} className="text-emerald-500" /> {s.views.toLocaleString()}</span>
-                  <span className="inline-flex items-center gap-1"><MessageSquare size={16} className="text-sky-500" /> {s.comments.toLocaleString()}</span>
-                  <span className="inline-flex items-center gap-1"><Heart size={16} className="text-rose-500" /> {s.likes.toLocaleString()}</span>
-                  <span className="inline-flex items-center gap-1"><UserPlus size={16} className="text-indigo-500" /> {s.followers.toLocaleString()}</span>
+                <div className="text-xs flex flex-wrap gap-3">
+                  <span className="inline-flex items-center gap-1"><Eye size={16} className="text-orange-500" /> {s.views.toLocaleString()}</span>
+                  <span className="inline-flex items-center gap-1"><MessageSquare size={16} className="text-orange-600" /> {s.comments.toLocaleString()}</span>
+                  <span className="inline-flex items-center gap-1"><Heart size={16} className="text-red-500" /> {s.likes.toLocaleString()}</span>
+                  <span className="inline-flex items-center gap-1"><UserPlus size={16} className="text-red-600" /> {s.followers.toLocaleString()}</span>
                 </div>
               </div>
             ))}
             {!stories.length && !loading && (
-              <div className="text-muted-foreground text-center py-8 text-xs">ไม่มีข้อมูล</div>
+              <div className="text-orange-600 text-center py-8 text-xs">ไม่มีข้อมูล</div>
             )}
           </CardContent>
         </Card>
       </div>
-      <div className="flex justify-between items-center text-center bg-backgroundCustom mt-2 md:mt-4 p-2 md:p-4 border rounded-xl shadow-sm">
+      <div className="flex justify-between items-center text-center bg-backgroundCustom border border-orange-200 mt-2 md:mt-4 p-2 md:p-4 rounded-xl shadow-sm">
         <span className="font-bold md:text-xl">
           รายได้ทั้งหมดของเดือนนี้:
         </span>
         <span className="font-bold md:text-xl">
-          {loading ? <span className="animate-pulse text-muted-foreground"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : (dashboardData?.currentMonthEarnings || 0).toLocaleString()} coins
+          {loading ? <span className="animate-pulse text-orange-500"><RefreshCw className="w-4 h-4 mr-2 animate-spin" /></span> : (dashboardData?.currentMonthEarnings || 0).toLocaleString()} coins
         </span>
       </div>
 
       {/* ตารางสถิติตอน: แสดงเมื่อเลือกเรื่องเดียว */}
       {selectedStory !== 'all' && (
-        <Card className="shadow-sm bg-backgroundCustom hover:shadow-md transition-shadow duration-300 ease-in-out">
+        <Card className="shadow-sm bg-backgroundCustom border-orange-200 hover:shadow-lg transition-shadow duration-300 ease-in-out">
           <CardHeader className="pb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 m-0">สถิติของแต่ละตอน</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 m-0 text-orange-700">สถิติของแต่ละตอน</CardTitle>
             <div className="w-full md:w-64">
               <Input
                 value={chapterQuery}
                 onChange={e => setChapterQuery(e.target.value)}
                 placeholder="ค้นหาชื่อตอน / หมายเลขตอน"
-                className="h-9"
+                className="h-9 border-orange-200 focus:border-orange-400"
               />
             </div>
           </CardHeader>
@@ -410,18 +410,18 @@ export default function Page() {
                         </TableRow>
                       )}
                       {!loading && pageItems.map(ch => (
-                        <TableRow key={ch.id}>
-                          <TableCell>{ch.chapter}</TableCell>
-                          <TableCell className="truncate max-w-[180px]">{ch.title}</TableCell>
-                          <TableCell>{ch.reads.toLocaleString()}</TableCell>
-                          <TableCell>{ch.comments.toLocaleString()}</TableCell>
-                          <TableCell>{ch.coinsMonth.toLocaleString()}</TableCell>
-                          <TableCell>{ch.coinsTotal.toLocaleString()}</TableCell>
+                        <TableRow key={ch.id} className="hover:bg-orange-50">
+                          <TableCell className="text-orange-700">{ch.chapter}</TableCell>
+                          <TableCell className="truncate max-w-[180px] text-orange-800">{ch.title}</TableCell>
+                          <TableCell className="text-orange-700">{ch.reads.toLocaleString()}</TableCell>
+                          <TableCell className="text-orange-700">{ch.comments.toLocaleString()}</TableCell>
+                          <TableCell className="text-orange-700">{ch.coinsMonth.toLocaleString()}</TableCell>
+                          <TableCell className="text-orange-700">{ch.coinsTotal.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                       {!loading && !pageItems.length && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">ไม่พบข้อมูล</TableCell>
+                          <TableCell colSpan={6} className="text-center text-orange-600 py-8">ไม่พบข้อมูล</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -429,9 +429,9 @@ export default function Page() {
                   </Table>
                   <div className="flex items-center justify-between gap-3 flex-wrap text-xs mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">แสดง {start + 1}-{start + pageItems.length} จาก {filtered.length}</span>
+                      <span className="text-orange-600">แสดง {start + 1}-{start + pageItems.length} จาก {filtered.length}</span>
                       <select
-                        className="h-7 rounded border bg-background px-1.5"
+                        className="h-7 rounded border border-orange-200 bg-white px-1.5 text-orange-700"
                         value={chapterPageSize}
                         onChange={(e) => { setChapterPageSize(Number(e.target.value)); setChapterPage(1) }}
                       >
@@ -443,12 +443,12 @@ export default function Page() {
                         <button
                           disabled={safePage === 1}
                           onClick={() => setChapterPage(1)}
-                          className="px-2 py-1 rounded border disabled:opacity-40 hover:bg-accent"
+                          className="px-2 py-1 rounded border border-orange-200 disabled:opacity-40 hover:bg-orange-100 text-orange-700"
                         >«</button>
                         <button
                           disabled={safePage === 1}
                           onClick={() => setChapterPage(p => Math.max(1, p - 1))}
-                          className="px-2 py-1 rounded border disabled:opacity-40 hover:bg-accent"
+                          className="px-2 py-1 rounded border border-orange-200 disabled:opacity-40 hover:bg-orange-100 text-orange-700"
                         >ก่อนหน้า</button>
                         {Array.from({ length: totalPages <= 5 ? totalPages : 5 }).map((_, i) => {
                           let pageNum: number
@@ -461,19 +461,19 @@ export default function Page() {
                             <button
                               key={pageNum}
                               onClick={() => setChapterPage(pageNum)}
-                              className={`px-2 py-1 rounded border ${pageNum === safePage ? 'bg-primary text-primary-foreground border-primary' : 'hover:bg-accent'}`}
+                              className={`px-2 py-1 rounded border ${pageNum === safePage ? 'bg-orange-600 text-white border-orange-600' : 'border-orange-200 text-orange-700 hover:bg-orange-100'}`}
                             >{pageNum}</button>
                           )
                         })}
                         <button
                           disabled={safePage === totalPages}
                           onClick={() => setChapterPage(p => Math.min(totalPages, p + 1))}
-                          className="px-2 py-1 rounded border disabled:opacity-40 hover:bg-accent"
+                          className="px-2 py-1 rounded border border-orange-200 disabled:opacity-40 hover:bg-orange-100 text-orange-700"
                         >ถัดไป</button>
                         <button
                           disabled={safePage === totalPages}
                           onClick={() => setChapterPage(totalPages)}
-                          className="px-2 py-1 rounded border disabled:opacity-40 hover:bg-accent"
+                          className="px-2 py-1 rounded border border-orange-200 disabled:opacity-40 hover:bg-orange-100 text-orange-700"
                         >»</button>
                       </div>
                     )}

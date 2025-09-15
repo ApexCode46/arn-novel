@@ -412,7 +412,7 @@ export default function ManageUsersPage() {
                                                     variant="destructive"
                                                     onClick={() => deleteUser(user.id)}
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="text-white w-4 h-4" />
                                                 </Button>
                                             </div>
                                         </TableCell>

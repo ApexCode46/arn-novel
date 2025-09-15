@@ -34,6 +34,7 @@ export default function Page() {
   const [status, setStatus] = useState<string>("");
   const [adminHidden, setAdminHidden] = useState<boolean>(false);
   const [adminHideReason, setAdminHideReason] = useState<string>("");
+  const [isEnd, setIsEnd] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   type Story = {
@@ -52,6 +53,7 @@ export default function Page() {
   status?: string;
   admin_hidden?: boolean;
   admin_hide_reason?: string;
+  is_end?: boolean;
 };
 
 
@@ -72,6 +74,7 @@ export default function Page() {
     setStatus(updatedStory.status || "");
     setAdminHidden(updatedStory.admin_hidden || false);
     setAdminHideReason(updatedStory.admin_hide_reason || "");
+    setIsEnd(updatedStory.is_end || false);
   };
 
 
@@ -104,6 +107,7 @@ export default function Page() {
         setStatus(getResult.status || "");
         setAdminHidden(getResult.admin_hidden || false);
         setAdminHideReason(getResult.admin_hide_reason || "");
+        setIsEnd(getResult.is_end || false);
       } catch (error) {
         console.error("Error fetching story data:", error);
       } finally {
@@ -213,6 +217,7 @@ export default function Page() {
             publishStatus: status as "draft" | "published",
             adminHidden: adminHidden,
             adminHideReason: adminHideReason,
+            is_end: isEnd,
           }}
           onSubmit={handleStoryUpdate}
         />

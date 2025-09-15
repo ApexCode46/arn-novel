@@ -26,6 +26,7 @@ export async function GET(req) {
         verticalImage: true,
         category: true,
         status: true,
+        is_end: true,
         created_at: true,
         type: true,
         views: true,
@@ -49,6 +50,7 @@ export async function GET(req) {
       chapters: story._count.chapter,
       category: story.category,
       status: story.status,
+      is_end: story.is_end,
       created_at: story.created_at,
       type: story.type,
       views: story.views,
@@ -67,6 +69,8 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
+    console.log('Received body:', body); // Debug log
+    
     const {
       storyId,
       title,
@@ -82,8 +86,11 @@ export async function POST(req) {
       allowComments,
       commentPermission,
       publishStatus,
+      is_end,
       userId,
     } = body;
+
+    console.log('is_end value:', is_end); // Debug log
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!title || !penName || !category || !userId) {
@@ -142,53 +149,65 @@ export async function POST(req) {
       }
 
       // อัปเดตนิยาย
+      const updateData = {
+        title,
+        penName,
+        blurb,
+        type,
+        contentLevel,
+        category,
+        tags,
+        verticalImage,
+        horizontalImage,
+        hideComments: hideComments,
+        allowComments: allowComments,
+        commentPermission: commentPermission,
+        status: existingStory.admin_hidden ? existingStory.status : (publishStatus || "draft"),
+        is_end: is_end !== undefined ? is_end : false, // เพิ่มฟิลด์ is_end
+      };
+      
+      console.log('Update data:', updateData); // Debug log
+      
       story = await prisma.stories.update({
         where: {
           story_id: storyId,
         },
-        data: {
-          title,
-          penName,
-          blurb,
-          type,
-          contentLevel,
-          category,
-          tags,
-          verticalImage,
-          horizontalImage,
-          hideComments: hideComments,
-          allowComments: allowComments,
-          commentPermission: commentPermission,
-          status: existingStory.admin_hidden ? existingStory.status : (publishStatus || "draft"),
-        },
+        data: updateData,
       });
 
       message = "Story updated successfully";
       statusCode = 200;
     } else {
       // สร้างนิยายใหม่
+      const createData = {
+        title,
+        penName,
+        blurb,
+        type,
+        contentLevel,
+        category,
+        tags,
+        verticalImage,
+        horizontalImage,
+        hideComments: hideComments,
+        allowComments: allowComments,
+        commentPermission: commentPermission,
+        status: publishStatus || "draft", // ใช้ publishStatus หรือ draft เป็นค่าเริ่มต้น
+        is_end: is_end !== undefined ? is_end : false, // เพิ่มฟิลด์ is_end
+        user_id: userId,
+      };
+      
+      console.log('Create data:', createData); // Debug log
+      
       story = await prisma.stories.create({
-        data: {
-          title,
-          penName,
-          blurb,
-          type,
-          contentLevel,
-          category,
-          tags,
-          verticalImage,
-          horizontalImage,
-          hideComments: hideComments,
-          allowComments: allowComments,
-          commentPermission: commentPermission,
-          status: publishStatus || "draft", // ใช้ publishStatus หรือ draft เป็นค่าเริ่มต้น
-          user_id: userId,
-        },
+        data: createData,
       });
 
       message = "Story created successfully";
       statusCode = 201;
     }
+
+    console.log('Story saved with is_end:', story.is_end); // Debug log
 
     return NextResponse.json(
       {

@@ -22,7 +22,6 @@ import {
     Minus,
     Expand,
     Shrink,
-    Image as ImageIcon,
     Redo,
     Undo,
 } from "lucide-react";
@@ -34,17 +33,8 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
         return null;
     }
 
-    const addImage = () => {
-        const url = window.prompt("URL for image");
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
-        }
-    };
-
     return (
         <>
-
-
             {collapsed ?
                 (<div className="sticky top-0 z-10 
         flex justify-end items-center gap-2 p-2
@@ -167,13 +157,6 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
                             )}
                         >
                             <ListOrdered size={18} />
-                        </button>
-
-                        <button
-                            onClick={addImage}
-                            className="p-2 rounded-md hover:bg-gray-200 hover:text-black"
-                        >
-                            <ImageIcon size={18} />
                         </button>
 
                         <button

@@ -1,13 +1,13 @@
 
 
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // ข้อมูลสารบัญ
 const sections = [
   {
-    id: 'copyright',
-    label: '1. ลิขสิทธิ์',
+    id: '1',
+    label: 'ลิขสิทธิ์',
     items: [
       'ห้ามละเมิดลิขสิทธิ์ เช่น คัดลอกหรือเผยแพร่โดยไม่ได้รับอนุญาต',
       'นักเขียนต้องเป็นเจ้าของผลงานที่นำมาเผยแพร่',
@@ -16,8 +16,8 @@ const sections = [
     ],
   },
   {
-    id: 'content',
-    label: '2. เนื้อหา',
+    id: '2',
+    label: 'เนื้อหา',
     items: [
       'เนื้อหาทั่วไป (PG): เหมาะกับทุกวัย ไม่มีความรุนแรงหรือทางเพศ',
       'เนื้อหา 18+ (NC): ผู้เข้าชมต้องยืนยันอายุ 18 ปีขึ้นไป',
@@ -26,8 +26,8 @@ const sections = [
     ],
   },
   {
-    id: 'comment',
-    label: '3. ความคิดเห็น',
+    id: '3',
+    label: 'ความคิดเห็น',
     items: [
       'ต้องแสดงความคิดเห็นอย่างสุภาพ',
       'ห้ามโพสต์สแปมหรือโฆษณาที่ไม่เกี่ยวข้อง',
@@ -35,24 +35,24 @@ const sections = [
     ],
   },
   {
-    id: 'support',
-    label: '4. ระบบสนับสนุน',
+    id: '4',
+    label: 'ระบบสนับสนุน',
     items: [
       'ควรตรวจสอบข้อมูลก่อนชำระเงิน',
       'ห้ามแลกเปลี่ยนหรือซื้อขายไอเทม/บัญชีภายนอกระบบ',
     ],
   },
   {
-    id: 'right',
-    label: '5. สิทธิ์เว็บไซต์',
+    id: '5',
+    label: 'สิทธิ์เว็บไซต์',
     items: [
       'เว็บไซต์สามารถตรวจสอบ ลบ หรือแก้ไขเนื้อหาที่ละเมิดกฎ',
       'มีสิทธิ์ระงับหรือยกเลิกบัญชีผู้ใช้งานที่ทำผิดกฎร้ายแรง',
     ],
   },
   {
-    id: 'ranking',
-    label: '6. การจัดอันดับ',
+    id: '6',
+    label: 'การจัดอันดับ',
     items: [
       'เนื้อหาจะถูกจัดอันดับตามยอดอ่าน ความคิดเห็น คะแนนจากผู้ใช้',
       'ห้ามปั่นยอดโดยใช้บอทหรือวิธีหลอกลวง',
@@ -65,8 +65,8 @@ const sections = [
     ],
   },
   {
-    id: 'privacy',
-    label: '7. ความเป็นส่วนตัว',
+    id: '7',
+    label: 'ความเป็นส่วนตัว',
     items: [
       'เว็บไซต์เก็บข้อมูลพฤติกรรมการใช้งานเพื่อปรับปรุงบริการ',
       'ข้อมูลส่วนบุคคลจะถูกเก็บรักษาตามนโยบายความเป็นส่วนตัว',
@@ -76,8 +76,8 @@ const sections = [
     ],
   },
   {
-    id: 'contact',
-    label: '8. ติดต่อทีมงาน',
+    id: '8',
+    label: 'ติดต่อทีมงาน',
     items: [
       'สามารถแจ้งปัญหาหรือเนื้อหาที่ไม่เหมาะสมผ่านช่องทางที่กำหนด',
       'การให้ข้อมูลเท็จในการรายงานอาจนำไปสู่การระงับบัญชี',
@@ -90,39 +90,34 @@ const sections = [
     ],
   },
   {
-    id: 'deletion',
-    label: '9. ลบนิยาย',
+    id: '9',
+    label: 'ลบนิยาย',
     items: [
       'ควรอัปเดตนิยายอย่างต่อเนื่อง',
       'ควรแจ้งล่วงหน้าหากจะลบนิยายที่มีผู้อ่านติดตาม',
       'การลบนิยายที่มีผู้สนับสนุนต้องได้รับการยืนยันพิเศษ',
       'ห้ามลบนิยายเพื่อหลีกเลี่ยงการลงโทษ',
-      'นิยายที่ถูกลบจะไม่สามารถกู้คืนได้หลังจาก 30 วัน',
-      'ควรสำรองข้อมูลก่อนลบนิยาย',
+      'ควรสำรองข้อมูลก่อนลบนิยายด้วยตนเอง',
       'การลบนิยายที่ละเมิดกฎจะไม่มีการเตือนล่วงหน้า',
       'ผู้อ่านที่สนับสนุนจะได้รับการแจ้งเตือนเมื่อนิยายถูกลบ',
-      'หากลบนิยายแล้วไม่สามารถใช้ชื่อเรื่องเดิมได้อีก'
+      'หากลบนิยายแล้วไม่สามารถกู้คืนไม่ได้อีก'
     ],
   },
   {
-    id: 'review',
-    label: '10. รีวิว',
+    id: '10',
+    label: 'รีวิว',
     items: [
       'นักเขียนสามารถเลือกเปิดหรือปิดคอมเมนต์ได้',
-      'รีวิวที่ละเมิดกฎจะถูกลบโดยไม่ต้องแจ้งล่วงหน้า',
       'ห้ามรีวิวเพื่อโฆษณาหรือประชาสัมพันธ์',
-      'รีวิวต้องอิงจากการอ่านจริง ห้ามรีวิวเท็จ',
       'ห้ามใช้ถ้อยคำหยาบคายหรือดูหมิ่นในรีวิว',
       'ควรให้คำแนะนำที่สร้างสรรค์แก่นักเขียน',
       'ห้ามเผยแพร่เนื้อหาสำคัญที่เป็นการสปอยล์',
-      'รีวิวต้องมีความยาวอย่างน้อย 50 คำ',
-      'ห้ามคัดลอกรีวิวของผู้อื่น',
       'สามารถแก้ไขรีวิวได้ภายใน 24 ชั่วโมง'
     ],
   },
   {
-    id: 'punishment',
-    label: '11. บทลงโทษ',
+    id: '11',
+    label: 'บทลงโทษ',
     items: [
       'บทลงโทษ: การเตือน การแบน ไปจนถึงการลบบัญชี',
       'สามารถอุทธรณ์ได้ภายใน 7 วัน',
@@ -275,7 +270,7 @@ export default function RulesPage() {
         <div className="relative">
           <button 
             onClick={() => setOpenMenu(!openMenu)}
-            className="glass-effect hover-lift px-4 py-3 rounded-xl text-gray-700 font-medium flex items-center gap-2 shadow-lg"
+            className="glass-effect hover-lift px-4 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -285,7 +280,7 @@ export default function RulesPage() {
           {openMenu && (
             <div className="absolute left-0 top-full mt-2 w-80 glass-effect rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto">
               <div className="p-6">
-                <h4 className="font-bold mb-4 text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold mb-4 flex items-center gap-2">
                   <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
@@ -300,7 +295,7 @@ export default function RulesPage() {
                         className={`block py-3 px-4 rounded-xl transition-all cursor-pointer text-sm font-medium ${
                           activeSection === sec.id
                             ? 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 shadow-sm'
-                            : 'hover:bg-white/50 text-gray-700 hover:text-orange-600'
+                            : 'hover:bg-white/50 hover:text-orange-600'
                         }`}
                       >
                         {sec.label}
@@ -330,14 +325,14 @@ export default function RulesPage() {
             <section 
               key={section.id} 
               id={section.id} 
-              className="glass-effect hover-lift p-8 rounded-2xl shadow-lg scroll-mt-24 border-l-4 border-gradient-to-b from-orange-400 to-red-400"
+              className="bg-backgroundCustom hover-lift p-8 rounded-2xl shadow-lg scroll-mt-24 border-l-4 border-gradient-to-b from-orange-400 to-red-400"
             >
               <div className="flex items-start gap-4 mb-6">
                 <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                  <h3 className="text-2xl font-bold mb-2">
                     {section.label}
                   </h3>
                   <div className="w-16 h-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-full"></div>
@@ -348,7 +343,7 @@ export default function RulesPage() {
                 {section.items.map((item, i) => (
                   <div key={i} className="flex items-start gap-3 group">
                     <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mt-2 group-hover:scale-125 transition-transform"></div>
-                    <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors">
+                    <p className="leading-relaxed transition-colors">
                       {item}
                     </p>
                   </div>
@@ -360,14 +355,14 @@ export default function RulesPage() {
 
         {/* Sidebar ชิดขวา */}
         <aside className="hidden lg:block self-start sticky top-6">
-          <div className="glass-effect p-6 rounded-2xl shadow-lg border-l-4 border-gradient-to-b from-orange-400 to-red-400">
+          <div className="bg-backgroundCustom p-6 rounded-2xl shadow-lg border-l-4 border-gradient-to-b from-orange-400 to-red-400">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
               </div>
-              <h4 className="font-bold text-xl text-gray-800">เนื้อหาในหน้านี้</h4>
+              <h4 className="font-bold text-xl">เนื้อหาในหน้านี้</h4>
             </div>
             
             <nav className="space-y-2">
@@ -379,7 +374,7 @@ export default function RulesPage() {
                   className={`group flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeSection === sec.id
                       ? 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 shadow-sm border-l-2 border-orange-400'
-                      : 'hover:bg-white/70 text-gray-700 hover:text-orange-600 hover:shadow-sm'
+                      : 'hover:bg-white/70 hover:text-orange-600 hover:shadow-sm'
                   }`}
                 >
                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${

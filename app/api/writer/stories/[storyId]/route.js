@@ -33,6 +33,7 @@ export async function GET(req, { params }) {
         allowComments: true,
         commentPermission: true,
         status: true,
+        is_end: true,
         admin_hidden: true,
         admin_hide_reason: true,
         created_at: true,

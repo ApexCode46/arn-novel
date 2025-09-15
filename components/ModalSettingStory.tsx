@@ -65,6 +65,7 @@ type ModalSettingStoryProps = {
         userId?: string;
         adminHidden?: boolean;
         adminHideReason?: string;
+        is_end?: boolean;
     };
 }
 
@@ -112,6 +113,9 @@ export default function Modalsettingstory({
 
     // สถานะการเผยแพร่
     const [publishStatus, setPublishStatus] = useState<"draft" | "published">(initialData?.publishStatus || "draft");
+
+    // สถานะการจบเรื่อง
+    const [isEnd, setIsEnd] = useState<boolean>(initialData?.is_end || false);
 
     // สถานะการลงทะเบียนนักเขียน
     const [writerRegistrationStatus, setWriterRegistrationStatus] = useState<string | null>(null);
@@ -194,7 +198,7 @@ export default function Modalsettingstory({
     // ตรวจสอบสถานะการลงทะเบียนนักเขียน
     const checkWriterRegistrationStatus = useCallback(async () => {
         if (!session?.user?.email) return;
-        
+
         setIsCheckingRegistration(true);
         try {
             const response = await fetch('/api/users/register-writer');
@@ -288,9 +292,11 @@ export default function Modalsettingstory({
                 allowComments: isChecked2,
                 commentPermission: selectedOption,
                 publishStatus: mode === 'edit' ? publishStatus : 'draft', // ใช้ draft เป็นค่าเริ่มต้นสำหรับการสร้างใหม่
+                is_end: isEnd, // เพิ่มสถานะการจบเรื่อง
                 userId: userId // ใช้ userId ที่ตรวจสอบแล้ว
             };
 
+            console.log('Sending formData:', formData); // Debug log
 
             const response = await fetch('/api/writer/stories', {
                 method: 'POST',
@@ -312,10 +318,11 @@ export default function Modalsettingstory({
                     // สำหรับการแก้ไข ส่งข้อมูลกลับและปิด modal
                     toast.success('บันทึกการแก้ไขเรียบร้อยแล้ว');
                     if (onSubmit) {
-                        // เพิ่ม status เข้าไปในข้อมูลที่ส่งกลับ
+                        // เพิ่ม status และ is_end เข้าไปในข้อมูลที่ส่งกลับ
                         const updatedStory = {
                             ...result.story,
-                            status: result.story.status || publishStatus
+                            status: result.story.status || publishStatus,
+                            is_end: result.story.is_end || isEnd
                         };
                         onSubmit(updatedStory);
                     }
@@ -367,6 +374,7 @@ export default function Modalsettingstory({
             setIsChecked2(initialData.allowComments ?? true);
             setSelectedOption(initialData.commentPermission || "followers");
             setPublishStatus(initialData.publishStatus || "draft");
+            setIsEnd(initialData.is_end || false);
         } else if (mode === 'create') {
             // รีเซ็ตค่าเมื่อเป็นโหมดสร้างใหม่
             setTitle("");
@@ -384,6 +392,7 @@ export default function Modalsettingstory({
             setIsChecked2(true);
             setSelectedOption("followers");
             setPublishStatus("draft");
+            setIsEnd(false);
         }
     }, [mode, initialData]);
 
@@ -509,6 +518,35 @@ export default function Modalsettingstory({
                                 </SelectContent>
                             </Select>
                         </div>
+                        {mode === 'edit' && (
+                            <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                <Label htmlFor="storyStatus">สถานะเรื่อง</Label>
+                                <Select
+                                    value={isEnd ? "completed" : "ongoing"}
+                                    onValueChange={(value) => setIsEnd(value === "completed")}
+                                >
+                                    <SelectTrigger className="w-auto bg-backgroundCustom">
+                                        <SelectValue placeholder="เลือกสถานะเรื่อง" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>สถานะเรื่อง</SelectLabel>
+                                            <SelectItem className="hover:bg-gray-200 hover:font-bold text-gray-600" value="ongoing">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                                                    กำลังเขียน
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem className="hover:bg-green-200 hover:font-bold text-green-600" value="completed">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                                    จบแล้ว
+                                                </div>
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>)}
 
                         <div className="grid w-full max-w-sm items-center gap-1 py-3">
                             <Label htmlFor="Blurb">คำโปรย</Label>
@@ -638,7 +676,7 @@ export default function Modalsettingstory({
                                 <h4 className='font-bold'>สถานะการเผยแพร่</h4>
                                 <div className="grid w-full max-w-sm items-center gap-3 py-3">
                                     <Label htmlFor="publishStatus">เลือกสถานะการเผยแพร่</Label>
-                                    
+
                                     {/* ตรวจสอบสถานะการลงทะเบียนนักเขียน */}
                                     {isCheckingRegistration ? (
                                         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -654,9 +692,9 @@ export default function Modalsettingstory({
                                             <p className="text-xs text-red-600 mt-1">
                                                 สถานะปัจจุบัน: {writerRegistrationStatus || 'ไม่มีข้อมูล'}
                                             </p>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
                                                 className="mt-2"
                                                 onClick={() => router.push('/writer/registerWriter')}
                                             >
@@ -679,15 +717,15 @@ export default function Modalsettingstory({
                                             </p>
                                         </div>
                                     ) : (
-                                        <RadioGroup 
-                                            value={publishStatus} 
+                                        <RadioGroup
+                                            value={publishStatus}
                                             onValueChange={(value: "draft" | "published") => setPublishStatus(value)}
                                             disabled={initialData?.adminHidden}
                                         >
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem 
-                                                    value="draft" 
-                                                    id="draft" 
+                                                <RadioGroupItem
+                                                    value="draft"
+                                                    id="draft"
                                                     disabled={initialData?.adminHidden}
                                                 />
                                                 <Label htmlFor="draft" className="flex items-center gap-2">
@@ -696,9 +734,9 @@ export default function Modalsettingstory({
                                                 </Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem 
-                                                    value="published" 
-                                                    id="published" 
+                                                <RadioGroupItem
+                                                    value="published"
+                                                    id="published"
                                                     disabled={initialData?.adminHidden}
                                                 />
                                                 <Label htmlFor="published" className="flex items-center gap-2">
@@ -708,7 +746,7 @@ export default function Modalsettingstory({
                                             </div>
                                         </RadioGroup>
                                     )}
-                                    
+
                                     {writerRegistrationStatus === 'approved' && publishStatus === "draft" && (
                                         <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                                             <p className="text-sm text-gray-600">
@@ -716,7 +754,7 @@ export default function Modalsettingstory({
                                             </p>
                                         </div>
                                     )}
-                                    
+
                                     {writerRegistrationStatus === 'approved' && publishStatus === "published" && (
                                         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                             <p className="text-sm text-green-700">
@@ -726,6 +764,8 @@ export default function Modalsettingstory({
                                     )}
                                 </div>
                                 <hr className='py-2' />
+
+
                             </>
                         )}
 
@@ -742,7 +782,7 @@ export default function Modalsettingstory({
                                 <hr className='py-2' />
                             </>
                         )}
-                        
+
                         <div>
                             <h4 className='pt-2 font-bold'>สิทธิ์การเข้าถึงนิยาย</h4>
                             <div className="grid w-full max-w-sm items-center gap-3 py-3">

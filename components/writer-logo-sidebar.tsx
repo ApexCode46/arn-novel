@@ -17,7 +17,7 @@ export function Navlogo() {
       size="lg"
       className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
     >
-      <div className="bg-blue-500 dark:bg-backgroundCustom text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+      <div className="bg-orange-500 dark:bg-backgroundCustom text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
         <Book className="w-4 h-4 text-white" />
       </div>
       <div className="grid flex-1 text-left text-sm leading-tight">

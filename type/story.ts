@@ -12,4 +12,5 @@ export type Story = {
   allowComments?: boolean;
   commentPermission?: string;
   status?: "draft" | "published";
+  is_end?: boolean;
 };

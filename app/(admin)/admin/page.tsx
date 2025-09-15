@@ -376,7 +376,7 @@ export default function AdsManagementPage() {
                   variant="destructive"
                   onClick={() => deleteAd(ad.ad_id)}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="text-white w-4 h-4" />
                 </Button>
               </div>
             </CardContent>

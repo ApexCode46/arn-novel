@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
-import { CircleUserRound, Users, Coins, Pencil, LogIn, LogOut, Settings } from "lucide-react"
+import { CircleUserRound, Users, Coins, Pencil, LogIn, LogOut, Settings, MessageCircleQuestionIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -78,6 +78,10 @@ export default function Account() {
     router.push("/profile");
   }
 
+  const handleNavigationHelp = () => {
+    router.push("/help");
+  }
+
   const handleNavigationToAdmin = () => {
     router.push("/admin");
   }
@@ -134,6 +138,11 @@ export default function Account() {
             <DropdownMenuItem onClick={handleNavigationToWallet}>
               <Coins /> เติมเหรียญ
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleNavigationHelp}>
+              <MessageCircleQuestionIcon /> ช่วยเหลือ
+            </DropdownMenuItem>
+
+            
             {(userProfile?.role === 'admin' || session?.user?.role === 'admin') && (
               <DropdownMenuItem onClick={handleNavigationToAdmin}>
                 <Settings /> Admin
