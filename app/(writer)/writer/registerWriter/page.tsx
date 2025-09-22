@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, User, CreditCard, Phone, Mail, Building2 ,RefreshCw } from 'lucide-react'
+import { Upload, User, CreditCard, Phone, Mail, Building2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { useOCRVerification } from '@/hooks/useOCRVerification'
+import { OCRVerificationDisplay } from '@/components/OCRVerificationDisplay'
 
 interface FormData {
   realName: string
@@ -38,6 +40,7 @@ export default function RegisterWriterPage() {
   const [loading, setLoading] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(true)
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus | null>(null)
+  const { isProcessing: isOCRProcessing, result: ocrResult, processImage, clearResult } = useOCRVerification()
   const [formData, setFormData] = useState<FormData>({
     realName: '',
     numIdCard: '',
@@ -195,9 +198,29 @@ export default function RegisterWriterPage() {
         setPreviews(prev => ({ ...prev, [field]: e.target?.result as string }))
       }
       reader.readAsDataURL(file)
+
+      // หากเป็นการอัปโหลดบัตรประชาชน ให้ทำการตรวจสอบ OCR
+      if (field === 'IdCard' && formData.realName && formData.numIdCard) {
+        handleOCRVerification(file)
+      }
     } else {
       setPreviews(prev => ({ ...prev, [field]: '' }))
+      if (field === 'IdCard') {
+        clearResult()
+      }
     }
+  }
+
+  const handleOCRVerification = async (file: File) => {
+    if (!formData.realName || !formData.numIdCard) {
+      toast.info('กรุณากรอกชื่อและเลขบัตรประชาชนก่อนอัปโหลดรูปภาพ')
+      return
+    }
+
+    await processImage(file, {
+      idNumber: formData.numIdCard,
+      name: formData.realName
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,6 +236,12 @@ export default function RegisterWriterPage() {
       return
     }
 
+    // ตรวจสอบผลการตรวจสอบ OCR
+    if (ocrResult && !ocrResult.verification.isValid) {
+      toast.error('การตรวจสอบบัตรประชาชนไม่ผ่าน กรุณาตรวจสอบข้อมูลหรืออัปโหลดรูปภาพใหม่')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -225,6 +254,15 @@ export default function RegisterWriterPage() {
       form.append('IdCard', formData.IdCard)
       form.append('SelfieWithIdCard', formData.SelfieWithIdCard)
       form.append('BankAccount', formData.BankAccount)
+
+      // เพิ่มข้อมูลการตรวจสอบ OCR
+      if (ocrResult) {
+        form.append('ocrVerification', JSON.stringify({
+          verified: ocrResult.verification.isValid,
+          matchScore: ocrResult.verification.matchScore,
+          confidence: ocrResult.ocrResult.confidence
+        }))
+      }
 
       const response = await fetch('/api/users/register-writer', {
         method: 'POST',
@@ -429,6 +467,14 @@ export default function RegisterWriterPage() {
                   />
                 </div>
 
+                {/* แสดงผลการตรวจสอบ OCR */}
+                {(isOCRProcessing || ocrResult) && (
+                  <OCRVerificationDisplay
+                    isProcessing={isOCRProcessing}
+                    result={ocrResult}
+                  />
+                )}
+
                 <FileUploadField
                   field="BankAccount"
                   label="รูปหน้าแรกสมุดบัญชีธนาคาร"
@@ -439,16 +485,20 @@ export default function RegisterWriterPage() {
               <div className="flex gap-4 pt-4">
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-orange-600 hover:bg-red-600 text-white border-orange-600 shadow-lg"
+                  disabled={loading || isOCRProcessing || (ocrResult?.verification?.isValid === false)}
+                  className="flex-1 bg-orange-600 hover:bg-red-600 text-white border-orange-600 shadow-lg disabled:opacity-50"
                 >
                   {loading
                     ? 'กำลังส่งคำขอ...'
+                    : isOCRProcessing
+                    ? 'กำลังตรวจสอบบัตรประชาชน...'
                     : applicationStatus && applicationStatus.status === 'rejected'
                       ? 'ส่งคำขอใหม่'
                       : 'ส่งคำขอสมัคร'
                   }
                 </Button>
+                
+                {/* ปุ่มตรวจสอบอีกครั้งถูกนำออกตามคำขอ */}
               </div>
             </form>
           </CardContent>
