@@ -55,7 +55,7 @@ async function main() {
         provider: 'local',
         providerAccountId: adminUser.id,
         email: adminUser.email,
-        password: '$2a$10$fmKnl9x46lpU2Dxym/Ki7OLwu9indq970oqiyU4HN3.M8I5nGTtTa',
+        password: '$2a$10$tukAhugCP9l6wEWqqakZIu.khunv00hhPjsZt1JQ0djlaFqxdv0Nm',
         },
     })
 
@@ -73,7 +73,7 @@ async function main() {
         provider: 'local',
         providerAccountId: regularUser.id,
         email: regularUser.email,
-        password: '$2a$10$fmKnl9x46lpU2Dxym/Ki7OLwu9indq970oqiyU4HN3.M8I5nGTtTa',
+        password: '$2a$10$tukAhugCP9l6wEWqqakZIu.khunv00hhPjsZt1JQ0djlaFqxdv0Nm',
         },
     })
 
@@ -99,7 +99,7 @@ async function main() {
             description: "คุ้มค่าพิเศษ ได้โบนัสเพิ่ม"
         },
         {
-            name: "Popular Pack",
+            name: "Pack 100 coins",
             amount: 100,
             price: 100,
             bonus: 10,
@@ -108,7 +108,7 @@ async function main() {
             description: "แพ็คเกจยอดนิยม ได้โบนัสสูงสุด"
         },
         {
-            name: "Premium Pack",
+            name: "Pack 300 coins",
             amount: 300,
             price: 300,
             bonus: 30,
@@ -117,7 +117,7 @@ async function main() {
             description: "แพ็คเกจพรีเมียม สำหรับนักอ่านตัวจริง"
         },
         {
-            name: "Mega Pack",
+            name: "Pack 500 coins",
             amount: 500,
             price: 500,
             bonus: 50,
@@ -126,7 +126,7 @@ async function main() {
             description: "แพ็คเกจใหญ่ โบนัสเท่าตัว"
         },
         {
-            name: "Ultra Pack",
+            name: "Pack 1000 coins",
             amount: 1000,
             price: 1000,
             bonus: 100,
@@ -135,7 +135,7 @@ async function main() {
             description: "แพ็คเกจขนาดใหญ่ โบนัสมหาศาล"
         },
         {
-            name: "Supreme Pack",
+            name: "Pack 2000 coins",
             amount: 2000,
             price: 2000,
             bonus: 200,
@@ -144,7 +144,7 @@ async function main() {
             description: "แพ็คเกจสุดพรีเมียม"
         },
         {
-            name: "Ultimate Pack",
+            name: "Pack 5000 coins",
             amount: 5000,
             price: 5000,
             bonus: 500,

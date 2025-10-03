@@ -161,6 +161,13 @@ export default function WriterApplicationsPage() {
         }
     }
 
+    function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -364,7 +371,7 @@ export default function WriterApplicationsPage() {
                                     <div className="space-y-2">
                                         <Label>รูปบัตรประชาชน</Label>
                                         <Image
-                                            src={viewingApplication.IdCard}
+                                            src={getStoryImage(viewingApplication.IdCard)}
                                             alt="บัตรประชาชน"
                                             width={400}
                                             height={250}
@@ -376,7 +383,7 @@ export default function WriterApplicationsPage() {
                                     <div className="space-y-2">
                                         <Label>รูปเซลฟี่กับบัตรประชาชน</Label>
                                         <Image
-                                            src={viewingApplication.SelfieWithIdCard}
+                                            src={getStoryImage(viewingApplication.SelfieWithIdCard)}
                                             alt="เซลฟี่กับบัตรประชาชน"
                                             width={400}
                                             height={250}
@@ -388,7 +395,7 @@ export default function WriterApplicationsPage() {
                                     <div className="space-y-2">
                                         <Label>รูปหน้าแรกสมุดบัญชี</Label>
                                         <Image
-                                            src={viewingApplication.BankAccount}
+                                            src={getStoryImage(viewingApplication.BankAccount)}
                                             alt="สมุดบัญชีธนาคาร"
                                             width={400}
                                             height={250}

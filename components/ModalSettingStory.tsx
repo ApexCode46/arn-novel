@@ -396,6 +396,13 @@ export default function Modalsettingstory({
         }
     }, [mode, initialData]);
 
+    function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
     // ตรวจสอบสถานะการลงทะเบียนนักเขียนเมื่อ session เปลี่ยน
     useEffect(() => {
         if (session?.user) {
@@ -586,33 +593,36 @@ export default function Modalsettingstory({
 
                         {mode === 'edit' && (
                             <>
-                                <h4 className='font-bold'>รูปภาพปก</h4><div className="grid gap-4 max-w-sm">
+                                <h4 className='font-bold'>รูปภาพปก</h4>
+                                <div className="grid gap-4 max-w-sm">
                                     <Label className="font-medium">อัปโหลดรูปภาพ (900x1200 รูปแนวตั้ง)</Label>
                                     <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
 
-                                    <div className='flex justify-center w-full '>
+                                    <div className='flex justify-center w-full'>
                                         {verticalImage && (
                                             <Image
-                                                src={verticalImage.startsWith('blob:') ? verticalImage :
-                                                    verticalImage.startsWith('/') ? verticalImage : "/novelImg/Test-novel.png"}
+                                                src={getStoryImage(verticalImage)}
+                                                alt="preview"
                                                 width={240}
                                                 height={320}
-                                                alt="preview"
-                                                className="w-60 h-80 rounded shadow-md mb-4" />
+                                                className="w-60 h-80 rounded shadow-md mb-4"
+                                                unoptimized
+                                            />
                                         )}
                                     </div>
-                                </div><div className="grid gap-4 max-w-sm">
+                                </div>
+                                <div className="grid gap-4 max-w-sm">
                                     <Label className="font-medium">อัปโหลดรูปภาพ (1200x640 รูปแนวนอน *ไม่บังคับ)</Label>
                                     <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
 
                                     <div className='flex justify-center w-full '>
                                         {horizontalImage && (
                                             <Image
-                                                src={horizontalImage.startsWith('blob:') ? horizontalImage :
-                                                    horizontalImage.startsWith('/') ? horizontalImage : "/novelImg/Test-novel.png"}
+                                                src={getStoryImage(horizontalImage)}
                                                 width={320}
                                                 height={180}
                                                 alt="preview"
+
                                                 className="w-80 h-42 rounded shadow-md mb-4" />
                                         )}
                                     </div>

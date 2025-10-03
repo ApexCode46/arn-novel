@@ -451,6 +451,13 @@ export default function ProfilePage() {
         router.push("/");
     };
 
+    function getProfileImage(src?: string) {
+        if (!src) return "/profile_user/ARN_profile.png"
+        if (src.startsWith("http")) return src
+        if (src.startsWith("/uploads")) return `/api${src}`
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
     // Loading state
     if (loading) {
         return (
@@ -493,7 +500,7 @@ export default function ProfilePage() {
                                         />
                                     ) : profile.image ? (
                                         <Image
-                                            src={profile.image}
+                                            src={getProfileImage(profile.image)}
                                             alt={profile.name}
                                             fill
                                             className="object-cover"
@@ -754,7 +761,7 @@ export default function ProfilePage() {
                                                             <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
                                                                 {story.verticalImage ? (
                                                                     <Image
-                                                                        src={story.verticalImage}
+                                                                        src={getProfileImage(story.verticalImage)}
                                                                         alt={story.title}
                                                                         width={64}
                                                                         height={80}
@@ -834,7 +841,7 @@ export default function ProfilePage() {
                                                             <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
                                                                 {favorite.story.verticalImage ? (
                                                                     <Image
-                                                                        src={favorite.story.verticalImage}
+                                                                        src={getProfileImage(favorite.story.verticalImage)}
                                                                         alt={favorite.story.title}
                                                                         width={64}
                                                                         height={80}
@@ -906,7 +913,7 @@ export default function ProfilePage() {
                                                         <div className="w-16 h-20 bg-gray-200 rounded flex-shrink-0">
                                                             {follow.story.verticalImage ? (
                                                                 <Image
-                                                                    src={follow.story.verticalImage}
+                                                                    src={getProfileImage(follow.story.verticalImage)}
                                                                     alt={follow.story.title}
                                                                     width={64}
                                                                     height={80}

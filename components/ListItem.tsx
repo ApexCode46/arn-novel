@@ -216,6 +216,12 @@ export function ListItem({ category = "all", limit = 20, showHidden = false, use
       </Carousel>
     );
   }
+  function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
 
   if (stories.length === 0) {
     return (
@@ -248,7 +254,7 @@ export function ListItem({ category = "all", limit = 20, showHidden = false, use
                 {/* Image Container */}
                 <div className="relative w-full aspect-[3/4] overflow-hidden">
                   <Image
-                    src={story.imageUrl || "/novelImg/Test-novel.png"}
+                    src={getStoryImage(story.imageUrl)}
                     alt={story.title || "Novel"}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"

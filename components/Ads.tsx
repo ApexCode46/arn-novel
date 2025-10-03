@@ -98,15 +98,17 @@ export function Ads() {
           {adsData.map((ad: Ad, index: number) => (
             <CarouselItem key={ad.ad_id} className="pl-4 md:basis-1/3 lg:basis-1/3">
               <div className="relative aspect-[16/9] w-full">
-                {ad.link ? (
-                  <a 
-                    href={ad.link} 
-                    target="_blank" 
+                {ad.path_img ? (
+                  <a
+                    href={ad.link}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full h-full"
                   >
                     <Image
-                      src={ad.path_img}
+                      src={ad.path_img.startsWith('/uploads')
+                        ? `/api${ad.path_img}`
+                        : ad.path_img}
                       alt={ad.name_as}
                       fill
                       priority={index === 0} // เพิ่ม priority สำหรับโฆษณาแรก
@@ -124,7 +126,7 @@ export function Ads() {
                     className="object-cover rounded"
                   />
                 )}
-                
+
                 {/* แสดงชื่อโฆษณาเมื่อ hover */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 hover:opacity-100 transition-opacity duration-300">
                   <p className="text-white text-sm font-medium truncate">{ad.name_as}</p>
@@ -159,11 +161,10 @@ function CarouselDots({
         <button
           key={index}
           onClick={() => api?.scrollTo(index)}
-          className={`w-2 h-2 rounded-full transition-colors ${
-            current === index
+          className={`w-2 h-2 rounded-full transition-colors ${current === index
               ? "bg-primary"
               : "bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
-          }`}
+            }`}
           aria-label={`Go to slide ${index + 1}`}
         />
       ))}

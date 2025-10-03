@@ -24,7 +24,7 @@ export async function POST(req) {
     const fileName = `${storyId}-${imageType}.${fileExtension}`;
     
     // เส้นทางสำหรับบันทึกไฟล์
-    const path = join(process.cwd(), "public", "novelImg", fileName);
+    const path = join(process.cwd(), "uploads", "novelImg", fileName);
     
     // บันทึกไฟล์
     await writeFile(path, buffer);

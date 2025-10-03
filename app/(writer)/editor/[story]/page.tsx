@@ -16,6 +16,7 @@ import { RefreshCw } from "lucide-react";
 
 export default function Page() {
   const { content, setContent } = useEditor();
+  const [imageVersion, setImageVersion] = useState<number>(Date.now());
   const params = useParams();
   const storyId = decodeURIComponent(params.story as string);
 
@@ -38,23 +39,23 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
 
   type Story = {
-  title?: string;
-  penName?: string;
-  category?: string;
-  type?: string;
-  blurb?: string;
-  contentLevel?: string;
-  tags?: string[];
-  verticalImage?: string;
-  horizontalImage?: string;
-  hideComments?: boolean;
-  allowComments?: boolean;
-  commentPermission?: string;
-  status?: string;
-  admin_hidden?: boolean;
-  admin_hide_reason?: string;
-  is_end?: boolean;
-};
+    title?: string;
+    penName?: string;
+    category?: string;
+    type?: string;
+    blurb?: string;
+    contentLevel?: string;
+    tags?: string[];
+    verticalImage?: string;
+    horizontalImage?: string;
+    hideComments?: boolean;
+    allowComments?: boolean;
+    commentPermission?: string;
+    status?: string;
+    admin_hidden?: boolean;
+    admin_hide_reason?: string;
+    is_end?: boolean;
+  };
 
 
   // ฟังก์ชันสำหรับอัปเดตข้อมูลหลังจากแก้ไข
@@ -75,6 +76,8 @@ export default function Page() {
     setAdminHidden(updatedStory.admin_hidden || false);
     setAdminHideReason(updatedStory.admin_hide_reason || "");
     setIsEnd(updatedStory.is_end || false);
+
+    setImageVersion(Date.now());
   };
 
 
@@ -118,6 +121,13 @@ export default function Page() {
     dataNovel();
   }, [storyId, setContent]); // เพิ่ม storyId และ setContent ใน dependencies
 
+  function getStoryImage(src?: string | null): string {
+    if (!src) return "/novelImg/Test-novel.png" // fallback
+    if (src.startsWith("http")) return src      // external
+    if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+    return `/api/uploads/${src.replace(/^\/+/, "")}`
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -128,7 +138,6 @@ export default function Page() {
   }
 
   return (
-
     <>
       <div className="container mx-auto py-4 space-y-6">
         <Modalsettingstory
@@ -141,9 +150,10 @@ export default function Page() {
                     <div className="lg:col-span-1">
                       <div className="relative aspect-[3/4] w-full max-w-sm mx-auto lg:mx-0">
                         <Image
-                          src={verticalImage || "/novelImg/Test-novel.png"}
-                          alt="Superman นิยาย"
+                          src={`${getStoryImage(verticalImage)}?v=${imageVersion}`} // ✅ ใช้ imageVersion
+                          alt="imgNovel"
                           fill
+                          priority
                           className="object-cover rounded-lg shadow-md"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />

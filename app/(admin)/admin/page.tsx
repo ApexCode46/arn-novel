@@ -101,7 +101,7 @@ export default function AdsManagementPage() {
     formData.append('link', editingAd.link || '')
     formData.append('status', editingAd.status ? 'true' : 'false')
     formData.append('path_img', editingAd.path_img || '')
-    
+
     if (imageFile) {
       formData.append('image', imageFile)
     }
@@ -218,7 +218,7 @@ export default function AdsManagementPage() {
         <div>
           <h1 className="text-3xl font-bold">จัดการโฆษณา</h1>
           <p className="text-muted-foreground">
-            จัดการโฆษณา 10 slot สำหรับแสดงในเว็บไซต์
+            จัดการโฆษณาสำหรับแสดงในเว็บไซต์
           </p>
         </div>
         <div className="flex gap-2">
@@ -241,7 +241,7 @@ export default function AdsManagementPage() {
               {editingAd?.ad_id ? 'แก้ไขโฆษณา' : 'เพิ่มโฆษณาใหม่'}
             </DialogTitle>
           </DialogHeader>
-          
+
           {editingAd && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,7 +254,7 @@ export default function AdsManagementPage() {
                     placeholder="ใส่ชื่อโฆษณา"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="link">ลิงก์</Label>
                   <Input
@@ -276,9 +276,9 @@ export default function AdsManagementPage() {
                 />
                 {previewUrl && (
                   <div className="mt-2 flex justify-center">
-                    <Image 
-                      src={previewUrl} 
-                      alt="Preview" 
+                    <Image
+                      src={previewUrl}
+                      alt="Preview"
                       width={384}
                       height={192}
                       className="max-w-sm h-48 object-cover rounded-md border"
@@ -343,8 +343,8 @@ export default function AdsManagementPage() {
             <CardContent className="space-y-3">
               {ad.path_img && (
                 <div className="aspect-video relative rounded-md overflow-hidden bg-muted">
-                  <Image 
-                    src={ad.path_img} 
+                  <Image
+                    src={ad.path_img.startsWith("/uploads") ? `/api${ad.path_img}` : ad.path_img}
                     alt={ad.name_as}
                     width={400}
                     height={225}
@@ -352,7 +352,7 @@ export default function AdsManagementPage() {
                   />
                 </div>
               )}
-              
+
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p><strong>ลิงก์:</strong> {ad.link || 'ไม่มี'}</p>
                 <p><strong>ผู้สร้าง:</strong> {ad.user.name}</p>
@@ -364,15 +364,15 @@ export default function AdsManagementPage() {
                   <Edit className="w-4 h-4 mr-1" />
                   แก้ไข
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => toggleAdStatus(ad.ad_id, !ad.status)}
                 >
                   {ad.status ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="destructive"
                   onClick={() => deleteAd(ad.ad_id)}
                 >

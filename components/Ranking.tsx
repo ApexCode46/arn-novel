@@ -62,6 +62,13 @@ export default function Ranking() {
     router.push(`/novel/${storyId}`);
   };
 
+  function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; 
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
   if (loading) {
     return (
       <div className="w-full space-y-6">
@@ -112,7 +119,7 @@ export default function Ranking() {
               <div className="flex-shrink-0 relative">
                 <div className="relative overflow-hidden rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                   <Image
-                    src={story.imageUrl || "/novelImg/Test-novel.png"}
+                    src={getStoryImage(story.imageUrl)}
                     alt={story.title}
                     width={128}
                     height={192}
@@ -182,7 +189,7 @@ export default function Ranking() {
       ))}
       
       {stories.length === 0 && !loading && (
-        <Card className="w-full drop-shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 border-0">
+        <Card className="w-full bg-backgroundCustom border-0">
           <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
               <BookOpen className="w-8 h-8 text-gray-400" />

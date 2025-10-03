@@ -27,10 +27,10 @@ interface CommentSettings {
     commentPermission: string;
 }
 
-export function CommentsStory({ 
-    storyId, 
-    commentSettings: initialCommentSettings 
-}: { 
+export function CommentsStory({
+    storyId,
+    commentSettings: initialCommentSettings
+}: {
     storyId: string;
     commentSettings?: CommentSettings;
 }) {
@@ -171,6 +171,13 @@ export function CommentsStory({
 
     const isOwner = (commentUserId: string) => session?.user?.email && commentUserId === session.user.email;
 
+    function getUserImage(image?: string | null): string {
+        if (!image || image.trim() === "") return "/profile_user/ARN_profile.png"
+        if (image.startsWith("http")) return image
+        if (image.startsWith("/uploads")) return `/api${image}`
+        return `/api/uploads/${image.replace(/^\/+/, "")}`
+    }
+
     return (
         <div className="mt-10 w-full bg-backgroundCustom border shadow-xl rounded-lg p-6" id="story-comments">
             {commentSettings.hideComments ? (
@@ -187,7 +194,7 @@ export function CommentsStory({
                                 <input
                                     type="text"
                                     placeholder={
-                                        commentSettings.commentPermission === 'followers' 
+                                        commentSettings.commentPermission === 'followers'
                                             ? "เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่แสดงความคิดเห็นได้..."
                                             : "แสดงความคิดเห็นเกี่ยวกับเรื่องนี้..."
                                     }
@@ -195,12 +202,12 @@ export function CommentsStory({
                                     onChange={(e) => setNewComment(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
                                     disabled={isSubmitting}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 />
                                 <button
                                     onClick={handleSubmit}
                                     disabled={isSubmitting || !newComment.trim()}
-                                    className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-200 shadow-sm border"
+                                    className="px-4 py-2 bg-backgroundCustom rounded-md disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:scale-103 hover:bg-green-500 hover:text-white shadow-sm border"
                                 >ส่ง</button>
                             </div>
                         ) : (
@@ -225,7 +232,7 @@ export function CommentsStory({
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center overflow-hidden`}>
                                                 {comment.user.image ? (
-                                                    <Image src={comment.user.image} alt={comment.user.name} width={32} height={32} className="w-8 h-8 object-cover" />
+                                                    <Image src={getUserImage(comment.user.image)} alt={comment.user.name} width={32} height={32} className="w-8 h-8 object-cover" />
                                                 ) : (
                                                     <span className="text-xs text-white font-medium">{comment.user.avatar}</span>
                                                 )}
@@ -278,7 +285,7 @@ export function CommentsStory({
                                     <button
                                         onClick={fetchMore}
                                         disabled={loadingMore}
-                                        className="w-full py-2 text-sm bg-backgroundCustom hover:bg-gray-200 rounded-md shadow-sm border disabled:opacity-50"
+                                        className="w-full py-2 text-sm bg-backgroundCustom hover:bg-backgroundCustom/80 rounded-md shadow-sm border disabled:opacity-50"
                                     >{loadingMore ? 'กำลังโหลด...' : 'แสดงเพิ่มเติม'}</button>
                                 </div>
                             )}

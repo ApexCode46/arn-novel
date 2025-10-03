@@ -209,7 +209,12 @@ export default function ManageUsersPage() {
         setPagination(prev => ({ ...prev, page: newPage }))
     }
 
-    
+    function getUserImage(image?: string | null): string {
+        if (!image || image.trim() === "") return "/profile_user/ARN_profile.png"
+        if (image.startsWith("http")) return image
+        if (image.startsWith("/uploads")) return `/api${image}`
+        return `/api/uploads/${image.replace(/^\/+/, "")}`
+    }
 
     return (
         <div className="container mx-auto py-4 lg:py-6 space-y-4 lg:space-y-6 px-4">
@@ -377,7 +382,7 @@ export default function ManageUsersPage() {
                                             <div className="flex items-center gap-2">
                                                 {user.image && (
                                                     <Image
-                                                        src={user.image}
+                                                        src={getUserImage(user.image)}
                                                         alt={user.name}
                                                         width={32}
                                                         height={32}

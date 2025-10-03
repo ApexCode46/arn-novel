@@ -118,31 +118,18 @@ export default function Stories() {
     setFilteredStories(filtered);
   }, [stories, typeFilter, sortOrder]);
 
-  // ฟังก์ชันตรวจสอบและแก้ไข image URL
-  const getValidImageSrc = (imageUrl: string | null): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return "/novelImg/Test-novel.png";
-    }
-
-    // ตรวจสอบว่าเป็น absolute URL (http/https)
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-
-    // ตรวจสอบว่าเป็น relative path ที่ถูกต้อง (เริ่มต้นด้วย /)
-    if (imageUrl.startsWith('/')) {
-      return imageUrl;
-    }
-
-    // ถ้าไม่ใช่ URL หรือ path ที่ถูกต้อง ให้ใช้ default image
-    return "/novelImg/Test-novel.png";
-  };
-
   // ฟังก์ชันจัดการเมื่อสร้างนิยายใหม่สำเร็จ
   const handleStoryCreated = () => {
     // รีเฟรชข้อมูล
     fetchStories();
   };
+
+  function getStoryImage(src?: string | null): string {
+    if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+    if (src.startsWith("http")) return src      // external
+    if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+    return `/api/uploads/${src.replace(/^\/+/, "")}`
+  }
 
   return (
     <>
@@ -151,14 +138,11 @@ export default function Stories() {
         <p className="text-sm">สร้างนิยายของคุณ</p>
       </div>
 
-      
-
-
-      <div className="w-full h-auto mb-3 border  rounded bg-backgroundCustom  border-orange-200 shadow-sm">
+      <div className="w-full h-auto mb-3 border  rounded bg-backgroundCustom shadow-sm">
         <div className="flex justify-between p-6 border-b">
           <div className="flex items-center gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-auto bg-backgroundCustom border-orange-200">
+              <SelectTrigger className="w-auto bg-backgroundCustom">
                 <SelectValue placeholder="เลือกเรื่อง" />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +153,7 @@ export default function Stories() {
             </Select>
 
             <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-auto bg-backgroundCustom border-orange-200">
+              <SelectTrigger className="w-auto bg-backgroundCustom ">
                 <SelectValue placeholder="เรียงตาม" />
               </SelectTrigger>
               <SelectContent>
@@ -186,7 +170,7 @@ export default function Stories() {
           <div>
             <Modalsettingstory
               trigger={
-                <div className="flex items-center justify-center bg-orange-600 hover:bg-red-600 text-white gap-2 cursor-pointer border border-orange-600 p-2 rounded shadow-sm text-sm transition-colors duration-300">
+                <div className="flex items-center justify-center bg-orange-600 hover:bg-red-600 text-white gap-2 cursor-pointer border p-2 rounded shadow-sm text-sm transition-colors duration-300">
                   เขียนใหม่
                 </div>
               }
@@ -212,7 +196,7 @@ export default function Stories() {
                 filteredStories.map((story) => (
                   <div
                     key={story.story_id}
-                    className="relative group hover:bg-orange-50 rounded-lg border border-orange-200 hover:border-orange-400 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    className="relative group hover:bg-orange-50 rounded-lg border  hover:border-orange-400 hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => router.push(`/editor/${story.story_id}`)}
                   >
                     <div className="flex gap-3 p-3">
@@ -220,10 +204,11 @@ export default function Stories() {
                       <div className="flex-shrink-0 relative">
                         <div className="relative w-16 h-20 rounded-md overflow-hidden shadow-sm">
                           <Image
-                            src={getValidImageSrc(story.verticalImage)}
+                            src={getStoryImage(story.verticalImage)}
                             alt={story.title}
                             fill
                             className="object-cover"
+                            unoptimized // ให้ browser cache ได้เต็ม ๆ
                           />
                         </div>
                         {/* Type Badge */}
@@ -249,7 +234,7 @@ export default function Stories() {
                           <div className="flex items-center gap-2">
                             <Badge
                               variant="secondary"
-                              className="bg-orange-100 text-orange-700 border-orange-300 text-xs"
+                              className="bg-orange-100 text-orange-700 border text-xs"
                             >
                               {story.category}
                             </Badge>
@@ -258,8 +243,8 @@ export default function Stories() {
                             <Badge
                               variant={story.status === 'published' ? 'default' : 'secondary'}
                               className={`text-xs ${story.status === 'published'
-                                  ? 'bg-green-100 text-green-800 border-green-200'
-                                  : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                ? 'bg-green-100 text-green-800 border-green-200'
+                                : 'bg-yellow-100 text-yellow-800 border-yellow-200'
                                 }`}
                             >
                               {story.status === 'published' ? 'เผยแพร่' : 'ร่าง'}

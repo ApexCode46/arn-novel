@@ -40,7 +40,7 @@ export default function Page({ params }: { params: Promise<{ category: string }>
         hasPrev: false,
     });
     const itemsPerPage = 30;
-    
+
     const router = useRouter();
 
     useEffect(() => {
@@ -125,21 +125,36 @@ export default function Page({ params }: { params: Promise<{ category: string }>
     }
 
     if (stories.length === 0) {
-        return <div>No stories found for this category.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-16rem)] py-16 text-center gap-4">
+                <h2 className="text-xl font-semibold">ไม่พบเรื่องในหมวดหมู่{category ? ` "${category}"` : ''}</h2>
+                <p className="text-sm text-muted-foreground">ลองกลับไปที่หน้าหลักเพื่อเลือกหมวดหมู่อื่น</p>
+                <Button onClick={handleGoHome}>
+                    กลับหน้าหลัก
+                </Button>
+            </div>
+        );
+    }
+
+    function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
     }
 
     return (
         <>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 mt-4 gap-2">
-            <div>
-               <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{category}</h3>
-            <p className="text-muted-foreground text-sm">แสดง {category} ทั้งหมด</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 mt-4 gap-2">
+                <div>
+                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{category}</h3>
+                    <p className="text-muted-foreground text-sm">แสดง {category} ทั้งหมด</p>
+                </div>
+                <div>
+                    <Button onClick={handleGoHome}>หน้าหลัก</Button>
+                </div>
             </div>
-            <div>
-                <Button onClick={handleGoHome}>หน้าหลัก</Button>
-            </div>
-        </div>
-            <hr className="my-2" /> 
+            <hr className="my-2" />
 
             {pagination.totalPages > 1 && (
                 <div className="flex justify-center items-center gap-4 pb-8">
@@ -175,7 +190,7 @@ export default function Page({ params }: { params: Promise<{ category: string }>
                         {/* Image Container */}
                         <div className="relative w-full aspect-[3/4] overflow-hidden">
                             <Image
-                                src={story.verticalImage || "/novelImg/Test-novel.png"}
+                                src={getStoryImage(story.verticalImage)}
                                 alt={story.title || "Novel"}
                                 fill
                                 sizes="(max-width: 640px) 30vw, (max-width: 768px) 20vw, (max-width: 1024px) 15vw, (max-width: 1280px) 10vw, 8vw"

@@ -73,21 +73,21 @@ export default function RankingPage() {
       }
 
       const response = await fetch(`/api/reader/ranking?category=${category}&page=${page}&limit=20`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch ranking');
       }
 
       const data = await response.json();
-      
+
       if (append) {
         setStories(prev => [...prev, ...data.stories]);
       } else {
         setStories(data.stories);
       }
-      
+
       setPagination(data.pagination);
-      
+
     } catch (error) {
       console.error('Error fetching ranking:', error);
     } finally {
@@ -120,9 +120,9 @@ export default function RankingPage() {
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="w-6 h-6 text-white"/>;
-    if (rank === 2) return <Trophy className="w-6 h-6 text-white"/>;
-    if (rank === 3) return <Award className="w-6 h-6 text-white"/>;
+    if (rank === 1) return <Crown className="w-6 h-6 text-white" />;
+    if (rank === 2) return <Trophy className="w-6 h-6 text-white" />;
+    if (rank === 3) return <Award className="w-6 h-6 text-white" />;
     return null;
   };
 
@@ -131,6 +131,13 @@ export default function RankingPage() {
     if (rank <= 10) return "bg-gradient-to-r from-purple-400 to-pink-500 text-white";
     return "bg-muted text-muted-foreground";
   };
+
+  function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; 
+        if (src.startsWith("http")) return src;      // external
+        if (src.startsWith("/uploads")) return `/api${src}`; // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`;
+    }
 
   if (loading) {
     return (
@@ -205,8 +212,8 @@ export default function RankingPage() {
         {/* Stories List */}
         <div className="space-y-4">
           {stories.map((story) => (
-            <Card 
-              key={story.id} 
+            <Card
+              key={story.id}
               className="bg-backgroundCustom border-0 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group shadow-sm"
               onClick={() => handleStoryClick(story.id)}
             >
@@ -226,7 +233,7 @@ export default function RankingPage() {
                   <div className="relative w-25 h-35 sm:w-25 sm:h-38 rounded overflow-hidden flex-shrink-0 mx-auto self-center">
                     {story.imageUrl ? (
                       <Image
-                        src={story.imageUrl}
+                        src={getStoryImage(story.imageUrl)}
                         alt={story.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-200"

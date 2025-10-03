@@ -31,8 +31,8 @@ export async function POST(request) {
     const formData = await request.formData()
     
     const ad_id = formData.get('ad_id')
-    const name_as = formData.get('name_as')
-    const user_input = formData.get('user_id') // อาจเป็น email หรือ user_id
+    const name_as = formData.get('name_as') 
+    const user_input = formData.get('user_id')
     const link = formData.get('link')
     const status = formData.get('status') === 'true'
     const image = formData.get('image')
@@ -70,14 +70,19 @@ export async function POST(request) {
       // สร้างชื่อไฟล์ที่ไม่ซ้ำ
       const timestamp = Date.now()
       const fileName = `ad_${timestamp}_${image.name}`
-      const uploadPath = path.join(process.cwd(), 'public', 'adsImg', fileName)
+
+      // เปลี่ยนไปเก็บที่ uploads/adsImg
+      const uploadDir = path.join(process.cwd(), 'uploads', 'adsImg')
+      const uploadPath = path.join(uploadDir, fileName)
 
       // สร้างโฟลเดอร์ถ้ายังไม่มี
-      await mkdir(path.dirname(uploadPath), { recursive: true })
+      await mkdir(uploadDir, { recursive: true })
       
       // เขียนไฟล์
       await writeFile(uploadPath, buffer)
-      path_img = `/adsImg/${fileName}`
+
+      // เก็บ path เป็น URL ที่เข้าถึงผ่าน API (เช่น /uploads/adsImg/xxxx.png)
+      path_img = `/uploads/adsImg/${fileName}`
     }
 
     const adData = {

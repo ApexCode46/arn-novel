@@ -451,7 +451,7 @@ export default function RegisterWriterPage() {
 
               {/* อัปโหลดรูปภาพ */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-700">เอกสารประกอบ</h3>
+                <h3 className="text-lg font-semibold text-orange-700">เอกสารประกอบ (หลีกเลี่ยงแสงสะท้อน) </h3> 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FileUploadField

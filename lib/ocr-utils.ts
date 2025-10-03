@@ -48,14 +48,6 @@ function stripHonorifics(input: string): string {
     .trim();
 }
 
-function normalizeNameToken(input: string): string {
-  return stripHonorifics(input)
-    .replace(/[\s\-_.]+/g, ' ')
-    .replace(/[^A-Za-zก-๙\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
 
 function normalizeThaiNameToken(input: string): string {
   return stripHonorifics(input)
@@ -235,10 +227,14 @@ async function performOCRWithParams(
 ): Promise<OCRResult> {
   try {
     console.log('⚙️ performOCRWithParams - params:', params);
-    const { data } = await Tesseract.recognize(image as any, language, {
+    type RecognizeImageArg = Parameters<typeof Tesseract.recognize>[0];
+    type RecognizeOptions = Parameters<typeof Tesseract.recognize>[2];
+
+    const options: RecognizeOptions = {
       logger: (m: { status?: string; progress?: number }) => {
-        if (m?.status === 'recognizing text') {
-          console.log(`📄 OCR (custom) Progress: ${Math.round((m.progress || 0) * 100)}%`);
+        if (m.status === 'recognizing text') {
+          const prog = Math.round(((m.progress ?? 0) * 100));
+          console.log(`📄 OCR (custom) Progress: ${prog}%`);
         }
       },
       // Common params to improve quality
@@ -246,7 +242,9 @@ async function performOCRWithParams(
       ...params,
       preserve_interword_spaces: '1',
       user_defined_dpi: '300',
-    } as any);
+    } as RecognizeOptions;
+
+    const { data } = await Tesseract.recognize(image as RecognizeImageArg, language, options);
 
     return { success: true, text: data.text, confidence: data.confidence };
   } catch (error) {
@@ -619,7 +617,7 @@ export function extractBankbookData(text: string): BankbookData {
 
   // Account number detection: look for label and generic patterns
   // Example formats: 188-2-75659-5, 123-4-56789-0, sometimes spaces
-  const accLabel = normalized.match(/เลขที่บัญชี|บัญชี\s*เลขที่|A\/C\s*NO\.|A\/C\s*NO|ACCOUNT\s*NO\.?/i);
+  // const accLabel = normalized.match(/เลขที่บัญชี|บัญชี\s*เลขที่|A\/C\s*NO\.|A\/C\s*NO|ACCOUNT\s*NO\.?/i); // unused
   const accCandidates: string[] = [];
   const accRegexes = [
     /(\d{1,3}\s*[\-–—]?\s*\d{1}\s*[\-–—]?\s*\d{5}\s*[\-–—]?\s*\d)/g, // 1-1-5-1 groups
@@ -695,7 +693,12 @@ export function compareBankbookData(
   let accWeight = 0.6;
   let nameWeight = 0.4;
   let bankWeight = 0.0;
-  if (input.bankName) bankWeight = 0.1, accWeight = 0.6, nameWeight = 0.3; // if bank provided, small weight
+  if (input.bankName) {
+    // if bank provided, small weight
+    bankWeight = 0.1;
+    accWeight = 0.6;
+    nameWeight = 0.3;
+  }
 
   if (input.accountNumber && ocr.accountNumber) {
     const inClean = input.accountNumber.replace(/\D/g, '');
@@ -747,12 +750,22 @@ export async function verifyBankbook(
         success: false,
         ocrResult,
         extracted: {},
-        verification: { isValid: false, matchScore: 0, details: {} as any },
+        verification: {
+          isValid: false,
+          matchScore: 0,
+          details: {
+            bankMatch: undefined,
+            accountNumberMatch: undefined,
+            accountNumberSimilarity: 0,
+            nameMatch: undefined,
+            nameSimilarity: 0,
+          },
+        },
         error: ocrResult.error || 'OCR failed',
       };
     }
 
-    let extracted = extractBankbookData(ocrResult.text);
+    const extracted = extractBankbookData(ocrResult.text);
 
     // Enhanced pass: try focused OCR for account number if missing
     if (!extracted.accountNumber) {
@@ -783,7 +796,17 @@ export async function verifyBankbook(
       success: false,
       ocrResult: { success: false, text: '', confidence: 0 },
       extracted: {},
-      verification: { isValid: false, matchScore: 0, details: {} as any },
+      verification: {
+        isValid: false,
+        matchScore: 0,
+        details: {
+          bankMatch: undefined,
+          accountNumberMatch: undefined,
+          accountNumberSimilarity: 0,
+          nameMatch: undefined,
+          nameSimilarity: 0,
+        },
+      },
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -894,7 +917,7 @@ export function compareIDCardData(
 
   // คำนวณคะแนนรวม (ให้น้ำหนักเลขบัตรประชาชนมากกว่า)
   // Weights: ID 60%, First 20%, Last 20%; if only legacy provided, use ID 60% + Legacy 40%.
-  let idWeight = 0.6;
+  const idWeight = 0.6;
   let firstWeight = 0.2;
   let lastWeight = 0.2;
   let legacyWeight = 0;
@@ -1014,7 +1037,7 @@ export async function verifyIDCard(
 
     // ดึงข้อมูลจากข้อความที่อ่านได้ (รอบแรก)
     console.log('🔍 Extracting data from OCR text...');
-  let extractedData = extractIDCardData(ocrResult.text);
+  const extractedData = extractIDCardData(ocrResult.text);
 
     // Enhanced pass: if missing idNumber or weak name, try field-specific OCR
     let enhancedTried = false;

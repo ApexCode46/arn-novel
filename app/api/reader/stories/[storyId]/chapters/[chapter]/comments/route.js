@@ -160,11 +160,11 @@ export async function GET(request, { params }) {
         timestamp: formatTimestamp(reply.created_at),
         created_at: reply.created_at,
         likes: reply._count?.likes || 0,
-        isLiked: false, // TODO: implement user-specific likes
+        isLiked: false, 
       })) || [],
       repliesCount: comment._count?.replies || 0,
       likes: comment._count?.likes || 0,
-      isLiked: false, // TODO: implement user-specific likes
+      isLiked: false, 
     }));
 
     return NextResponse.json({

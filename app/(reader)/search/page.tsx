@@ -454,9 +454,6 @@ export default function NovelBrowsePage() {
         {!loading && !error && filteredNovels.length === 0 && renderEmptyState()}
         {!loading && !error && filteredNovels.length > 0 && (
           <>
-          <div>
-            
-          </div>
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'space-y-4'}>
               {filteredNovels.map(novel => (
                 <div

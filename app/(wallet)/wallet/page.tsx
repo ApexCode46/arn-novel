@@ -224,11 +224,11 @@ export default function WalletPage() {
         </Button>
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-purple-600 rounded-full mb-4">
             <Wallet className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
               กระเป๋าเงิน
             </h1>
             <p className="text-muted-foreground text-base sm:text-lg mt-2">จัดการเงินและธุรกรรมของคุณ</p>
@@ -238,7 +238,7 @@ export default function WalletPage() {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Balance Card */}
-          <Card className="md:col-span-2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white border-0 shadow-2xl overflow-hidden relative">
+          <Card className="md:col-span-2 bg-gradient-to-br from-orange-600 via-pink-700 to-purple-700 text-white border-0 shadow-2xl overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
             <CardHeader className="relative z-10">
@@ -259,7 +259,7 @@ export default function WalletPage() {
               </p>
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-white text-blue-700 hover:bg-white/90 hover:text-blue-800 font-semibold shadow-lg transition-all duration-200 hover:shadow-xl"
+                className="w-full sm:w-auto bg-white text-orange-700 hover:bg-white/90 hover:text-blue-800 font-semibold shadow-lg transition-all duration-200 hover:shadow-xl"
                 onClick={() => router.push('/wallet/topUp')}
               >
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -310,8 +310,8 @@ export default function WalletPage() {
         <Card className="shadow-xl border-0 bg-backgroundCustom backdrop-blur-sm">
           <CardHeader className="border-b pb-2">
             <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <History className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-orange-500 rounded-lg">
+                <History className="w-6 h-6 text-white" />
               </div>
               ประวัติการทำธุรกรรม
               {walletData?.transaction && (

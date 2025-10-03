@@ -393,7 +393,7 @@ export default function NovelManagementPage() {
                                                         className="bg-green-600 hover:bg-green-700"
                                                         onClick={() => openActionDialog(story, null, 'show')}
                                                     >
-                                                        <Eye className="w-3 h-3 mr-1" />
+                                                        <Eye className="w-3 h-3 mr-1  " />
                                                         แสดง
                                                     </Button>
                                                 )}

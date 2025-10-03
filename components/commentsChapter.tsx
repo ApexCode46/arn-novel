@@ -64,11 +64,11 @@ interface CommentSettings {
     commentPermission: string;
 }
 
-export function CommentsChapter({ 
-    customTrigger, 
-    storyId, 
-    chapterOrder 
-}: { 
+export function CommentsChapter({
+    customTrigger,
+    storyId,
+    chapterOrder
+}: {
     customTrigger?: React.ReactNode;
     storyId?: string;
     chapterOrder?: string;
@@ -94,7 +94,7 @@ export function CommentsChapter({
     // ฟังก์ชันสำหรับดึงข้อมูล comments
     const fetchComments = useCallback(async () => {
         console.log('fetchComments called with:', { storyId, chapterOrder });
-        
+
         if (!storyId || !chapterOrder) {
             console.log('Missing storyId or chapterOrder:', { storyId, chapterOrder });
             // ถ้าไม่มี storyId หรือ chapterOrder ให้แสดงข้อมูลว่าง
@@ -106,7 +106,7 @@ export function CommentsChapter({
         try {
             setLoading(true);
             const response = await fetch(`/api/reader/stories/${storyId}/chapters/${chapterOrder}/comments`);
-            
+
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
@@ -140,7 +140,7 @@ export function CommentsChapter({
     // ฟังก์ชันสำหรับส่ง comment ใหม่
     const handleSubmitComment = async (parentId?: string) => {
         console.log('handleSubmitComment called with:', { storyId, chapterOrder, parentId });
-        
+
         const content = parentId ? replyContent : newComment;
         if (!content.trim() || isSubmitting) return;
         if (!storyId || !chapterOrder) {
@@ -156,11 +156,11 @@ export function CommentsChapter({
 
         // แสดง loading toast
         let loadingToast: string | number | undefined;
-        
+
         try {
             setIsSubmitting(true);
             loadingToast = toast.loading('กำลังส่งความคิดเห็น...');
-            
+
             const response = await fetch(`/api/reader/stories/${storyId}/chapters/${chapterOrder}/comments`, {
                 method: 'POST',
                 headers: {
@@ -273,8 +273,8 @@ export function CommentsChapter({
                         // อัพเดท replies ด้วย
                         return {
                             ...comment,
-                            replies: comment.replies.map(reply => 
-                                reply.id === commentId 
+                            replies: comment.replies.map(reply =>
+                                reply.id === commentId
                                     ? { ...reply, isLiked: data.data.isLiked, likes: data.data.likesCount }
                                     : reply
                             )
@@ -335,10 +335,10 @@ export function CommentsChapter({
                         // อัพเดท replies ด้วย
                         return {
                             ...comment,
-                            replies: comment.replies.map(reply => 
-                                reply.id === commentId 
-                                    ? { 
-                                        ...reply, 
+                            replies: comment.replies.map(reply =>
+                                reply.id === commentId
+                                    ? {
+                                        ...reply,
                                         content: data.data.content,
                                         updated_at: data.data.updated_at,
                                         timestamp: data.data.timestamp
@@ -407,6 +407,13 @@ export function CommentsChapter({
         return session?.user?.email && commentUserId === session.user.email;
     };
 
+    function getUserImage(image?: string | null): string {
+        if (!image || image.trim() === "") return "/profile_user/ARN_profile.png"
+        if (image.startsWith("http")) return image
+        if (image.startsWith("/uploads")) return `/api${image}`
+        return `/api/uploads/${image.replace(/^\/+/, "")}`
+    }
+
     // ดึงข้อมูล comments เมื่อ drawer เปิด
     useEffect(() => {
         if (isOpen) {
@@ -446,251 +453,251 @@ export function CommentsChapter({
                                             <div className="text-gray-500">ยังไม่มีความคิดเห็น</div>
                                         </div>
                                     ) : (
-                                    comments.map((comment) => (
-                                        <div key={comment.id} className="bg-backgroundCustom rounded-lg p-4 hover:bg-backgroundCustom/80 mb-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center`}>
-                                                        {comment.user.image ? (
-                                                            <Image
-                                                                src={comment.user.image}
-                                                                alt={comment.user.name}
-                                                                width={32}
-                                                                height={32}
-                                                                className="w-8 h-8 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <span className="text-xs">{comment.user.avatar}</span>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-sm">{comment.user.name}</div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {comment.timestamp}
-                                                            {comment.updated_at && comment.updated_at !== comment.created_at && (
-                                                                <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
+                                        comments.map((comment) => (
+                                            <div key={comment.id} className="bg-backgroundCustom rounded-lg p-4 hover:bg-backgroundCustom/80 mb-4 shadow-sm border">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full ${comment.user.color} flex items-center justify-center`}>
+                                                            {comment.user.image ? (
+                                                                <Image
+                                                                    src={getUserImage(comment.user.image)}
+                                                                    alt={comment.user.name}
+                                                                    width={32}
+                                                                    height={32}
+                                                                    className="w-8 h-8 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-xs">{comment.user.avatar}</span>
                                                             )}
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                {/* Edit/Delete Menu */}
-                                                {isCommentOwner(comment.user.id) && (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <button className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600">
-                                                                <MoreHorizontal size={16} />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleEditClick(comment.id, comment.content)}>
-                                                                <Edit2 className="mr-2 h-4 w-4" />
-                                                                แก้ไข
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem 
-                                                                onClick={() => handleDeleteComment(comment.id)}
-                                                                className="text-red-600 focus:text-red-600"
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                ลบ
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                )}
-                                            </div>
-                                            
-                                            {/* Comment Content - Edit Mode or Display Mode */}
-                                            {editingComment === comment.id ? (
-                                                <div className="mb-3">
-                                                    <textarea
-                                                        value={editContent}
-                                                        onChange={(e) => setEditContent(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                                                        rows={3}
-                                                        placeholder="แก้ไขความคิดเห็น..."
-                                                    />
-                                                    <div className="flex gap-2 mt-2">
-                                                        <button
-                                                            onClick={() => handleSaveEdit(comment.id)}
-                                                            disabled={!editContent.trim()}
-                                                            className="px-3 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600"
-                                                        >
-                                                            บันทึก
-                                                        </button>
-                                                        <button
-                                                            onClick={handleCancelEdit}
-                                                            className="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
-                                                        >
-                                                            ยกเลิก
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <p className=" text-sm mb-3 leading-relaxed">
-                                                    {comment.content}
-                                                </p>
-                                            )}
-                                            <div className="flex items-center gap-4 text-sm">
-                                                <button 
-                                                    className="flex items-center gap-1 text-gray-500 hover:text-blue-500"
-                                                    onClick={() => handleReplyClick(comment.id)}
-                                                >
-                                                    <span>↩</span>
-                                                    <span>ตอบกลับ ({comment.repliesCount})</span>
-                                                </button>
-                                                <button 
-                                                    className={`flex items-center gap-1 hover:text-red-500 ${comment.isLiked ? 'text-red-500' : 'text-gray-500'}`}
-                                                    onClick={() => handleLikeClick(comment.id)}
-                                                >
-                                                    <span>♥</span>
-                                                    <span>{comment.likes}</span>
-                                                </button>
-                                                {comment.repliesCount > 0 && (
-                                                    <button 
-                                                        className="text-blue-500 hover:text-blue-700 text-xs"
-                                                        onClick={() => toggleReplies(comment.id)}
-                                                    >
-                                                        {showReplies[comment.id] ? 'ซ่อนการตอบกลับ' : `ดูการตอบกลับ (${comment.repliesCount})`}
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {/* Reply Form */}
-                                            {replyingTo === comment.id && (
-                                                <div className="mt-3 p-3 bg-backgroundCustom rounded-lg">
-                                                    <div className="flex gap-2 mb-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder={`ตอบกลับ ${comment.user.name}...`}
-                                                            value={replyContent}
-                                                            onChange={(e) => setReplyContent(e.target.value)}
-                                                            onKeyPress={(e) => {
-                                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                                    e.preventDefault();
-                                                                    handleSubmitComment(comment.id);
-                                                                }
-                                                            }}
-                                                            disabled={isSubmitting}
-                                                            className="flex-1 px-3 py-2 bg-backgroundCustom border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                                        />
-                                                        <button
-                                                            onClick={() => handleSubmitComment(comment.id)}
-                                                            disabled={isSubmitting || !replyContent.trim()}
-                                                            className="px-3 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 text-sm"
-                                                        >
-                                                            ส่ง
-                                                        </button>
-                                                        <button
-                                                            onClick={handleCancelReply}
-                                                            className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
-                                                        >
-                                                            ยกเลิก
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Replies Section */}
-                                            {showReplies[comment.id] && comment.replies.length > 0 && (
-                                                <div className="mt-3 ml-6 space-y-3">
-                                                    {comment.replies.map((reply) => (
-                                                        <div key={reply.id} className="bg-background rounded-lg p-3 border border-gray-200">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
-                                                                        {reply.user.image ? (
-                                                                            <Image
-                                                                                src={reply.user.image}
-                                                                                alt={reply.user.name}
-                                                                                width={24}
-                                                                                height={24}
-                                                                                className="w-6 h-6 rounded-full object-cover"
-                                                                            />
-                                                                        ) : (
-                                                                            <span className="text-xs">{reply.user.avatar}</span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="font-medium text-sm">{reply.user.name}</div>
-                                                                        <div className="text-xs text-gray-500">
-                                                                            {reply.timestamp}
-                                                                            {reply.updated_at && reply.updated_at !== reply.created_at && (
-                                                                                <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                {/* Edit/Delete Menu for Replies */}
-                                                                {isCommentOwner(reply.user.id) && (
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <button className="p-1 rounded-full hover:bg-gray-200 hover:text-gray-600">
-                                                                                <MoreHorizontal size={14} />
-                                                                            </button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end">
-                                                                            <DropdownMenuItem onClick={() => handleEditClick(reply.id, reply.content)}>
-                                                                                <Edit2 className="mr-2 h-3 w-3" />
-                                                                                แก้ไข
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem 
-                                                                                onClick={() => handleDeleteComment(reply.id)}
-                                                                                className="text-red-600 focus:text-red-600"
-                                                                            >
-                                                                                <Trash2 className="mr-2 h-3 w-3" />
-                                                                                ลบ
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
+                                                        <div>
+                                                            <div className="font-medium text-sm">{comment.user.name}</div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {comment.timestamp}
+                                                                {comment.updated_at && comment.updated_at !== comment.created_at && (
+                                                                    <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
                                                                 )}
                                                             </div>
-                                                            
-                                                            {/* Reply Content - Edit Mode or Display Mode */}
-                                                            {editingComment === reply.id ? (
-                                                                <div className="mb-2">
-                                                                    <textarea
-                                                                        value={editContent}
-                                                                        onChange={(e) => setEditContent(e.target.value)}
-                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                                                                        rows={2}
-                                                                        placeholder="แก้ไขการตอบกลับ..."
-                                                                    />
-                                                                    <div className="flex gap-2 mt-2">
-                                                                        <button
-                                                                            onClick={() => handleSaveEdit(reply.id)}
-                                                                            disabled={!editContent.trim()}
-                                                                            className="px-2 py-1 bg-blue-500 text-white rounded text-xs disabled:opacity-50 hover:bg-blue-600"
-                                                                        >
-                                                                            บันทึก
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={handleCancelEdit}
-                                                                            className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
-                                                                        >
-                                                                            ยกเลิก
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <p className="text-sm mb-2 leading-relaxed">
-                                                                    {reply.content}
-                                                                </p>
-                                                            )}
-                                                            <div className="flex items-center gap-4 text-sm">
-                                                                <button 
-                                                                    className={`flex items-center gap-1 hover:text-red-500 ${reply.isLiked ? 'text-red-500' : 'text-gray-500'}`}
-                                                                    onClick={() => handleLikeClick(reply.id)}
-                                                                >
-                                                                    <span>♥</span>
-                                                                    <span>{reply.likes}</span>
-                                                                </button>
-                                                            </div>
                                                         </div>
-                                                    ))}
+                                                    </div>
+                                                    {/* Edit/Delete Menu */}
+                                                    {isCommentOwner(comment.user.id) && (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <button className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600">
+                                                                    <MoreHorizontal size={16} />
+                                                                </button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => handleEditClick(comment.id, comment.content)}>
+                                                                    <Edit2 className="mr-2 h-4 w-4" />
+                                                                    แก้ไข
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                                    className="text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    ลบ
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))
-                                )}
+
+                                                {/* Comment Content - Edit Mode or Display Mode */}
+                                                {editingComment === comment.id ? (
+                                                    <div className="mb-3">
+                                                        <textarea
+                                                            value={editContent}
+                                                            onChange={(e) => setEditContent(e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                                            rows={3}
+                                                            placeholder="แก้ไขความคิดเห็น..."
+                                                        />
+                                                        <div className="flex gap-2 mt-2">
+                                                            <button
+                                                                onClick={() => handleSaveEdit(comment.id)}
+                                                                disabled={!editContent.trim()}
+                                                                className="px-3 py-1 bg-green-500 text-white rounded text-xs disabled:opacity-50 hover:bg-green-600"
+                                                            >
+                                                                บันทึก
+                                                            </button>
+                                                            <button
+                                                                onClick={handleCancelEdit}
+                                                                className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                                                            >
+                                                                ยกเลิก
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className=" text-sm mb-3 leading-relaxed">
+                                                        {comment.content}
+                                                    </p>
+                                                )}
+                                                <div className="flex items-center gap-4 text-sm">
+                                                    <button
+                                                        className="flex items-center gap-1 text-gray-500 hover:text-blue-500"
+                                                        onClick={() => handleReplyClick(comment.id)}
+                                                    >
+                                                        <span>↩</span>
+                                                        <span>ตอบกลับ ({comment.repliesCount})</span>
+                                                    </button>
+                                                    <button
+                                                        className={`flex items-center gap-1 hover:text-red-500 ${comment.isLiked ? 'text-red-500' : 'text-gray-500'}`}
+                                                        onClick={() => handleLikeClick(comment.id)}
+                                                    >
+                                                        <span>♥</span>
+                                                        <span>{comment.likes}</span>
+                                                    </button>
+                                                    {comment.repliesCount > 0 && (
+                                                        <button
+                                                            className="text-blue-500 hover:text-blue-700 text-xs"
+                                                            onClick={() => toggleReplies(comment.id)}
+                                                        >
+                                                            {showReplies[comment.id] ? 'ซ่อนการตอบกลับ' : `ดูการตอบกลับ (${comment.repliesCount})`}
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Reply Form */}
+                                                {replyingTo === comment.id && (
+                                                    <div className="mt-3 p-3 bg-backgroundCustom rounded-lg">
+                                                        <div className="flex gap-2 mb-2">
+                                                            <input
+                                                                type="text"
+                                                                placeholder={`ตอบกลับ ${comment.user.name}...`}
+                                                                value={replyContent}
+                                                                onChange={(e) => setReplyContent(e.target.value)}
+                                                                onKeyPress={(e) => {
+                                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                                        e.preventDefault();
+                                                                        handleSubmitComment(comment.id);
+                                                                    }
+                                                                }}
+                                                                disabled={isSubmitting}
+                                                                className="flex-1 px-3 py-2 bg-backgroundCustom border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                                            />
+                                                            <button
+                                                                onClick={() => handleSubmitComment(comment.id)}
+                                                                disabled={isSubmitting || !replyContent.trim()}
+                                                                className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                                                            >
+                                                                ส่ง
+                                                            </button>
+                                                            <button
+                                                                onClick={handleCancelReply}
+                                                                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                                                            >
+                                                                ยกเลิก
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Replies Section */}
+                                                {showReplies[comment.id] && comment.replies.length > 0 && (
+                                                    <div className="mt-3 ml-6 space-y-3">
+                                                        {comment.replies.map((reply) => (
+                                                            <div key={reply.id} className="bg-background rounded-lg p-3 border">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`w-6 h-6 rounded-full ${reply.user.color} flex items-center justify-center`}>
+                                                                            {reply.user.image ? (
+                                                                                <Image
+                                                                                    src={getUserImage(reply.user.image)}
+                                                                                    alt={reply.user.name}
+                                                                                    width={24}
+                                                                                    height={24}
+                                                                                    className="w-6 h-6 rounded-full object-cover"
+                                                                                />
+                                                                            ) : (
+                                                                                <span className="text-xs">{reply.user.avatar}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="font-medium text-sm">{reply.user.name}</div>
+                                                                            <div className="text-xs text-gray-500">
+                                                                                {reply.timestamp}
+                                                                                {reply.updated_at && reply.updated_at !== reply.created_at && (
+                                                                                    <span className="ml-1 text-gray-400">(แก้ไขแล้ว)</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Edit/Delete Menu for Replies */}
+                                                                    {isCommentOwner(reply.user.id) && (
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger asChild>
+                                                                                <button className="p-1 rounded-full hover:bg-gray-200 hover:text-gray-600">
+                                                                                    <MoreHorizontal size={14} />
+                                                                                </button>
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent align="end">
+                                                                                <DropdownMenuItem onClick={() => handleEditClick(reply.id, reply.content)}>
+                                                                                    <Edit2 className="mr-2 h-3 w-3" />
+                                                                                    แก้ไข
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem
+                                                                                    onClick={() => handleDeleteComment(reply.id)}
+                                                                                    className="text-red-600 focus:text-red-600"
+                                                                                >
+                                                                                    <Trash2 className="mr-2 h-3 w-3" />
+                                                                                    ลบ
+                                                                                </DropdownMenuItem>
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Reply Content - Edit Mode or Display Mode */}
+                                                                {editingComment === reply.id ? (
+                                                                    <div className="mb-2">
+                                                                        <textarea
+                                                                            value={editContent}
+                                                                            onChange={(e) => setEditContent(e.target.value)}
+                                                                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm resize-none"
+                                                                            rows={2}
+                                                                            placeholder="แก้ไขการตอบกลับ..."
+                                                                        />
+                                                                        <div className="flex gap-2 mt-2">
+                                                                            <button
+                                                                                onClick={() => handleSaveEdit(reply.id)}
+                                                                                disabled={!editContent.trim()}
+                                                                                className="px-2 py-1 bg-green-500 text-white rounded text-xs disabled:opacity-50 hover:bg-green-600"
+                                                                            >
+                                                                                บันทึก
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={handleCancelEdit}
+                                                                                className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                                                                            >
+                                                                                ยกเลิก
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-sm mb-2 leading-relaxed">
+                                                                        {reply.content}
+                                                                    </p>
+                                                                )}
+                                                                <div className="flex items-center gap-4 text-sm">
+                                                                    <button
+                                                                        className={`flex items-center gap-1 hover:text-red-500 ${reply.isLiked ? 'text-red-500' : 'text-gray-500'}`}
+                                                                        onClick={() => handleLikeClick(reply.id)}
+                                                                    >
+                                                                        <span>♥</span>
+                                                                        <span>{reply.likes}</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </ScrollArea>
                         )}
@@ -705,7 +712,7 @@ export function CommentsChapter({
                                             <input
                                                 type="text"
                                                 placeholder={
-                                                    commentSettings.commentPermission === 'followers' 
+                                                    commentSettings.commentPermission === 'followers'
                                                         ? "เฉพาะผู้ติดตามเรื่องนี้เท่านั้นที่แสดงความคิดเห็นได้..."
                                                         : "แสดงความคิดเห็น..."
                                                 }

@@ -61,7 +61,7 @@ export async function POST(request) {
     const fileName = `${randomUUID()}.${fileExtension}`;
     
     // Ensure directory exists
-    const uploadDir = join(process.cwd(), 'public', 'profile_user');
+    const uploadDir = join(process.cwd(), 'uploads', 'profile_user');
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (error) {

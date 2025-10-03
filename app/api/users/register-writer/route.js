@@ -70,7 +70,7 @@ export async function POST(request) {
     // ฟังก์ชันสำหรับลบไฟล์เก่า
     const deleteOldFile = async (filePath) => {
       if (filePath) {
-        const fullPath = path.join(process.cwd(), 'public', filePath.substring(1)) // ตัด / ออกจากหน้า
+        const fullPath = path.join(process.cwd(), 'uploads', filePath.substring(1)) // ตัด / ออกจากหน้า
         if (existsSync(fullPath)) {
           try {
             await unlink(fullPath)
@@ -89,7 +89,7 @@ export async function POST(request) {
       
       const timestamp = Date.now()
       const fileName = `${timestamp}_${file.name}`
-      const dirPath = path.join(process.cwd(), 'public', directory)
+      const dirPath = path.join(process.cwd(), 'uploads', directory)
       const filePath = path.join(dirPath, fileName)
       
       // สร้างโฟลเดอร์ถ้ายังไม่มี

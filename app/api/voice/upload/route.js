@@ -93,7 +93,7 @@ export async function POST(request) {
       const relativePath = existingVoice.file_path.startsWith("/")
         ? existingVoice.file_path.substring(1)
         : existingVoice.file_path;
-      const oldFilePath = path.join(process.cwd(), "public", relativePath);
+      const oldFilePath = path.join(process.cwd(), "uploads", relativePath);
       try {
         if (existsSync(oldFilePath)) {
           await unlink(oldFilePath);
@@ -105,7 +105,7 @@ export async function POST(request) {
     }
 
     // Create upload directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), "public", "voice");
+    const uploadDir = path.join(process.cwd(), "uploads", "voice");
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
     }
@@ -301,7 +301,7 @@ export async function DELETE(request) {
       const relativePath = voice.file_path.startsWith("/")
         ? voice.file_path.substring(1)
         : voice.file_path;
-      const filePath = path.join(process.cwd(), "public", relativePath);
+      const filePath = path.join(process.cwd(), "uploads", relativePath);
       try {
         if (existsSync(filePath)) {
           await unlink(filePath);

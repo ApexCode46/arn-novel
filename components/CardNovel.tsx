@@ -21,6 +21,13 @@ interface CardNovelProps {
   size?: 'large' | 'small';
 }
 
+function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
 export default function CardNovel({ story, size = 'large' }: CardNovelProps) {
   // ตรวจสอบว่า story มีค่าหรือไม่
   if (!story) {
@@ -52,7 +59,7 @@ export default function CardNovel({ story, size = 'large' }: CardNovelProps) {
             <div className="flex-shrink-0 relative w-[110px] xs:w-[120px] sm:w-[160px] md:w-[180px] lg:w-[200px]">
               <div className="relative aspect-[3/4] w-full mx-0 h-full max-h-[200px] sm:max-h-[186px] md:max-h-[213px] lg:max-h-[250px]">
                 <Image
-                  src={story.verticalImage || "/novelImg/Test-novel.png"}
+                  src={getStoryImage(story.verticalImage)}
                   alt={story.title}
                   fill
                   className="object-cover rounded-lg shadow-md group-hover:scale-105 transition-transform duration-300"
@@ -145,7 +152,7 @@ export default function CardNovel({ story, size = 'large' }: CardNovelProps) {
           <div className="lg:col-span-2 flex justify-start flex-shrink-0 w-[120px] xs:w-[130px] sm:w-auto">
             <div className="relative aspect-[3/4] w-[120px] xs:w-[130px] sm:w-full mx-0 lg:mx-0">
               <Image
-                src={story.verticalImage || "/novelImg/Test-novel.png"}
+                src={getStoryImage(story.verticalImage)}
                 alt={story.title}
                 fill
                 priority

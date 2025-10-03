@@ -437,6 +437,13 @@ export default function Page() {
     );
   }
 
+  function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+        if (src.startsWith("http")) return src      // external
+        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+        return `/api/uploads/${src.replace(/^\/+/, "")}`
+    }
+
   // Error state
   if (error || !story) {
     return (
@@ -455,7 +462,7 @@ export default function Page() {
             <div className="lg:col-span-1">
               <div className="relative aspect-[3/4] w-full max-w-sm mx-auto lg:mx-0">
                 <Image
-                  src={story.verticalImage ||  "/novelImg/Test-novel.png"}
+                  src={getStoryImage(story.verticalImage)}
                   alt={story.title}
                   fill
                   priority

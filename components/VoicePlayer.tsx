@@ -35,6 +35,7 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
+    const [previousVolume, setPreviousVolume] = useState(1);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const progressRef = useRef<HTMLDivElement>(null);
@@ -71,19 +72,44 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
         if (!audio) return;
 
         const updateTime = () => setCurrentTime(audio.currentTime);
-        const updateDuration = () => setDuration(audio.duration);
-        const handleEnded = () => setIsPlaying(false);
+        const updateDuration = () => {
+            if (audio.duration && !isNaN(audio.duration)) {
+                setDuration(audio.duration);
+            }
+        };
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+        };
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+        const handleError = (e: Event) => {
+            console.error('Audio error:', e);
+            toast.error("ไม่สามารถโหลดไฟล์เสียงได้");
+            setIsPlaying(false);
+        };
+
+        // Set initial volume
+        audio.volume = volume;
 
         audio.addEventListener('timeupdate', updateTime);
         audio.addEventListener('loadedmetadata', updateDuration);
+        audio.addEventListener('durationchange', updateDuration);
         audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+        audio.addEventListener('error', handleError);
 
         return () => {
             audio.removeEventListener('timeupdate', updateTime);
             audio.removeEventListener('loadedmetadata', updateDuration);
+            audio.removeEventListener('durationchange', updateDuration);
             audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+            audio.removeEventListener('error', handleError);
         };
-    }, [voiceData]);
+    }, [voiceData, volume]);
 
     // Play/pause toggle
     const togglePlayback = async () => {
@@ -95,23 +121,26 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
             try {
                 await audioRef.current.play();
             } catch (error) {
-                console.error('Error playing audio:', error);
+                console.error("Error playing audio:", error);
                 toast.error("เกิดข้อผิดพลาดในการเล่นเสียง");
             }
         }
-        setIsPlaying(!isPlaying);
     };
 
-    // Handle progress click
     const handleProgressClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (!audioRef.current || !progressRef.current) return;
+        const audio = audioRef.current;
+        const progress = progressRef.current;
 
-        const rect = progressRef.current.getBoundingClientRect();
+        if (!audio || !progress || isNaN(audio.duration) || audio.duration === 0) return;
+
+        const rect = progress.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const percentage = clickX / rect.width;
-        const newTime = percentage * duration;
 
-        audioRef.current.currentTime = newTime;
+        const newTime = percentage * audio.duration;
+
+        audio.currentTime = newTime;
+        setCurrentTime(newTime); // optional UI sync
     };
 
     // Volume control
@@ -121,19 +150,30 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
         if (audioRef.current) {
             audioRef.current.volume = vol;
         }
-        setIsMuted(vol === 0);
+        if (vol === 0) {
+            setIsMuted(true);
+        } else {
+            setIsMuted(false);
+            setPreviousVolume(vol);
+        }
     };
 
     // Mute toggle
     const toggleMute = () => {
-        if (audioRef.current) {
-            if (isMuted) {
-                audioRef.current.volume = volume;
-                setIsMuted(false);
-            } else {
-                audioRef.current.volume = 0;
-                setIsMuted(true);
-            }
+        if (!audioRef.current) return;
+
+        if (isMuted) {
+            // Unmute: restore previous volume
+            const restoreVol = previousVolume > 0 ? previousVolume : 0.5;
+            audioRef.current.volume = restoreVol;
+            setVolume(restoreVol);
+            setIsMuted(false);
+        } else {
+            // Mute: save current volume then set to 0
+            setPreviousVolume(volume);
+            audioRef.current.volume = 0;
+            setVolume(0);
+            setIsMuted(true);
         }
     };
 
@@ -145,9 +185,27 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    function getStoryVoice(src?: string | null): string {
+        // แปลง path เสียงให้รองรับหลายกรณี
+        if (!src) return ""; // ไม่มีเสียง -> ให้เป็นค่าว่าง (audio จะไม่เล่น)
+        let p = src.trim();
+        if (!p) return "";
+        // อนุญาต external URL
+        if (p.startsWith("http://") || p.startsWith("https://")) return p;
+        // ถ้าไม่มี / ด้านหน้า เติมให้
+        if (!p.startsWith("/")) p = `/${p}`;
+        // ไฟล์เสียงจาก API อยู่ใน uploads/voice/ แต่บันทึกเป็น /voice/
+        // ต้อง map /voice/xxx.wav -> /api/uploads/voice/xxx.wav
+        if (p.startsWith("/voice/")) return `/api/uploads${p}`;
+        // ถ้าอยู่ใต้ /uploads => เรียกผ่าน /api
+        if (p.startsWith("/uploads")) return `/api${p}`;
+        // กรณีอื่นถือว่าเป็นไฟล์ใน uploads
+        return `/api/uploads/${p.replace(/^\/+/, "")}`;
+    }
+
     if (isLoading) {
         return (
-            <Card className="w-full">
+            <Card className="w-full bg-backgroundCustom border-0">
                 <CardContent className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
                     <span className="ml-2">กำลังโหลดเสียงพากย์...</span>
@@ -161,7 +219,7 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
     }
 
     return (
-        <Card className="w-full">
+        <Card className="w-full border-0 bg-backgroundCustom shadow-md">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Volume2 className="h-5 w-5" />
@@ -172,8 +230,9 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
 
                 {/* Audio element */}
                 <audio
+                    key={voiceData?.file_path}
                     ref={audioRef}
-                    src={voiceData.file_path}
+                    src={getStoryVoice(voiceData.file_path)}
                     preload="metadata"
                 />
 
@@ -183,7 +242,7 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
                         variant="outline"
                         size="lg"
                         onClick={togglePlayback}
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 bg-backgroundCustom"
                     >
                         {isPlaying ? (
                             <Pause className="h-6 w-6" />
@@ -200,7 +259,7 @@ export function VoicePlayer({ storyId, chapterId, chapterTitle }: VoicePlayerPro
                             onClick={handleProgressClick}
                         >
                             <div
-                                className="h-full bg-blue-500 rounded-full transition-all"
+                                className="h-full bg-orange-500 rounded-full transition-all"
                                 style={{
                                     width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
                                 }}
