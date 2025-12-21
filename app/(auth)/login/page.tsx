@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
-import { Facebook } from "lucide-react"
 
 export default function AuthPage() {
     const [mode, setMode] = useState<"login" | "register">("login")
@@ -163,10 +162,7 @@ export default function AuthPage() {
                                             หรือเข้าสู่ระบบโดย
                                         </span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button variant="outline">
-                                            <Facebook className="w-5 h-5" />
-                                        </Button>
+                                    <div className="grid grid-cols gap-4">
                                         <Button
                                             variant="outline"
                                             type="button"

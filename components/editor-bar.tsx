@@ -22,7 +22,6 @@ import {
     Minus,
     Expand,
     Shrink,
-    Image as ImageIcon,
     Redo,
     Undo,
 } from "lucide-react";
@@ -34,17 +33,8 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
         return null;
     }
 
-    const addImage = () => {
-        const url = window.prompt("URL for image");
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
-        }
-    };
-
     return (
         <>
-
-
             {collapsed ?
                 (<div className="sticky top-0 z-10 
         flex justify-end items-center gap-2 p-2
@@ -170,13 +160,6 @@ const EditorToolbar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => 
                         </button>
 
                         <button
-                            onClick={addImage}
-                            className="p-2 rounded-md hover:bg-gray-200 hover:text-black"
-                        >
-                            <ImageIcon size={18} />
-                        </button>
-
-                        <button
                             onClick={() => editor.chain().focus().setTextAlign('left').run()}
                             className={cn(
                                 "p-2 rounded-md transition-colors",
@@ -256,12 +239,15 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
             }),
         ],
         content: content,
+        onCreate: ({ editor }) => {
+            editor.commands.setTextAlign('left') // ชิดซ้ายอัตโนมัติ
+        },
         onUpdate: ({ editor }) => {
             onContentChange(editor.getHTML());
         },
         editorProps: {
             attributes: {
-                class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[300px] max-w-none p-4",
+                class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[300px] max-w-none p-4 justify-start items-start",
             },
             handleKeyDown(view, event) {
                 if (event.key === 'Tab') {
@@ -277,10 +263,11 @@ export function TiptapEditor({ content, onContentChange }: TiptapEditorProps) {
         immediatelyRender: false,
     });
 
-    
+
     useEffect(() => {
         if (editor && content !== editor.getHTML()) {
             editor.commands.setContent(content);
+            editor.commands.setTextAlign('left');
         }
     }, [editor, content]);
 

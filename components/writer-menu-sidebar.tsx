@@ -12,30 +12,39 @@ import {
 export function NavMain() {
   const router = useRouter();
 
-  const handleNavigationToDashBoard = async () => {
+  const handleNavigationToDashBoard = () => {
         router.push("/writer");
     }
 
-    const handleNavigationToStories = async () => {
+    const handleNavigationToStories = () => {
         router.push("/writer/stories");
     }
+
+    const handleNavigationToRegisterWriter = () => {
+        router.push("/writer/registerWriter");
+    }
+
+    const handleNavigationToHelp = () => {
+        router.push("/writer/help");
+    }
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>โหมดนักเขียน</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuButton onClick={handleNavigationToDashBoard}>
-          <ChartColumnBig /> <strong>หน้าหลัก</strong>
+          <ChartColumnBig /> <strong>สรุปภาพรวม</strong>
         </SidebarMenuButton>
         
         <SidebarMenuButton onClick={handleNavigationToStories}>
           <Book /> <strong>นิยายของฉัน</strong>
         </SidebarMenuButton>
 
-        <SidebarMenuButton >
+        <SidebarMenuButton onClick={handleNavigationToRegisterWriter}>
           <UserCheck /> <strong>ลงทะเบียนนักเขียน</strong>
         </SidebarMenuButton>
 
-        <SidebarMenuButton >
+        <SidebarMenuButton onClick={handleNavigationToHelp}>
           <MessageCircleQuestion /> <strong>ช่วยเหลือ</strong>
         </SidebarMenuButton>
       </SidebarMenu> 

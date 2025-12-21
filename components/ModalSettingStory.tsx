@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,11 @@ type ModalSettingStoryProps = {
         hideComments?: boolean;
         allowComments?: boolean;
         commentPermission?: string;
+        publishStatus?: "draft" | "published";
         userId?: string;
+        adminHidden?: boolean;
+        adminHideReason?: string;
+        is_end?: boolean;
     };
 }
 
@@ -98,11 +103,23 @@ export default function Modalsettingstory({
     // upload preview
     const [verticalImage, setVerticalImage] = useState<string | null>(initialData?.verticalImage || null);
     const [horizontalImage, setHorizontalImage] = useState<string | null>(initialData?.horizontalImage || null);
+    const [verticalImageFile, setVerticalImageFile] = useState<File | null>(null);
+    const [horizontalImageFile, setHorizontalImageFile] = useState<File | null>(null);
 
     // สิทธิ์การเข้าถึงนิยาย
     const [isChecked1, setIsChecked1] = useState(initialData?.hideComments || false);
     const [isChecked2, setIsChecked2] = useState(initialData?.allowComments ?? true);
-    const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "comfortable");
+    const [selectedOption, setSelectedOption] = useState(initialData?.commentPermission || "followers");
+
+    // สถานะการเผยแพร่
+    const [publishStatus, setPublishStatus] = useState<"draft" | "published">(initialData?.publishStatus || "draft");
+
+    // สถานะการจบเรื่อง
+    const [isEnd, setIsEnd] = useState<boolean>(initialData?.is_end || false);
+
+    // สถานะการลงทะเบียนนักเขียน
+    const [writerRegistrationStatus, setWriterRegistrationStatus] = useState<string | null>(null);
+    const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
 
     // Loading state
     const [isLoading, setIsLoading] = useState(false);
@@ -115,6 +132,7 @@ export default function Modalsettingstory({
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setVerticalImage(imageUrl);
+            setVerticalImageFile(file);
         }
     };
 
@@ -123,7 +141,28 @@ export default function Modalsettingstory({
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setHorizontalImage(imageUrl);
+            setHorizontalImageFile(file);
         }
+    };
+
+    // ฟังก์ชันอัปโหลดไฟล์
+    const uploadImage = async (file: File, storyId: string, imageType: string) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('storyId', storyId);
+        formData.append('imageType', imageType);
+
+        const response = await fetch('/api/writer/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to upload image');
+        }
+
+        const result = await response.json();
+        return result.fileName;
     };
 
     // จัดการ สิทธิ์การเข้าถึง
@@ -156,6 +195,27 @@ export default function Modalsettingstory({
         setTags(tags.filter((t) => t !== tag));
     };
 
+    // ตรวจสอบสถานะการลงทะเบียนนักเขียน
+    const checkWriterRegistrationStatus = useCallback(async () => {
+        if (!session?.user?.email) return;
+
+        setIsCheckingRegistration(true);
+        try {
+            const response = await fetch('/api/users/register-writer');
+            if (response.ok) {
+                const data = await response.json();
+                setWriterRegistrationStatus(data.application?.status || null);
+            } else {
+                setWriterRegistrationStatus(null);
+            }
+        } catch (error) {
+            console.error('Error checking writer registration:', error);
+            setWriterRegistrationStatus(null);
+        } finally {
+            setIsCheckingRegistration(false);
+        }
+    }, [session?.user?.email]);
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -175,7 +235,48 @@ export default function Modalsettingstory({
             return;
         }
 
+        // ตรวจสอบสถานะการลงทะเบียนนักเขียนหากต้องการเผยแพร่
+        if (mode === 'edit' && publishStatus === 'published' && writerRegistrationStatus !== 'approved') {
+            setError('กรุณาลงทะเบียนนักเขียนและรอการอนุมัติก่อนเผยแพร่นิยาย');
+            setIsLoading(false);
+            toast.error('ไม่สามารถเผยแพร่ได้ กรุณาลงทะเบียนนักเขียนก่อน');
+            return;
+        }
+
+        // ตรวจสอบว่าถูก admin ซ่อนไว้หรือไม่
+        if (mode === 'edit' && publishStatus === 'published' && initialData?.adminHidden) {
+            const reason = initialData.adminHideReason || 'ถูกระงับโดยผู้ดูแลระบบ';
+            setError(`ไม่สามารถเผยแพร่นิยายนี้ได้ เนื่องจาก: ${reason}`);
+            setIsLoading(false);
+            toast.error(`ไม่สามารถเผยแพร่ได้: ${reason}`);
+            return;
+        }
+
         try {
+            let finalVerticalImage = null;
+            let finalHorizontalImage = null;
+
+            if (mode === 'create') {
+                // สำหรับการสร้างใหม่ ใช้ภาพ Test-novel.png เป็นค่าเริ่มต้น
+                finalVerticalImage = '/novelImg/Test-novel.png';
+                finalHorizontalImage = '/novelImg/Test-novel.png';
+            } else if (mode === 'edit' && initialData?.storyId) {
+                // สำหรับการแก้ไข ตรวจสอบว่ามีการอัปโหลดไฟล์ใหม่หรือไม่
+                if (verticalImageFile) {
+                    const uploadedVerticalName = await uploadImage(verticalImageFile, initialData.storyId, 'vertical');
+                    finalVerticalImage = `/novelImg/${uploadedVerticalName}`;
+                } else {
+                    finalVerticalImage = initialData.verticalImage;
+                }
+
+                if (horizontalImageFile) {
+                    const uploadedHorizontalName = await uploadImage(horizontalImageFile, initialData.storyId, 'horizontal');
+                    finalHorizontalImage = `/novelImg/${uploadedHorizontalName}`;
+                } else {
+                    finalHorizontalImage = initialData.horizontalImage;
+                }
+            }
+
             const formData = {
                 storyId: initialData?.storyId || undefined,
                 title: title,
@@ -185,14 +286,17 @@ export default function Modalsettingstory({
                 contentLevel,
                 category,
                 tags,
-                verticalImage: verticalImage ? `img-v-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
-                horizontalImage: horizontalImage ? `img-h-${title.replace(/\s+/g, '-')}-${initialData?.storyId || 'new'}` : null,
+                verticalImage: finalVerticalImage,
+                horizontalImage: finalHorizontalImage,
                 hideComments: isChecked1,
                 allowComments: isChecked2,
                 commentPermission: selectedOption,
+                publishStatus: mode === 'edit' ? publishStatus : 'draft', // ใช้ draft เป็นค่าเริ่มต้นสำหรับการสร้างใหม่
+                is_end: isEnd, // เพิ่มสถานะการจบเรื่อง
                 userId: userId // ใช้ userId ที่ตรวจสอบแล้ว
             };
 
+            console.log('Sending formData:', formData); // Debug log
 
             const response = await fetch('/api/writer/stories', {
                 method: 'POST',
@@ -208,11 +312,19 @@ export default function Modalsettingstory({
                 if (mode === 'create') {
                     // สำหรับการสร้างใหม่ ไปที่หน้า editor
                     const storyId = result.story.story_id;
+                    toast.success('สร้างนิยายใหม่สำเร็จ');
                     router.push(`/editor/${storyId}`);
                 } else {
                     // สำหรับการแก้ไข ส่งข้อมูลกลับและปิด modal
+                    toast.success('บันทึกการแก้ไขเรียบร้อยแล้ว');
                     if (onSubmit) {
-                        onSubmit(result.story);
+                        // เพิ่ม status และ is_end เข้าไปในข้อมูลที่ส่งกลับ
+                        const updatedStory = {
+                            ...result.story,
+                            status: result.story.status || publishStatus,
+                            is_end: result.story.is_end || isEnd
+                        };
+                        onSubmit(updatedStory);
                     }
                     // ปิด modal
                     setIsOpen(false);
@@ -220,10 +332,12 @@ export default function Modalsettingstory({
 
             } else {
                 setError(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
+                toast.error(result.error || 'เกิดข้อผิดพลาดในการบันทึกนิยาย');
             }
         } catch (error) {
             console.log('Network error:', error);
             setError('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
+            toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
         } finally {
             setIsLoading(false);
         }
@@ -258,9 +372,50 @@ export default function Modalsettingstory({
             setHorizontalImage(initialData.horizontalImage || null);
             setIsChecked1(initialData.hideComments || false);
             setIsChecked2(initialData.allowComments ?? true);
-            setSelectedOption(initialData.commentPermission || "comfortable");
+            setSelectedOption(initialData.commentPermission || "followers");
+            setPublishStatus(initialData.publishStatus || "draft");
+            setIsEnd(initialData.is_end || false);
+        } else if (mode === 'create') {
+            // รีเซ็ตค่าเมื่อเป็นโหมดสร้างใหม่
+            setTitle("");
+            setPenName("");
+            setType("");
+            setCategory("");
+            setContentLevel("PG");
+            setBlurb("");
+            setTags([]);
+            setVerticalImage(null);
+            setHorizontalImage(null);
+            setVerticalImageFile(null);
+            setHorizontalImageFile(null);
+            setIsChecked1(false);
+            setIsChecked2(true);
+            setSelectedOption("followers");
+            setPublishStatus("draft");
+            setIsEnd(false);
         }
     }, [mode, initialData]);
+
+    function getStoryImage(src?: string | null): string {
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png";
+        // ถ้าเป็น blob URL (จากการอัปโหลดใหม่)
+        if (src.startsWith("blob:")) return src;
+        // ถ้าเป็น URL ภายนอก
+        if (src.startsWith("http")) return src;
+        // ถ้าเป็นไฟล์ local ที่ขึ้นต้นด้วย /uploads หรือ /novelImg
+        if (src.startsWith("/uploads") || src.startsWith("/novelImg")) {
+            return src.startsWith("/uploads") ? `/api${src}` : src;
+        }
+        // กรณีอื่นๆ
+        return `/api/uploads/${src.replace(/^\/+/, "")}`;
+    }
+
+    // ตรวจสอบสถานะการลงทะเบียนนักเขียนเมื่อ session เปลี่ยน
+    useEffect(() => {
+        if (session?.user) {
+            checkWriterRegistrationStatus();
+        }
+    }, [session, checkWriterRegistrationStatus]);
 
     return (
         <div className="contents">
@@ -323,54 +478,40 @@ export default function Modalsettingstory({
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                    <SelectGroup className="text-pink-400 rounded ">
-                                        <SelectLabel className="text-pink-500 bg-pink-300 text-xl font-bold rounded">นิยายรัก</SelectLabel>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักหวานแหวว">รักหวานแหวว</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก ซึ้งกินใจ">ซึ้งกินใจ</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักดราม่า">รักดราม่า</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักคอมเมดี้st">รักคอมเมดี้</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักแฟนตาซี">รักแฟนตาซี</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก วาย">วาย</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก ยูริ">ยูริ</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักสีเทา">รักสีเทา</SelectItem>
-                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-500" value="นิยายรัก รักอื่นๆ">รักอื่นๆ</SelectItem>
-                                    </SelectGroup>
+                                    <SelectGroup>
+                                        <SelectLabel>หมวดหมู่</SelectLabel>
+                                        <SelectItem className="hover:bg-red-200 hover:font-bold text-red-500" value="action">นิยายแอคชั่น</SelectItem>
+                                        <SelectItem className="hover:bg-pink-200 hover:font-bold text-pink-500" value="romance">นิยายรัก</SelectItem>
+                                        <SelectItem className="hover:bg-neutral-300 hover:font-bold text-neutral-600" value="drama">นิยายดราม่า</SelectItem>
+                                        <SelectItem className="hover:bg-yellow-200 hover:font-bold text-yellow-500" value="comedy">นิยายตลก</SelectItem>
+                                        <SelectItem className="hover:bg-purple-200 hover:font-bold text-purple-500" value="fantasy">นิยายแฟนตาซี</SelectItem>
+                                        <SelectItem className="hover:bg-rose-300 hover:font-bold text-rose-600" value="horror">นิยายสยองขวัญ</SelectItem>
+                                        <SelectItem className="hover:bg-orange-200 hover:font-bold text-orange-500" value="thriller">นิยายระทึกขวัญ</SelectItem>
+                                        <SelectItem className="hover:bg-slate-300 hover:font-bold text-slate-600" value="mystery">นิยายสืบสวนสอบสวน</SelectItem>
+                                        <SelectItem className="hover:bg-sky-200 hover:font-bold text-sky-500" value="sci-fi">นิยายวิทยาศาสตร์</SelectItem>
+                                        <SelectItem className="hover:bg-green-200 hover:font-bold text-green-600" value="slice-of-life">ชีวิตประจำวัน</SelectItem>
+                                        <SelectItem className="hover:bg-indigo-200 hover:font-bold text-indigo-500" value="isekai">อิเซไก</SelectItem>
+                                        <SelectItem className="hover:bg-amber-200 hover:font-bold text-amber-600" value="historical">ย้อนยุค</SelectItem>
+                                        <SelectItem className="hover:bg-zinc-200 hover:font-bold text-zinc-700" value="psychological">แนวจิตวิทยา</SelectItem>
+                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-600" value="bl">นิยายวาย (BL)</SelectItem>
+                                        <SelectItem className="hover:bg-rose-200 hover:font-bold text-rose-500" value="gl">นิยายยูริ (GL)</SelectItem>
+                                        <SelectItem className="hover:bg-fuchsia-200 hover:font-bold text-fuchsia-500" value="LGBTQ+">LGBTQ+</SelectItem>
+                                        <SelectItem className="hover:bg-purple-300 hover:font-bold text-purple-600" value="fanfic">แฟนฟิค</SelectItem>
+                                        <SelectItem className="hover:bg-lime-200 hover:font-bold text-lime-600" value="school">นิยายวัยเรียน</SelectItem>
+                                        <SelectItem className="hover:bg-emerald-200 hover:font-bold text-emerald-500" value="sports">นิยายกีฬา</SelectItem>
+                                        <SelectItem className="hover:bg-rose-200 hover:font-bold text-rose-500" value="mafia">นิยายมาเฟีย</SelectItem>
+                                        <SelectItem className="hover:bg-gray-200 hover:font-bold text-gray-600" value="detective">นิยายนักสืบ</SelectItem>
+                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-600" value="revenge">แนวแก้แค้น</SelectItem>
+                                        <SelectItem className="hover:bg-pink-300 hover:font-bold text-pink-700" value="drama-romance">รักดราม่า</SelectItem>
+                                        <SelectItem className="hover:bg-cyan-200 hover:font-bold text-cyan-600" value="time-travel">ย้อนเวลา</SelectItem>
+                                        <SelectItem className="hover:bg-yellow-300 hover:font-bold text-yellow-700" value="system">ระบบ/เกมเทพทรู</SelectItem>
+                                        <SelectItem className="hover:bg-red-200 hover:font-bold text-red-500" value="zombie">แนวซอมบี้</SelectItem>
+                                        <SelectItem className="hover:bg-gray-300 hover:font-bold text-gray-700" value="tragedy">โศกนาฏกรรม</SelectItem>
+                                        <SelectItem className="hover:bg-amber-300 hover:font-bold text-amber-700" value="idol">ดารา / ไอดอล</SelectItem>
+                                        <SelectItem className="hover:bg-violet-200 hover:font-bold text-violet-600" value="crossover">ครอสโอเวอร์</SelectItem>
+                                        <SelectItem className="hover:bg-green-100 hover:font-bold text-green-500" value="healing">แนวเยียวยาหัวใจ</SelectItem>
+                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-600" value="mature">ผู้ใหญ่ / Mature</SelectItem>
 
-                                    <SelectGroup className="text-red-400 rounded">
-                                        <SelectLabel className="text-red-500 bg-red-300 text-xl font-bold rounded">นิยายตื่นเต้น</SelectLabel>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น แฟนตาซี">แฟนตาซี</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น เกมออนไลน์">เกมออนไลน์</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น วิทยาศาสตร์">วิทยาศาสตร์</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น ระทึกขวัญ">ระทึกขวัญ</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น สืบสวน">สืบสวน</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น กำลังภายใน">กำลังภายใน</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น สงคราม">สงคราม</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น ผจญภัย">ผจญภัย</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น อดีต ปัจจุบัน อนาคต">อดีต ปัจจุบัน อนาคต</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น พีเรียดไทย">พีเรียดไทย</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น พีเรียดตะวันตก">พีเรียดตะวันตก</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น บู๊_แอ๊คชั่น">บู๊ แอ๊คชั่น</SelectItem>
-                                        <SelectItem className="hover:bg-red-300 hover:font-bold text-red-500" value="นิยายตื่นเต้น จีนย้อนยุค">จีนย้อนยุค</SelectItem>
-                                    </SelectGroup>
-
-                                    <SelectGroup className="text-blue-400 rounded">
-                                        <SelectLabel className="text-blue-500 bg-blue-300 text-xl font-bold rounded">แฟนฟิค</SelectLabel>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคเกาหลี">แฟนฟิคเกาหลี</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคไทย">แฟนฟิคไทย</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคเอเชีย">แฟนฟิคเอเชีย</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคฝรั่ง">แฟนฟิคฝรั่ง</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคนิยาย">แฟนฟิคนิยาย การ์ตูน เกม</SelectItem>
-                                        <SelectItem className="hover:bg-blue-300 hover:font-bold text-blue-500" value="แฟนฟิค แฟนฟิคอื่นๆ">แฟนฟิคอื่นๆ</SelectItem>
-                                    </SelectGroup>
-
-                                    <SelectGroup className="text-orange-400 rounded">
-                                        <SelectLabel className="text-orange-500 bg-orange-300 text-xl font-bold rounded">นิยายอื่นๆ</SelectLabel>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ นิทาน_วรรณกรรม">นิทาน วรรณกรรม</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ กลอน">กลอน</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ สังคม">สังคม</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ จิตวิทยา">จิตวิทยา</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ ตลก_ขบขัน">ตลก-ขบขัน</SelectItem>
-                                        <SelectItem className="hover:bg-orange-300 hover:font-bold text-orange-500" value="นิยายอื่นๆ หักมุม">หักมุม</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -391,6 +532,35 @@ export default function Modalsettingstory({
                                 </SelectContent>
                             </Select>
                         </div>
+                        {mode === 'edit' && (
+                            <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                <Label htmlFor="storyStatus">สถานะเรื่อง</Label>
+                                <Select
+                                    value={isEnd ? "completed" : "ongoing"}
+                                    onValueChange={(value) => setIsEnd(value === "completed")}
+                                >
+                                    <SelectTrigger className="w-auto bg-backgroundCustom">
+                                        <SelectValue placeholder="เลือกสถานะเรื่อง" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>สถานะเรื่อง</SelectLabel>
+                                            <SelectItem className="hover:bg-gray-200 hover:font-bold text-gray-600" value="ongoing">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                                                    กำลังเขียน
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem className="hover:bg-green-200 hover:font-bold text-green-600" value="completed">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                                    จบแล้ว
+                                                </div>
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>)}
 
                         <div className="grid w-full max-w-sm items-center gap-1 py-3">
                             <Label htmlFor="Blurb">คำโปรย</Label>
@@ -407,41 +577,67 @@ export default function Modalsettingstory({
                         </div>
                         <hr className='py-2' />
 
-                        <h4 className='font-bold'>รูปภาพปก</h4>
-                        <div className="grid gap-4 max-w-sm">
-                            <Label className="font-medium">อัปโหลดรูปภาพ (900x1200 รูปแนวตั้ง)</Label>
-                            <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
+                        {mode === 'create' && (
+                            <>
+                                <h4 className='font-bold'>รูปภาพปก</h4>
+                                <div className="grid gap-4 max-w-sm">
+                                    <p className="text-sm text-muted-foreground">
+                                        เมื่อสร้างนิยายใหม่ ระบบจะใช้รูปภาพเริ่มต้น คุณสามารถเปลี่ยนได้ในภายหลัง
+                                    </p>
+                                    <div className='flex justify-center w-full '>
+                                        <Image
+                                            src="/novelImg/Test-novel.png"
+                                            width={240}
+                                            height={320}
+                                            alt="default cover"
+                                            className="w-60 h-80 rounded shadow-md mb-4"
+                                        />
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
 
-                            <div className='flex justify-center w-full '>
-                                {verticalImage && (
-                                    <Image
-                                        src={"/novelImg/Test-novel.png"}
-                                        width={240}
-                                        height={320}
-                                        alt="preview"
-                                        className="w-60 h-80 rounded shadow-md mb-4"
-                                    />
-                                )}
-                            </div>
-                        </div>
+                        {mode === 'edit' && (
+                            <>
+                                <h4 className='font-bold'>รูปภาพปก</h4>
+                                <div className="grid gap-4 max-w-sm">
+                                    <Label className="font-medium">อัปโหลดรูปภาพ (900x1200 รูปแนวตั้ง)</Label>
+                                    <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
 
-                        <div className="grid gap-4 max-w-sm">
-                            <Label className="font-medium">อัปโหลดรูปภาพ (1200x640 รูปแนวนอน)</Label>
-                            <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
+                                    <div className='flex justify-center w-full'>
+                                        {(verticalImage || initialData?.verticalImage) && (
+                                            <Image
+                                                src={getStoryImage(verticalImage || initialData?.verticalImage)}
+                                                alt="preview"
+                                                width={240}
+                                                height={320}
+                                                className="w-60 h-80 rounded shadow-md mb-4 object-cover"
+                                                unoptimized
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 max-w-sm">
+                                    <Label className="font-medium">อัปโหลดรูปภาพ (1200x640 รูปแนวนอน *ไม่บังคับ)</Label>
+                                    <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
 
-                            <div className='flex justify-center w-full '>
-                                {horizontalImage && (
-                                    <Image
-                                        src={"/novelImg/Test-novel.png"}
-                                        width={320}
-                                        height={180}
-                                        alt="preview"
-                                        className="w-80 h-42 rounded shadow-md mb-4"
-                                    />
-                                )}                                                      
-                            </div>
-                        </div>
-                        <hr className='py-2' />
+                                    <div className='flex justify-center w-full '>
+                                        {(horizontalImage || initialData?.horizontalImage) && (
+                                            <Image
+                                                src={getStoryImage(horizontalImage || initialData?.horizontalImage)}
+                                                width={320}
+                                                height={180}
+                                                alt="preview"
+                                                className="w-80 h-42 rounded shadow-md mb-4 object-cover"
+                                                unoptimized
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
 
                         <h4 className='pt-2 font-bold'>ช่วยให้เข้าถึงได้ง่าย</h4>
                         <div className="grid w-full max-w-sm items-center gap-3 py-3">
@@ -492,6 +688,119 @@ export default function Modalsettingstory({
                             </div>
                         </div>
                         <hr className='py-2' />
+
+                        {mode === 'edit' && (
+                            <>
+                                <h4 className='font-bold'>สถานะการเผยแพร่</h4>
+                                <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                    <Label htmlFor="publishStatus">เลือกสถานะการเผยแพร่</Label>
+
+                                    {/* ตรวจสอบสถานะการลงทะเบียนนักเขียน */}
+                                    {isCheckingRegistration ? (
+                                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <p className="text-sm text-blue-600">
+                                                🔄 กำลังตรวจสอบสถานะการลงทะเบียนนักเขียน...
+                                            </p>
+                                        </div>
+                                    ) : writerRegistrationStatus !== 'approved' ? (
+                                        <div className="p-3 bg-red-600 border rounded-lg">
+                                            <p className="text-sm text-white">
+                                                ⚠️ <strong>ไม่สามารถเผยแพร่ได้:</strong> กรุณาลงทะเบียนนักเขียนและรอการอนุมัติก่อน
+                                            </p>
+                                            <p className="text-xs text-red-600 mt-1">
+                                                สถานะปัจจุบัน: {writerRegistrationStatus || 'ไม่มีข้อมูล'}
+                                            </p>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-2"
+                                                onClick={() => router.push('/writer/registerWriter')}
+                                            >
+                                                ลงทะเบียนนักเขียน
+                                            </Button>
+                                        </div>
+                                    ) : initialData?.adminHidden ? (
+                                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-red-500">🚫</span>
+                                                <p className="text-sm font-medium text-red-700">
+                                                    นิยายนี้ถูกระงับโดยผู้ดูแลระบบ
+                                                </p>
+                                            </div>
+                                            <p className="text-sm text-red-600 mb-2">
+                                                <strong>เหตุผล:</strong> {initialData.adminHideReason || 'ไม่ได้ระบุเหตุผล'}
+                                            </p>
+                                            <p className="text-xs text-red-600">
+                                                ไม่สามารถเปลี่ยนสถานะการเผยแพร่ได้จนกว่าผู้ดูแลจะยกเลิกการระงับ
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <RadioGroup
+                                            value={publishStatus}
+                                            onValueChange={(value: "draft" | "published") => setPublishStatus(value)}
+                                            disabled={initialData?.adminHidden}
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="draft"
+                                                    id="draft"
+                                                    disabled={initialData?.adminHidden}
+                                                />
+                                                <Label htmlFor="draft" className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                                    ร่าง
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="published"
+                                                    id="published"
+                                                    disabled={initialData?.adminHidden}
+                                                />
+                                                <Label htmlFor="published" className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                                    เผยแพร่
+                                                </Label>
+                                            </div>
+                                        </RadioGroup>
+                                    )}
+
+                                    {writerRegistrationStatus === 'approved' && publishStatus === "draft" && (
+                                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <p className="text-sm text-gray-600">
+                                                💡 <strong>ร่าง:</strong> นิยายจะไม่แสดงในรายการสาธารณะ และเฉพาะคุณเท่านั้นที่เห็นได้
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {writerRegistrationStatus === 'approved' && publishStatus === "published" && (
+                                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                            <p className="text-sm text-green-700">
+                                                ✅ <strong>เผยแพร่:</strong> นิยายจะแสดงในรายการสาธารณะ และผู้อ่านสามารถค้นหาและอ่านได้
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <hr className='py-2' />
+
+
+                            </>
+                        )}
+
+                        {mode === 'create' && (
+                            <>
+                                <h4 className='font-bold'>สถานะการเผยแพร่</h4>
+                                <div className="grid w-full max-w-sm items-center gap-3 py-3">
+                                    <div className="p-3 bg-backgroundCustom/80 borde rounded-lg">
+                                        <p className="text-sm">
+                                            📝 <strong>สำหรับนิยายใหม่:</strong> นิยายจะถูกสร้างในสถานะ &ldquo;ร่าง&rdquo; ก่อน คุณสามารถเปลี่ยนเป็น &ldquo;เผยแพร่&rdquo; ได้ในภายหลังผ่านการแก้ไขข้อมูลนิยาย
+                                        </p>
+                                    </div>
+                                </div>
+                                <hr className='py-2' />
+                            </>
+                        )}
+
                         <div>
                             <h4 className='pt-2 font-bold'>สิทธิ์การเข้าถึงนิยาย</h4>
                             <div className="grid w-full max-w-sm items-center gap-3 py-3">
@@ -545,11 +854,11 @@ export default function Modalsettingstory({
                                                     className="mt-2"
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <RadioGroupItem value="default" id="r1" />
+                                                        <RadioGroupItem value="all" id="r1" />
                                                         <Label htmlFor="r1">ทุกคน</Label>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <RadioGroupItem value="comfortable" id="r2" />
+                                                        <RadioGroupItem value="followers" id="r2" />
                                                         <Label htmlFor="r2">เฉพาะคนที่ติดตามนิยายเรื่องนี้</Label>
                                                     </div>
                                                 </RadioGroup>

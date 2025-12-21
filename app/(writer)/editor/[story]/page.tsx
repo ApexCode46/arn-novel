@@ -12,9 +12,11 @@ import { useEffect, useState } from "react";
 import { useEditor } from "@/context/EditorContext";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 export default function Page() {
   const { content, setContent } = useEditor();
+  const [imageVersion, setImageVersion] = useState<number>(Date.now());
   const params = useParams();
   const storyId = decodeURIComponent(params.story as string);
 
@@ -23,28 +25,37 @@ export default function Page() {
   const [category, setCategory] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [blurb, setBlurb] = useState<string>("");
-  const [contenLavel, setContentLevel] = useState<string>("");
+  const [contentLavel, setContentLevel] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
   const [verticalImage, setVerticalImage] = useState<string>("");
   const [horizontalImage, setHorizontalImage] = useState<string>("");
   const [hideComments, setHideComments] = useState<boolean>();
   const [allowComments, setAllowComments] = useState<boolean>();
   const [commentPermission, setCommentPermission] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
+  const [adminHidden, setAdminHidden] = useState<boolean>(false);
+  const [adminHideReason, setAdminHideReason] = useState<string>("");
+  const [isEnd, setIsEnd] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   type Story = {
-  title?: string;
-  penName?: string;
-  category?: string;
-  type?: string;
-  blurb?: string;
-  contentLevel?: string;
-  tags?: string[];
-  verticalImage?: string;
-  horizontalImage?: string;
-  hideComments?: boolean;
-  allowComments?: boolean;
-  commentPermission?: string;
-};
+    title?: string;
+    penName?: string;
+    category?: string;
+    type?: string;
+    blurb?: string;
+    contentLevel?: string;
+    tags?: string[];
+    verticalImage?: string;
+    horizontalImage?: string;
+    hideComments?: boolean;
+    allowComments?: boolean;
+    commentPermission?: string;
+    status?: string;
+    admin_hidden?: boolean;
+    admin_hide_reason?: string;
+    is_end?: boolean;
+  };
 
 
   // ฟังก์ชันสำหรับอัปเดตข้อมูลหลังจากแก้ไข
@@ -61,6 +72,12 @@ export default function Page() {
     setHideComments(updatedStory.hideComments);
     setAllowComments(updatedStory.allowComments);
     setCommentPermission(updatedStory.commentPermission || "");
+    setStatus(updatedStory.status || "");
+    setAdminHidden(updatedStory.admin_hidden || false);
+    setAdminHideReason(updatedStory.admin_hide_reason || "");
+    setIsEnd(updatedStory.is_end || false);
+
+    setImageVersion(Date.now());
   };
 
 
@@ -90,21 +107,42 @@ export default function Page() {
         setHideComments(getResult.hideComments);
         setAllowComments(getResult.allowComments);
         setCommentPermission(getResult.commentPermission || "");
+        setStatus(getResult.status || "");
+        setAdminHidden(getResult.admin_hidden || false);
+        setAdminHideReason(getResult.admin_hide_reason || "");
+        setIsEnd(getResult.is_end || false);
       } catch (error) {
         console.error("Error fetching story data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     dataNovel();
   }, [storyId, setContent]); // เพิ่ม storyId และ setContent ใน dependencies
 
-  return (
+  function getStoryImage(src?: string | null): string {
+    if (!src) return "/novelImg/Test-novel.png" // fallback
+    if (src.startsWith("http")) return src      // external
+    if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+    return `/api/uploads/${src.replace(/^\/+/, "")}`
+  }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">กำลังโหลดข้อมูลนิยาย...</span>
+      </div>
+    )
+  }
+
+  return (
     <>
       <div className="container mx-auto py-4 space-y-6">
         <Modalsettingstory
           trigger={
-            <div className="cursor-pointer  transition-all duration-200 hover:shadow-lg ">
+            <div className="cursor-pointer  transition-all duration-200 shadow-lg hover:scale-105 ">
               <Card className="w-full bg-backgroundCustom border hover:bg-secondary ">
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -112,9 +150,10 @@ export default function Page() {
                     <div className="lg:col-span-1">
                       <div className="relative aspect-[3/4] w-full max-w-sm mx-auto lg:mx-0">
                         <Image
-                          src="/novelImg/action1.png"
-                          alt="Superman นิยาย"
+                          src={`${getStoryImage(verticalImage)}?v=${imageVersion}`} // ✅ ใช้ imageVersion
+                          alt="imgNovel"
                           fill
+                          priority
                           className="object-cover rounded-lg shadow-md"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
@@ -122,24 +161,24 @@ export default function Page() {
                     </div>
 
                     <div className="lg:col-span-2 space-y-4">
-                      <CardTitle className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-                        {title || "ไม่มีชื่อเรื่อง"}
+                      <CardTitle className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight break-words hyphens-auto">
+                        {title || "กำลังโหลด..."}
                       </CardTitle>
 
                       <div className="space-y-3 text-sm md:text-base">
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">นามปากกา:</span>
-                          <span className="text-foreground">{penName || "ไม่มีนามปากกา"}</span>
+                          <span className="text-foreground">{penName || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">ประเภทนิยาย:</span>
-                          <span className="text-foreground">{type || "ไม่มีประเภท"}</span>
+                          <span className="text-foreground">{type || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">หมวดหมู่</span>
-                          <span className="text-foreground">{category || "ไม่มีหมวดหมู่"}</span>
+                          <span className="text-foreground">{category || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
@@ -149,13 +188,13 @@ export default function Page() {
                               <Badge key={tag} className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-md text-xs">
                                 #{tag}
                               </Badge>
-                            )) || "ไม่มีแท็ก"}
+                            )) || "กำลังโหลด..."}
                           </div>
                         </div>
 
                         <div className="flex flex-wrap items-start gap-2">
                           <span className="font-semibold text-muted-foreground min-w-0">ระดับเนื้อหา</span>
-                          <span className="text-foreground">{contenLavel || "ไม่มีระดับ"}</span>
+                          <span className="text-foreground">{contentLavel || "กำลังโหลด..."}</span>
                         </div>
 
                         <div className="space-y-2">
@@ -177,7 +216,7 @@ export default function Page() {
             penName: penName,
             blurb: blurb,
             type: type,
-            contentLevel: contenLavel,
+            contentLevel: contentLavel,
             category: category,
             tags: tags,
             verticalImage: verticalImage,
@@ -185,6 +224,10 @@ export default function Page() {
             hideComments: hideComments,
             allowComments: allowComments,
             commentPermission: commentPermission,
+            publishStatus: status as "draft" | "published",
+            adminHidden: adminHidden,
+            adminHideReason: adminHideReason,
+            is_end: isEnd,
           }}
           onSubmit={handleStoryUpdate}
         />

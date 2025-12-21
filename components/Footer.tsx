@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Mail, Book } from "lucide-react";
+import { Book } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -18,20 +18,6 @@ export default function Footer() {
               แพลตฟอร์มอ่านนิยายออนไลน์ที่ดีที่สุด
               พบกับนิยายหลากหลายแนวที่จะทำให้คุณหลงใหลในโลกของเรื่องราว
             </p>
-            <div className="flex gap-3">
-              <Link href="#" className="p-2 rounded-full bg-muted hover:bg-muted-foreground/10 transition-colors">
-                <Facebook className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Link>
-              <Link href="#" className="p-2 rounded-full bg-muted hover:bg-muted-foreground/10 transition-colors">
-                <Twitter className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Link>
-              <Link href="#" className="p-2 rounded-full bg-muted hover:bg-muted-foreground/10 transition-colors">
-                <Instagram className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Link>
-              <Link href="#" className="p-2 rounded-full bg-muted hover:bg-muted-foreground/10 transition-colors">
-                <Mail className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Link>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -44,18 +30,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/novels" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  นิยายทั้งหมด
-                </Link>
-              </li>
-              <li>
-                <Link href="/ranking" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href="/rank" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   อันดับความนิยม
                 </Link>
               </li>
               <li>
-                <Link href="/genres" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  หมวดหมู่
+                <Link href="/search" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  ค้นหา
                 </Link>
               </li>
               <li>
@@ -108,22 +89,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  ติดต่อเรา
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  นโยบายความเป็นส่วนตัว
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  เงื่อนไขการใช้งาน
-                </Link>
-              </li>
-              <li>
-                <Link href="/writer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href="/writer/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   สำหรับนักเขียน
                 </Link>
               </li>

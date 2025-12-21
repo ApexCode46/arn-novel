@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import Modalsettingstory from "@/components/ModalSettingStory"
 
-import { Calendar, BookOpen } from "lucide-react"
+import { Calendar, BookOpen, Eye, RefreshCw } from "lucide-react"
 
 // Extend the session user type to include id
 interface ExtendedUser {
@@ -35,6 +35,8 @@ type Story = {
   category: string;
   created_at: string;
   type: string;
+  views: number;
+  status: string;
 };
 
 export default function Stories() {
@@ -47,14 +49,14 @@ export default function Stories() {
   const [sortOrder, setSortOrder] = useState("latest");
 
   // ดึงข้อมูล stories จาก API
-  const fetchStories = async () => {
+  const fetchStories = useCallback(async () => {
     const userId = (session?.user as ExtendedUser)?.id;
     if (!userId) return;
 
     try {
       setIsLoading(true);
       const response = await fetch(`/api/writer/stories?userId=${userId}`);
-      
+
       if (response.ok) {
         const storiesData = await response.json();
         setStories(storiesData);
@@ -66,14 +68,14 @@ export default function Stories() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session?.user]);
 
   // ดึงข้อมูลเมื่อ session พร้อม
   useEffect(() => {
     if (session?.user) {
       fetchStories();
     }
-  }, [session]);
+  }, [session, fetchStories]);
 
   // ฟังก์ชันกรองและเรียงลำดับ
   useEffect(() => {
@@ -88,63 +90,59 @@ export default function Stories() {
       });
     }
 
-    // เรียงลำดับ
-    filtered.sort((a, b) => {
-      switch (sortOrder) {
-        case "latest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case "alphabetical":
-          return a.title.localeCompare(b.title, 'th');
-        case "chapters":
-          return b.chapters - a.chapters;
-        default:
-          return 0;
-      }
-    });
+    // เรียงลำดับและกรอง
+    if (sortOrder === "published") {
+      filtered = filtered.filter(story => story.status === "published");
+    } else if (sortOrder === "draft") {
+      filtered = filtered.filter(story => story.status === "draft");
+    } else {
+      // เรียงลำดับตามเงื่อนไขอื่นๆ
+      filtered.sort((a, b) => {
+        switch (sortOrder) {
+          case "latest":
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          case "oldest":
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          case "alphabetical":
+            return a.title.localeCompare(b.title, 'th');
+          case "chapters":
+            return b.chapters - a.chapters;
+          case "views":
+            return b.views - a.views;
+          default:
+            return 0;
+        }
+      });
+    }
 
     setFilteredStories(filtered);
   }, [stories, typeFilter, sortOrder]);
 
-  // ฟังก์ชันตรวจสอบและแก้ไข image URL
-  const getValidImageSrc = (imageUrl: string | null): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return "/novelImg/Test-novel.png";
-    }
-    
-    // ตรวจสอบว่าเป็น absolute URL (http/https)
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-    
-    // ตรวจสอบว่าเป็น relative path ที่ถูกต้อง (เริ่มต้นด้วย /)
-    if (imageUrl.startsWith('/')) {
-      return imageUrl;
-    }
-    
-    // ถ้าไม่ใช่ URL หรือ path ที่ถูกต้อง ให้ใช้ default image
-    return "/novelImg/Test-novel.png";
-  };
-
   // ฟังก์ชันจัดการเมื่อสร้างนิยายใหม่สำเร็จ
-  const handleStoryCreated = (newStory: any) => {
-    console.log('Creating story:', newStory);
+  const handleStoryCreated = () => {
     // รีเฟรชข้อมูล
     fetchStories();
   };
 
+  function getStoryImage(src?: string | null): string {
+    if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
+    if (src.startsWith("http")) return src      // external
+    if (src.startsWith("/uploads")) return `/api${src}` // local uploads
+    return `/api/uploads/${src.replace(/^\/+/, "")}`
+  }
+
   return (
     <>
-      <h3 className="my-2 text-3xl md:text-4xl font-bold">นิยายของฉัน</h3>
-      <hr className="py-2" />
+      <div className="mb-4">
+        <h3 className="text-2xl md:text-3xl font-bold tracking-tight">นิยายของฉัน</h3>
+        <p className="text-sm">สร้างนิยายของคุณ</p>
+      </div>
 
-
-      <div className="w-full h-auto mb-3 border rounded bg-backgroundCustom ">
-        <div className="flex justify-between p-6 border-b ">
+      <div className="w-full h-auto mb-3 border  rounded bg-backgroundCustom shadow-sm">
+        <div className="flex justify-between p-6 border-b">
           <div className="flex items-center gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto bg-backgroundCustom">
                 <SelectValue placeholder="เลือกเรื่อง" />
               </SelectTrigger>
               <SelectContent>
@@ -155,7 +153,7 @@ export default function Stories() {
             </Select>
 
             <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto bg-backgroundCustom ">
                 <SelectValue placeholder="เรียงตาม" />
               </SelectTrigger>
               <SelectContent>
@@ -163,13 +161,16 @@ export default function Stories() {
                 <SelectItem value="oldest">เก่าสุด</SelectItem>
                 <SelectItem value="alphabetical">ตามตัวอักษร</SelectItem>
                 <SelectItem value="chapters">จำนวนตอน</SelectItem>
+                <SelectItem value="views">จำนวนการอ่าน</SelectItem>
+                <SelectItem value="published">เผยแพร่</SelectItem>
+                <SelectItem value="draft">ร่าง</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Modalsettingstory 
+            <Modalsettingstory
               trigger={
-                <div className="flex items-center justify-center gap-2 cursor-pointer bg-background hover:bg-secondary border-1 p-2 rounded ">
+                <div className="flex items-center justify-center bg-orange-600 hover:bg-red-600 text-white gap-2 cursor-pointer border p-2 rounded shadow-sm text-sm transition-colors duration-300">
                   เขียนใหม่
                 </div>
               }
@@ -183,77 +184,95 @@ export default function Stories() {
             <div className="p-3 space-y-3">
               {isLoading ? (
                 <div className="flex items-center justify-center h-40">
-                  <div className="text-muted-foreground">กำลังโหลด...</div>
+                  <RefreshCw className="w-6 h-6 animate-spin text-orange-600" />
                 </div>
               ) : filteredStories.length === 0 ? (
                 <div className="flex items-center justify-center h-40">
-                  <div className="text-muted-foreground text-center">
+                  <div className="text-orange-600 text-center">
                     {stories.length === 0 ? "ยังไม่มีนิยาย" : "ไม่พบนิยายที่ตรงกับเงื่อนไข"}
                   </div>
                 </div>
               ) : (
                 filteredStories.map((story) => (
-                <div
-                  key={story.story_id}
-                  className="relative group bg-card hover:bg-card/90 rounded-lg border border-border/40 hover:border-primary/20 hover:shadow-md transition-all duration-300 cursor-pointer"
-                  onClick={() => router.push(`/editor/${story.story_id}`)}
-                >
-                  <div className="flex gap-3 p-3">
-                    {/* Story Image */}
-                    <div className="flex-shrink-0 relative">
-                      <div className="relative w-16 h-20 rounded-md overflow-hidden shadow-sm">
-                        <Image
-                          src={getValidImageSrc(story.verticalImage)}
-                          alt={story.title}
-                          fill
-                          className="object-cover"
-                        />
+                  <div
+                    key={story.story_id}
+                    className="relative group hover:bg-orange-50 rounded-lg border  hover:border-orange-400 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    onClick={() => router.push(`/editor/${story.story_id}`)}
+                  >
+                    <div className="flex gap-3 p-3">
+                      {/* Story Image */}
+                      <div className="flex-shrink-0 relative">
+                        <div className="relative w-16 h-20 rounded-md overflow-hidden shadow-sm">
+                          <Image
+                            src={getStoryImage(story.verticalImage)}
+                            alt={story.title}
+                            fill
+                            className="object-cover"
+                            unoptimized // ให้ browser cache ได้เต็ม ๆ
+                          />
+                        </div>
+                        {/* Type Badge */}
+                        <div className="absolute -top-1 -left-1 bg-orange-600 text-white rounded-full px-1.5 h-4 flex items-center justify-center text-xs font-medium">
+                          {story.type}
+                        </div>
                       </div>
-                      {/* Type Badge */}
-                      <div className="absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full px-1.5 h-4 flex items-center justify-center text-xs font-medium">
-                        {story.type}
-                      </div>
-                    </div>
 
-                    {/* Story Content */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      {/* Title */}
-                      <h3 className="text-sm font-medium text-foreground line-clamp-1">
-                        {story.title}
-                      </h3>
+                      {/* Story Content */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        {/* Title */}
+                        <h3 className="text-sm font-medium text-orange-800 line-clamp-1">
+                          {story.title}
+                        </h3>
 
-                      {/* Blurb */}
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {story.blurb}
-                      </p>
-                      
-                      {/* Category & Stats Row */}
-                      <div className="flex items-center justify-between">
-                        <Badge 
-                          variant="secondary" 
-                          className="bg-primary/10 text-primary border-primary/20 text-xs"
-                        >
-                          {story.category}
-                        </Badge>
-                        
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <BookOpen className="w-3 h-3" />
-                            <span>{story.chapters}</span>
+                        {/* Blurb */}
+                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                          {story.blurb}
+                        </p>
+
+                        {/* Category & Stats Row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="secondary"
+                              className="bg-orange-100 text-orange-700 border text-xs"
+                            >
+                              {story.category}
+                            </Badge>
+
+                            {/* Status Badge */}
+                            <Badge
+                              variant={story.status === 'published' ? 'default' : 'secondary'}
+                              className={`text-xs ${story.status === 'published'
+                                ? 'bg-green-100 text-green-800 border-green-200'
+                                : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                }`}
+                            >
+                              {story.status === 'published' ? 'เผยแพร่' : 'ร่าง'}
+                            </Badge>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            <span>{new Date(story.created_at).toLocaleDateString('th-TH', { 
-                              month: 'short', 
-                              day: 'numeric',
-                              year: '2-digit'
-                            })}</span>
+
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="w-3 h-3 text-orange-600" />
+                              <span>{story.chapters}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-3 h-3 text-orange-600" />
+                              <span>{story.views.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-orange-600" />
+                              <span>{new Date(story.created_at).toLocaleDateString('th-TH', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: '2-digit'
+                              })}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 ))
               )}
             </div>

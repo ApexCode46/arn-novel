@@ -19,14 +19,52 @@ model User {
   Session         Session[]
   accounts        Account[]
   chapterComments chapterComments[]
+  commentLikes    commentLikes[]
   favorite        favorite[]
   follow          follow[]
   stories         stories[]
   storyComments   storyComments[]
   voice           voice[]
   wallet          wallet?
+  ads             ads[]
+  registerWriter  RegisterWriter?
 
   @@map("users")
+}
+
+model ads {
+  ad_id      Int      @id @default(autoincrement()) @map("ad_id")
+  name_as    String
+  user_id    String
+  path_img   String
+  link       String?
+  status     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("ads")
+}
+
+model RegisterWriter {
+  registerWriter_id   String   @id @default(cuid()) @map("register_writer_id")
+  user_id            String   @unique
+  realName           String
+  IdCard             String   // path to ID card image
+  SelfieWithIdCard   String   // path to selfie with ID card image
+  numIdCard          String   // ID card number
+  email              String
+  phoneNumber        String
+  BankAccount        String   // path to bank account document
+  numBank            String
+  status             String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("register_writers")
 }
 
 model Account {
@@ -69,55 +107,73 @@ model VerificationToken {
 }
 
 model stories {
-  story_id          String   @id @default(cuid())
+  story_id          String          @id @default(cuid())
   user_id           String
-  user              User     @relation(fields: [user_id], references: [id])
-  penName           String
   title             String
-  blurb             String?
   category          String
-  type              String   @default("เรื่องสั้น")
-  contentLevel      String   @default("PG")
-  tags              String[]
-  storyInfo         String?  @db.Text
-  verticalImage     String
-  horizontalImage   String?
-  hideComments      Boolean
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
   allowComments     Boolean
+  blurb             String?
   commentPermission String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  chapter       chapters[]
-  favorite      favorite[]
-  follow        follow[]
-  storyComments storyComments[]
-  voice         voice[]
+  hideComments      Boolean
+  horizontalImage   String?
+  penName           String
+  storyInfo         String?
+  verticalImage     String?
+  contentLevel      String          @default("PG")
+  tags              String[]
+  type              String          @default("เรื่องสั้น")
+  views             Int             @default(0)
+  status            String          @default("draft")
+  is_end            Boolean         @default(false)
+  admin_hidden      Boolean         @default(false)
+  admin_hide_reason String?
+  chapter           chapters[]
+  favorite          favorite[]
+  follow            follow[]
+  user              User            @relation(fields: [user_id], references: [id])
+  storyComments     storyComments[]
+  transaction       transaction[]
+  voice             voice[]
 }
 
 model chapters {
-  chapter_id String   @id @default(cuid())
-  story_id   String
-  story      stories  @relation(fields: [story_id], references: [story_id])
-  order      Int
-  title      String
-  content    String
-  price      Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
+  chapter_id      String            @id @default(cuid())
+  story_id        String
+  title           String
+  content         String
+  price           Int
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  order           Int
+  is_hidden       Boolean           @default(false)
+  scheduled_date  DateTime?
+  status          String            @default("draft")
+  views           Int               @default(0)
+  admin_hidden    Boolean           @default(false)
+  admin_hide_reason String?
   chapterComments chapterComments[]
+  story           stories           @relation(fields: [story_id], references: [story_id])
   favorite        favorite[]
   transaction     transaction[]
+  voice           voice[]
 }
 
 model voice {
-  voice_id    String        @id @default(cuid())
-  user_id     String
-  story_id    String
-  transaction transaction[]
-  story       stories       @relation(fields: [story_id], references: [story_id])
-  user        User          @relation(fields: [user_id], references: [id])
+  voice_id   String    @id @default(cuid())
+  user_id    String
+  story_id   String
+  chapter_id String?
+  created_at DateTime  @default(now())
+  duration   Float?
+  file_name  String
+  file_path  String
+  file_size  Int
+  updated_at DateTime  @updatedAt
+  chapter    chapters? @relation(fields: [chapter_id], references: [chapter_id])
+  story      stories   @relation(fields: [story_id], references: [story_id])
+  user       User      @relation(fields: [user_id], references: [id])
 }
 
 model storyComments {
@@ -132,14 +188,29 @@ model storyComments {
 }
 
 model chapterComments {
-  chapterComment_id String   @id @default(cuid())
+  chapterComment_id String            @id @default(cuid())
   user_id           String
   chapter_id        String
   content           String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  chapter           chapters @relation(fields: [chapter_id], references: [chapter_id])
-  user              User     @relation(fields: [user_id], references: [id])
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  parent_id         String?
+  chapter           chapters          @relation(fields: [chapter_id], references: [chapter_id])
+  parent            chapterComments?  @relation("CommentReplies", fields: [parent_id], references: [chapterComment_id])
+  replies           chapterComments[] @relation("CommentReplies")
+  user              User              @relation(fields: [user_id], references: [id])
+  likes             commentLikes[]
+}
+
+model commentLikes {
+  id                String          @id @default(cuid())
+  user_id           String
+  chapterComment_id String
+  created_at        DateTime        @default(now())
+  comment           chapterComments @relation(fields: [chapterComment_id], references: [chapterComment_id])
+  user              User            @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, chapterComment_id])
 }
 
 model follow {
@@ -172,17 +243,40 @@ model wallet {
   user        User          @relation(fields: [user_id], references: [id])
 }
 
-model transaction {
-  transaction_id String          @id @default(cuid())
-  wallet_id      String
+model coinPackage {
+  package_id     String        @id @default(uuid())
+  name           String
   amount         Int
-  type           TransactionType
-  chapter_id     String?
-  voice_id       String?
-  created_at     DateTime        @default(now())
-  chapter        chapters?       @relation(fields: [chapter_id], references: [chapter_id])
-  voice          voice?          @relation(fields: [voice_id], references: [voice_id])
-  wallet         wallet          @relation(fields: [wallet_id], references: [wallet_id])
+  bonus          Int           @default(0)
+  price          Int
+  original_price Int?
+  is_popular     Boolean       @default(false)
+  is_active      Boolean       @default(true)
+  description    String?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  transactions   transaction[]
+}
+
+model transaction {
+  transaction_id           String          @id @default(uuid())
+  wallet_id                String
+  amount                   Int
+  type                     TransactionType
+  chapter_id               String?
+  created_at               DateTime        @default(now())
+  coin_package_id          String?
+  currency                 String          @default("THB")
+  notes                    String?
+  payment_method           String?
+  payment_status           PaymentStatus   @default(PENDING)
+  stripe_charge_id         String?
+  stripe_payment_intent_id String?
+  story_id                 String?
+  chapter                  chapters?       @relation(fields: [chapter_id], references: [chapter_id])
+  coinPackage              coinPackage?    @relation(fields: [coin_package_id], references: [package_id])
+  story                    stories?        @relation(fields: [story_id], references: [story_id])
+  wallet                   wallet          @relation(fields: [wallet_id], references: [wallet_id])
 }
 
 enum TransactionType {
@@ -190,4 +284,13 @@ enum TransactionType {
   PURCHASE
   REFUND
   BONUS
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
 }

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(req, { params }) {
   try {
-    const { storyId } = params;
+    const { storyId } = await params;
 
     if (!storyId) {
       return NextResponse.json(
@@ -32,6 +32,10 @@ export async function GET(req, { params }) {
         horizontalImage: true,
         allowComments: true,
         commentPermission: true,
+        status: true,
+        is_end: true,
+        admin_hidden: true,
+        admin_hide_reason: true,
         created_at: true,
         updated_at: true,
       }
@@ -57,7 +61,7 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const { storyId } = params;
+    const { storyId } = await params;
     const body = await req.json();
     const { content } = body;
 

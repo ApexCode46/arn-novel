@@ -1,10 +1,31 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { useEditor } from "@/context/EditorContext";
 import { TiptapEditor } from "@/components/editor-bar"
 import { Input } from "@/components/ui/input"
+import { VoiceUpload } from "@/components/VoiceUpload"
+import { RefreshCw } from "lucide-react";
+
+interface ChapterData {
+  chapter_id: string;
+  title: string;
+  content: string;
+  order: number;
+  price: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface VoiceData {
+  voice_id: string;
+  file_name: string;
+  file_path: string;
+  duration?: number;
+  created_at: string;
+}
 
 export default function Page() {
   const params = useParams();
@@ -17,6 +38,26 @@ export default function Page() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [chapterData, setChapterData] = useState<ChapterData | null>(null);
+  const [existingVoice, setExistingVoice] = useState<VoiceData | null>(null);
+
+  // ฟังก์ชันโหลดเสียงพากย์ที่มีอยู่ - ใช้ useCallback เพื่อ memoize
+  const loadExistingVoice = useCallback(async (chapterId: string) => {
+    try {
+      const response = await fetch(`/api/voice/upload?storyId=${storyId}&chapterId=${chapterId}`);
+      if (response.ok) {
+        const voiceData = await response.json();
+        if (voiceData.data) {
+          setExistingVoice(voiceData.data);
+        } else {
+          setExistingVoice(null); // ไม่มีเสียงพากย์
+        }
+      }
+    } catch (error) {
+      console.error('Error loading existing voice:', error);
+      setExistingVoice(null);
+    }
+  }, [storyId]);
 
   // ดึงข้อมูล chapter เมื่อ component mount
   useEffect(() => {
@@ -28,9 +69,13 @@ export default function Page() {
         const response = await fetch(`/api/writer/stories/${storyId}/chapters/${chapterOrder}`);
 
         if (response.ok) {
-          const chapterData = await response.json();
-          setNameChapter(chapterData.title || "");
-          setContent(chapterData.content || "");
+          const data = await response.json();
+          setChapterData(data);
+          setNameChapter(data.title || "");
+          setContent(data.content || "");
+          
+          // Load existing voice if available
+          loadExistingVoice(data.chapter_id);
         } else {
           console.error('Failed to fetch chapter');
         }
@@ -42,7 +87,7 @@ export default function Page() {
     };
 
     fetchChapter();
-  }, [storyId, chapterOrder, setContent]);
+  }, [storyId, chapterOrder, setContent, loadExistingVoice]);
 
   // ฟังก์ชันบันทึก chapter
   const saveChapter = async () => {
@@ -64,30 +109,17 @@ export default function Page() {
       if (response.ok) {
         const result = await response.json();
         console.log("Chapter saved successfully:", result);
-        // แสดงข้อความสำเร็จ (อาจใช้ toast notification)
+        toast.success("บันทึกแล้ว");
       } else {
         throw new Error("Failed to save chapter");
       }
     } catch (error) {
       console.error("Error saving chapter:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error("เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setIsSaving(false);
     }
   };
-
-  // Auto-save เมื่อมีการเปลี่ยนแปลง (debounced)
-  useEffect(() => {
-    if (isLoading) return; // ไม่ save ขณะกำลังโหลดข้อมูล
-
-    const timeoutId = setTimeout(() => {
-      if (nameChapter || content) {
-        saveChapter();
-      }
-    }, 5000); // auto-save หลังจาก 5 วินาที
-
-    return () => clearTimeout(timeoutId);
-  }, [nameChapter, content]); // เมื่อ title หรือ content เปลี่ยน
 
   const handleBlur = () => {
     setIsEditing(false);
@@ -101,9 +133,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="w-full min-h-[70rem] my-5 bg-backgroundCustom shadow-2xl flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg">กำลังโหลดข้อมูล...</div>
-        </div>
+        <RefreshCw className="w-8 h-8 animate-spin" />
       </div>
     );
   }
@@ -158,8 +188,28 @@ export default function Page() {
 
       <hr className="py-2 " />
 
-      <div className="p-6">
+      <div className="p-6 space-y-6">
+        
+        {/* Voice Upload Section */}
+        {chapterData && (
+          <VoiceUpload
+            storyId={storyId}
+            chapterId={chapterData.chapter_id}
+            chapterOrder={chapterOrder}
+            existingVoice={existingVoice ? {
+              voice_id: existingVoice.voice_id,
+              file_name: existingVoice.file_name,
+              duration: existingVoice.duration
+            } : undefined}
+            onVoiceUploaded={() => {
+              if (chapterData?.chapter_id) {
+                loadExistingVoice(chapterData.chapter_id);
+              }
+            }}
+          />
+        )}
 
+        {/* Editor Section */}
         <TiptapEditor
           content={content}
           onContentChange={(html) => setContent(html)}
