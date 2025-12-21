@@ -42,7 +42,7 @@ export async function GET(req, { params }) {
       headers: {
         "Content-Length": fileStat.size.toString(),
         "Content-Type": contentType,
-        "Accept-Ranges": "bytes", // ✅ Important
+        "Accept-Ranges": "bytes",
       },
     })
   } catch (err) {

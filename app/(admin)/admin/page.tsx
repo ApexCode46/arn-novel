@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -60,7 +59,9 @@ export default function AdsManagementPage() {
   // เริ่มแก้ไขโฆษณา
   const startEdit = (ad: Ad) => {
     setEditingAd(ad)
-    setPreviewUrl(ad.path_img)
+    // แปลง path ให้ถูกต้องก่อนตั้งเป็น preview
+    const imagePath = ad.path_img.startsWith("/uploads") ? `/api${ad.path_img}` : ad.path_img
+    setPreviewUrl(imagePath)
     setImageFile(null)
     setIsDialogOpen(true)
   }
@@ -282,6 +283,11 @@ export default function AdsManagementPage() {
                       width={384}
                       height={192}
                       className="max-w-sm h-48 object-cover rounded-md border"
+                      unoptimized
+                      onError={(e) => {
+                        console.error('Image load error:', previewUrl)
+                        e.currentTarget.src = '/novelImg/Test-novel.png' // fallback image
+                      }}
                     />
                   </div>
                 )}
@@ -349,6 +355,7 @@ export default function AdsManagementPage() {
                     width={400}
                     height={225}
                     className="w-full h-full object-cover"
+                    unoptimized
                   />
                 </div>
               )}

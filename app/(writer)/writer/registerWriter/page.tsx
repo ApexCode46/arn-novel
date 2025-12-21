@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -236,10 +235,9 @@ export default function RegisterWriterPage() {
       return
     }
 
-    // ตรวจสอบผลการตรวจสอบ OCR
+    // ✅ ใหม่ (ให้ผ่านแม้ตรวจสอบไม่ตรง 100%)
     if (ocrResult && !ocrResult.verification.isValid) {
-      toast.error('การตรวจสอบบัตรประชาชนไม่ผ่าน กรุณาตรวจสอบข้อมูลหรืออัปโหลดรูปภาพใหม่')
-      return
+      toast.warning('ผลการตรวจสอบบัตรประชาชนไม่ตรง 100% แต่จะส่งคำขอต่อไป')
     }
 
     setLoading(true)
@@ -318,6 +316,7 @@ export default function RegisterWriterPage() {
                 width={200}
                 height={128}
                 className="max-w-full max-h-32 mx-auto mb-2 rounded object-cover border border-orange-200"
+                unoptimized
               />
               <p className="text-sm text-green-600 font-medium">รูปภาพถูกเลือกแล้ว</p>
             </div>
@@ -451,7 +450,7 @@ export default function RegisterWriterPage() {
 
               {/* อัปโหลดรูปภาพ */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-700">เอกสารประกอบ (หลีกเลี่ยงแสงสะท้อน) </h3> 
+                <h3 className="text-lg font-semibold text-orange-700">เอกสารประกอบ (หลีกเลี่ยงแสงสะท้อน) </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FileUploadField
@@ -485,19 +484,19 @@ export default function RegisterWriterPage() {
               <div className="flex gap-4 pt-4">
                 <Button
                   type="submit"
-                  disabled={loading || isOCRProcessing || (ocrResult?.verification?.isValid === false)}
+                  disabled={loading || isOCRProcessing}
                   className="flex-1 bg-orange-600 hover:bg-red-600 text-white border-orange-600 shadow-lg disabled:opacity-50"
                 >
                   {loading
                     ? 'กำลังส่งคำขอ...'
                     : isOCRProcessing
-                    ? 'กำลังตรวจสอบบัตรประชาชน...'
-                    : applicationStatus && applicationStatus.status === 'rejected'
-                      ? 'ส่งคำขอใหม่'
-                      : 'ส่งคำขอสมัคร'
+                      ? 'กำลังตรวจสอบบัตรประชาชน...'
+                      : applicationStatus && applicationStatus.status === 'rejected'
+                        ? 'ส่งคำขอใหม่'
+                        : 'ส่งคำขอสมัคร'
                   }
                 </Button>
-                
+
                 {/* ปุ่มตรวจสอบอีกครั้งถูกนำออกตามคำขอ */}
               </div>
             </form>

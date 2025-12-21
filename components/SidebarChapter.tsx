@@ -17,36 +17,48 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import SortableChapterItem from "@/components/SortableChapterItem";
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { SetStateAction, useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Settings, Coins, EyeOff, Clock, Pen } from "lucide-react";
 import ModalSettingChapter from "@/components/ModalSettingChapter";
 import { ModalConfirm } from "@/components/ModalConfirm";
 import { useSession } from "next-auth/react";
 
 // Interface สำหรับ purchased chapter item
 interface PurchasedChapterItem {
-  transaction_id: string;
-  chapter_id: string;
-  amount: number;
-  created_at: string;
-  chapter: {
+    transaction_id: string;
     chapter_id: string;
-    title: string;
-    order: number;
-    price: number;
-  };
+    amount: number;
+    created_at: string;
+    chapter: {
+        chapter_id: string;
+        title: string;
+        order: number;
+        price: number;
+    };
 }
 
 // Interface สำหรับ Session ที่มี user id
 interface ExtendedSession {
-  user: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  }
+    user: {
+        id: string;
+        name?: string | null;
+        email?: string | null;
+        image?: string | null;
+    }
 }
 
 type SidebarChapterProps = {
@@ -71,6 +83,12 @@ type Chapter = {
     admin_hide_reason?: string; // เพิ่มสำหรับเหตุผลการซ่อน
 };
 
+export interface ChapterItem {
+    chapter_id: string;
+    order: number;
+    title: string;
+}
+
 export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const params = useParams();
     const storyId = params.story as string;
@@ -89,6 +107,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const [chapterToConfirm, setChapterToConfirm] = useState<Chapter | null>(null);
     const [purchasedChapters, setPurchasedChapters] = useState<Set<string>>(new Set());
     const [userCoins, setUserCoins] = useState<number>(0);
+    const sensors = useSensors(useSensor(PointerSensor));
 
     const handlePageChange = (value: SetStateAction<string>) => {
         setCurrentPage(value);
@@ -177,7 +196,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     // คำนวณจำนวนหน้าสำหรับ pagination (20 ตอนต่อหน้า)
     const chaptersPerPage = 20;
     // กรองตอนตาม mode ก่อนคำนวณ pagination
-    const visibleChapters = mode === 'reader' 
+    const visibleChapters = mode === 'reader'
         ? chapters.filter(chapter => chapter.status === 'published')
         : chapters;
     const totalChapters = visibleChapters.length;
@@ -216,7 +235,7 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
             // แสดงเฉพาะตอนที่เผยแพร่แล้วสำหรับ reader
             filteredChapters = chapters.filter(chapter => chapter.status === 'published');
         }
-        
+
         const pageIndex = parseInt(currentPage.split('-')[1]) - 1;
         const startIndex = pageIndex * chaptersPerPage;
         const endIndex = Math.min(startIndex + chaptersPerPage, filteredChapters.length);
@@ -260,9 +279,13 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
         }
     };
 
-    const handleOpenSettings = (chapter: Chapter) => {
-        setSelectedChapter(chapter);
-        setIsModalOpen(true);
+    const handleOpenSettings = (chapter: ChapterItem) => {
+        // Find the full chapter data from chapters array
+        const fullChapter = chapters.find(c => c.chapter_id === chapter.chapter_id);
+        if (fullChapter) {
+            setSelectedChapter(fullChapter);
+            setIsModalOpen(true);
+        }
     };
 
     const handleCloseModal = () => {
@@ -272,13 +295,13 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
 
     const handleConfirmPurchase = async () => {
         if (!chapterToConfirm) return;
-        
+
         // อัพเดท purchased chapters
         setPurchasedChapters(prev => new Set([...prev, chapterToConfirm.chapter_id]));
-        
+
         // อัพเดท user coins (หักราคาตอน)
         setUserCoins(prev => Math.max(0, prev - chapterToConfirm.price));
-        
+
         // นำไปหน้าอ่าน chapter
         router.push(`/novel/${storyId}/${chapterToConfirm.order}`);
     };
@@ -286,6 +309,30 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
     const handleCloseConfirmModal = () => {
         setIsConfirmModalOpen(false);
         setChapterToConfirm(null);
+    };
+
+    const updateChapterOrder = async (reordered: Chapter[]) => {
+        try {
+            const response = await fetch(`/api/writer/stories/${storyId}/reorder`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    chapters: reordered.map((ch) => ({
+                        chapter_id: ch.chapter_id,
+                        order: ch.order,
+                    })),
+                }),
+            });
+
+            if (!response.ok) throw new Error("อัปเดตลำดับไม่สำเร็จ");
+
+            toast.success("✅ บันทึกลำดับตอนใหม่เรียบร้อยแล้ว");
+        } catch (err) {
+            console.error("Error updating chapter order:", err);
+            toast.error("❌ ไม่สามารถอัปเดตลำดับตอนได้");
+        }
     };
 
     return (
@@ -345,89 +392,53 @@ export default function SidebarChapter({ trigger, mode }: SidebarChapterProps) {
                             <div className="text-center text-sm text-muted-foreground p-4">
                                 ยังไม่มีตอน
                             </div>
+                        ) : mode === "writer" ? (
+                            // 👇 วางไว้ด้านบนของ SidebarChapter component
+
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={async ({ active, over }) => {
+                                    if (!over || active.id === over.id) return;
+
+                                    setChapters((prev) => {
+                                        const oldIndex = prev.findIndex((c) => c.chapter_id === active.id);
+                                        const newIndex = prev.findIndex((c) => c.chapter_id === over.id);
+                                        const reordered = arrayMove(prev, oldIndex, newIndex);
+                                        const updated = reordered.map((c, i) => ({ ...c, order: i + 1 }));
+
+                                        // 🔥 เรียก API เพื่ออัปเดตฐานข้อมูล
+                                        updateChapterOrder(updated);
+
+                                        return updated;
+                                    });
+                                }}
+                            >
+
+                                <SortableContext
+                                    items={currentChapters.map((c) => c.chapter_id)}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    {currentChapters.map((chapter) => (
+                                        <SortableChapterItem
+                                            key={chapter.chapter_id}
+                                            chapter={chapter}
+                                            storyId={storyId}
+                                            router={router}
+                                            onOpenSettings={handleOpenSettings}
+                                        />
+                                    ))}
+                                </SortableContext>
+                            </DndContext>
+
                         ) : (
-                            currentChapters.map((chapter: Chapter) => (
+                            currentChapters.map((chapter) => (
                                 <div
                                     key={chapter.chapter_id}
-                                    className={`text-sm my-2 p-4 bg-background border rounded transition-colors relative group ${
-                                        chapter.admin_hidden 
-                                            ? 'opacity-60 bg-red-50 border-red-200 cursor-not-allowed' 
-                                            : 'hover:bg-backgroundCustom cursor-pointer'
-                                    }`}
+                                    onClick={() => router.push(`/novel/${storyId}/${chapter.order}`)}
+                                    className="text-sm my-2 p-4 bg-background border rounded hover:bg-backgroundCustom cursor-pointer"
                                 >
-                                    <div
-                                        onClick={() => {
-                                            // ตรวจสอบว่าถูก admin hidden หรือไม่
-                                            if (chapter.admin_hidden) {
-                                                return; // ไม่ให้คลิกถ้าถูก admin hidden
-                                            }
-
-                                            if (mode === 'writer') {
-                                                // นำไปหน้าแก้ไข chapter
-                                                router.push(`/editor/${storyId}/${chapter.order}`);
-                                            } else {
-                                                // ตรวจสอบว่าต้องซื้อหรือไม่
-                                                if (chapter.price > 0 && !purchasedChapters.has(chapter.chapter_id)) {
-                                                    // แสดง ModalConfirm
-                                                    setChapterToConfirm(chapter);
-                                                    setIsConfirmModalOpen(true);
-                                                } else {
-                                                    // นำไปหน้าอ่าน chapter
-                                                    router.push(`/novel/${storyId}/${chapter.order}`);
-                                                }
-                                            }
-                                        }}
-                                        className={`cursor-pointer ${chapter.admin_hidden ? 'cursor-not-allowed opacity-60' : ''}`}
-                                    >
-                                        <div className="text-bold mt-1 pr-10">
-                                            <div className="flex items-center gap-2">
-                                                <span>ตอนที่ {chapter.order} : {chapter.title}</span>
-                                                {chapter.price > 0 && (mode !== 'reader' || !session?.user?.id || !purchasedChapters.has(chapter.chapter_id)) && (
-                                                    <span className="flex justify-center items-center text-xs bg-yellow-900 text-yellow-200 px-2 py-0.5 rounded">
-                                                        {chapter.price} <Coins className="inline-block w-3 h-3" />
-                                                    </span>
-                                                )}
-                                                {mode === 'reader' && chapter.price > 0 && purchasedChapters.has(chapter.chapter_id) && (
-                                                    <span className="flex justify-center items-center text-xs bg-green-900 text-green-200 px-2 py-0.5 rounded font-medium">
-                                                        ซื้อแล้ว
-                                                    </span>
-                                                )}
-                                                {(chapter.isHidden || chapter.is_hidden) && (
-                                                    <span className="flex justify-center items-center text-xs bg-red-900 text-white px-2 py-0.5 rounded">
-                                                        <EyeOff className="inline-block w-3 h-3" />
-                                                    </span>
-                                                )}
-                                                {chapter.admin_hidden && (
-                                                    <span className="flex justify-center items-center text-xs bg-red-600 text-white px-2 py-0.5 rounded font-medium">
-                                                        🚫 Admin
-                                                    </span>
-                                                )}
-                                                {chapter.status === "draft" && (
-                                                    <span className="flex justify-center items-center text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                                        <Pen className="inline-block w-3 h-3" />
-                                                    </span>
-                                                )}
-                                                {chapter.status === "scheduled" && (
-                                                    <span className="flex justify-center items-center text-xs bg-blue-900 text-blue-200 px-2 py-0.5 rounded">
-                                                        <Clock className="inline-block w-3 h-3" />
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {mode === 'writer' && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleOpenSettings(chapter);
-                                            }}
-                                            className="absolute top-2 right-2 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 opacity-60 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                                            title="ตั้งค่าตอน"
-                                        >
-                                            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200" />
-                                        </button>
-                                    )}
+                                    ตอนที่ {chapter.order}: {chapter.title}
                                 </div>
                             ))
                         )}

@@ -397,10 +397,17 @@ export default function Modalsettingstory({
     }, [mode, initialData]);
 
     function getStoryImage(src?: string | null): string {
-        if (!src || src.trim() === "") return "/novelImg/Test-novel.png"; // fallback
-        if (src.startsWith("http")) return src      // external
-        if (src.startsWith("/uploads")) return `/api${src}` // local uploads
-        return `/api/uploads/${src.replace(/^\/+/, "")}`
+        if (!src || src.trim() === "") return "/novelImg/Test-novel.png";
+        // ถ้าเป็น blob URL (จากการอัปโหลดใหม่)
+        if (src.startsWith("blob:")) return src;
+        // ถ้าเป็น URL ภายนอก
+        if (src.startsWith("http")) return src;
+        // ถ้าเป็นไฟล์ local ที่ขึ้นต้นด้วย /uploads หรือ /novelImg
+        if (src.startsWith("/uploads") || src.startsWith("/novelImg")) {
+            return src.startsWith("/uploads") ? `/api${src}` : src;
+        }
+        // กรณีอื่นๆ
+        return `/api/uploads/${src.replace(/^\/+/, "")}`;
     }
 
     // ตรวจสอบสถานะการลงทะเบียนนักเขียนเมื่อ session เปลี่ยน
@@ -599,13 +606,13 @@ export default function Modalsettingstory({
                                     <Input type="file" accept="image/*" onChange={handleVerticalImageChange} />
 
                                     <div className='flex justify-center w-full'>
-                                        {verticalImage && (
+                                        {(verticalImage || initialData?.verticalImage) && (
                                             <Image
-                                                src={getStoryImage(verticalImage)}
+                                                src={getStoryImage(verticalImage || initialData?.verticalImage)}
                                                 alt="preview"
                                                 width={240}
                                                 height={320}
-                                                className="w-60 h-80 rounded shadow-md mb-4"
+                                                className="w-60 h-80 rounded shadow-md mb-4 object-cover"
                                                 unoptimized
                                             />
                                         )}
@@ -616,14 +623,15 @@ export default function Modalsettingstory({
                                     <Input type="file" accept="image/*" onChange={handleHorizontalImageChange} />
 
                                     <div className='flex justify-center w-full '>
-                                        {horizontalImage && (
+                                        {(horizontalImage || initialData?.horizontalImage) && (
                                             <Image
-                                                src={getStoryImage(horizontalImage)}
+                                                src={getStoryImage(horizontalImage || initialData?.horizontalImage)}
                                                 width={320}
                                                 height={180}
                                                 alt="preview"
-
-                                                className="w-80 h-42 rounded shadow-md mb-4" />
+                                                className="w-80 h-42 rounded shadow-md mb-4 object-cover"
+                                                unoptimized
+                                            />
                                         )}
                                     </div>
                                 </div>
